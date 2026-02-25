@@ -1,0 +1,6 @@
+pandas
+matplotlib
+ruptures
+pyts
+tslearn
+networkx
