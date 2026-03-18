@@ -14,6 +14,7 @@ from tqdm.auto import tqdm
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ALPHA, BETA = 1, 1e10
 LR, MIN_LR = 1e-3, 1e-8
+FORCE_REGULARIZATION_FREQUENCY = 4
 PATIENCE = 10
 EPOCHS = 2000
 
@@ -73,7 +74,8 @@ class SequenceSimilarity(nn.Module):
         """Add a regularization term to prevent weights collapse"""
         rows_deviation = torch.sum((torch.sum(self.sigma, dim=1) - self.row_sums) ** 2)
         cols_deviation = torch.sum((torch.sum(self.sigma, dim=0) - self.col_sums) ** 2)
-        return BETA * (rows_deviation + cols_deviation)
+        return rows_deviation + cols_deviation
+
 
 def train_model(model):
     # Set the optimizer
@@ -94,8 +96,11 @@ def train_model(model):
     for epoch in tqdm(range(EPOCHS), desc="Training", total=EPOCHS):
         # Calculate the loss
         match_loss = model()
-        reg_loss = model.regularization_loss()
-        loss = match_loss + reg_loss
+        if epoch % FORCE_REGULARIZATION_FREQUENCY == 0:
+            reg_loss = model.regularization_loss()
+            loss = match_loss + BETA * reg_loss
+        else:
+            loss = match_loss
         # Backpropagation
         optimizer.zero_grad()
         loss.backward()
