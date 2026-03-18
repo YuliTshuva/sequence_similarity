@@ -14,8 +14,6 @@ from matplotlib import rcParams
 rcParams['font.family'] = 'Times New Roman'
 DATA_DIR = "data"
 PLOTS_DIR = join("plots", "change_points")
-CONVOLVE_KERNEL_SIZE = 10
-CHANGE_THRESHOLD = 3
 
 
 def annotate_change_points_example():
@@ -171,13 +169,10 @@ def plot_derivatives():
         # Normalize the kernel
         kernel = kernel / kernel.sum()
         convolved_f = np.convolve(f, kernel, mode='same')
-        f[CONVOLVE_KERNEL_SIZE:-CONVOLVE_KERNEL_SIZE] = convolved_f[CONVOLVE_KERNEL_SIZE:-CONVOLVE_KERNEL_SIZE]
+        f[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)] = convolved_f[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)]
 
         # Calculate first derivative of f
-        der_f = np.diff(f, n=1)
-
-        # 1, 2, 3, 4, 5, 4, 3, 2, 1
-        # 1, 1, 1, 1, -1, -1, -1, -1
+        der_f = np.concat([np.array([0]), np.diff(f, n=1)])
 
         # Calculate the derivative amplitude
         der_amp = np.max(der_f) - np.min(der_f)
@@ -189,7 +184,11 @@ def plot_derivatives():
         signs = [sign_func(x, threshold) for x in der_f]
 
         # Filter the edges
-        signs = signs[CONVOLVE_KERNEL_SIZE:-CONVOLVE_KERNEL_SIZE]
+        signs = ([signs[(CONVOLVE_KERNEL_SIZE-1)//2]] * ((CONVOLVE_KERNEL_SIZE-1)//2) +
+                 signs[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)] +
+                 [signs[-(CONVOLVE_KERNEL_SIZE-1)//2 - 1]] * ((CONVOLVE_KERNEL_SIZE-1)//2))
+        if len(signs) < len(f):
+            signs = signs + [signs[-1]] * (len(f) - len(signs))
         signs = np.array(signs)
 
         # Extract feature points out of signs
@@ -226,16 +225,15 @@ def plot_derivatives():
         f = load_data(file_path).copy()
 
         # Smooth the data
-        kernel = np.array(
-            list(range(1, CONVOLVE_KERNEL_SIZE // 2 + 1)) + list(range(CONVOLVE_KERNEL_SIZE // 2 - 1, 0, -1)))
+        kernel = np.array(list(range(1, CONVOLVE_KERNEL_SIZE//2 + 1)) + list(range(CONVOLVE_KERNEL_SIZE//2 - 1, 0, -1)))
         kernel *= kernel
         # Normalize the kernel
         kernel = kernel / kernel.sum()
         convolved_f = np.convolve(f, kernel, mode='same')
-        f[CONVOLVE_KERNEL_SIZE:-CONVOLVE_KERNEL_SIZE] = convolved_f[CONVOLVE_KERNEL_SIZE:-CONVOLVE_KERNEL_SIZE]
+        f[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)] = convolved_f[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)]
 
         # Calculate first derivative of f
-        der_f = np.diff(f, n=1)
+        der_f = np.concat([np.array([0]), np.diff(f, n=1)])
 
         # Calculate the derivative amplitude
         der_amp = np.max(der_f) - np.min(der_f)
@@ -247,13 +245,15 @@ def plot_derivatives():
         signs = [sign_func(x, threshold) for x in der_f]
 
         # Filter the edges
-        signs = signs[CONVOLVE_KERNEL_SIZE:-CONVOLVE_KERNEL_SIZE]
+        signs = ([signs[(CONVOLVE_KERNEL_SIZE-1)//2]] * ((CONVOLVE_KERNEL_SIZE-1)//2) +
+                 signs[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)] +
+                 [signs[-(CONVOLVE_KERNEL_SIZE-1)//2 - 1]] * ((CONVOLVE_KERNEL_SIZE-1)//2))
+        if len(signs) < len(f):
+            signs = signs + [signs[-1]] * (len(f) - len(signs))
         signs = np.array(signs)
 
         # Extract feature points out of signs
         signs_fps = feature_points(signs)
-        # Convert signs_fps to numpy array for indexing
-        signs_fps = np.array(signs_fps) + CONVOLVE_KERNEL_SIZE
 
         # Reload data
         f = load_data(file_path).copy()
@@ -276,50 +276,6 @@ def plot_derivatives():
 
     # Save the figure
     plt.savefig(join(PLOTS_DIR, "categorized_derivatives.png"))
-    plt.show()
-
-
-def generate_a_saw_and_plot_it():
-    # Set a 1x2 grid for plots
-    fig, ax = plt.subplots(1, 2, figsize=(10, 7))
-
-    # Generate a sawtooth wave
-    n_points = 1000
-    f = sawtooth_k_cycles(n_points, k=5)
-
-    # Calculate first derivative of f
-    der_f = np.diff(f, n=1)
-
-    # Calculate the derivative amplitude
-    der_amp = np.max(der_f) - np.min(der_f)
-
-    # Track change points in the derivative
-    threshold = CHANGE_THRESHOLD * der_amp / 100
-
-    # Apply sign_func over der_f
-    signs = [sign_func(x, threshold) for x in der_f]
-
-    # Filter the edges
-    signs = signs[CONVOLVE_KERNEL_SIZE:-CONVOLVE_KERNEL_SIZE]
-
-    # Plot the data
-    ax[0].plot(f, color='royalblue')
-    ax[1].scatter(range(len(signs)), signs, color='royalblue')
-
-    # Set title
-    ax[0].set_title("Sawtooth Function", fontsize=20)
-    ax[1].set_title("Categorized Derivatives", fontsize=20)
-
-    ax[0].set_xlabel("Time", fontsize=15)
-    ax[1].set_xlabel("Time", fontsize=15)
-    ax[0].set_ylabel("Value", fontsize=15)
-
-    # Set suptitle
-    plt.suptitle(f"Categorized points by derivatives values", fontsize=36)
-    plt.tight_layout(rect=(0, 0.03, 1, 0.95))
-
-    # Save the figure
-    plt.savefig(join(PLOTS_DIR, "Sawtooth.png"))
     plt.show()
 
 

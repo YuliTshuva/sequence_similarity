@@ -18,13 +18,16 @@ STRATEGY = "uniform"
 TIMEOUT = 10  # seconds
 
 # Hyperparameters
-AMPLITUDE_PERCENTAGE, SEGMENT_PERCENTAGE = 3, 10
+AMPLITUDE_PERCENTAGE, SEGMENT_PERCENTAGE, MIN_SEGMENT_PERCENTAGE = 3, 5, 2
+CONVOLVE_KERNEL_SIZE = 10
+CHANGE_THRESHOLD = 3
+
+# Old hyperparameters
 SEGMENT_THRESHOLD = 10  # minimum length (in percentages) of a segment to be considered for similarity
 SAX_N_BINS = 5  # number of bins for SAX transformation
 PL_ALPHA = 0.5  # weight for combining similarity scores
 CHANGE_POINTS_PEN = 10  # penalty for DTW distance
 EPSILON = 0.1  # threshold for extending the best match
-EXTREMUM_LENGTH = 5  # minimum length of a segment to be considered an extremum
 
 
 def sawtooth_k_cycles(n_points=1000, k=5):
@@ -115,7 +118,7 @@ def dist(abstraction1, abstraction2, alpha):
     return dtw_distance(abstraction1, abstraction2) + alpha * proportion_loss(abstraction1, abstraction2)
 
 
-def change_points(points, pen=10, model="rbf"):
+def jony_change_points(points, pen=10, model="rbf"):
     algo = rpt.Pelt(model=model).fit(points)
     result = algo.predict(pen=pen)  # pen is the HP beta
     return result
@@ -200,8 +203,8 @@ def original_sim_score(f1, f2):
     3) Look for partial matches: Compute similarity of each segment of Ck with each segment of T.
     """
     # Identify change points
-    change_points_f1 = change_points(f1, pen=CHANGE_POINTS_PEN)
-    change_points_f2 = change_points(f2, pen=CHANGE_POINTS_PEN)
+    change_points_f1 = jony_change_points(f1, pen=CHANGE_POINTS_PEN)
+    change_points_f2 = jony_change_points(f2, pen=CHANGE_POINTS_PEN)
 
     # Extract sequences of consecutive segments
     segments_f1 = extract_segments(f1, change_points_f1, segment_threshold=SEGMENT_THRESHOLD * len(f1) / 100)
@@ -244,3 +247,129 @@ def original_sim_score(f1, f2):
         new_sim = dist(extended_segment_f1, extended_segment_f2, alpha=PL_ALPHA)
 
     return new_sim, (left_step1, right_step1), (left_step2, right_step2)
+
+
+def change_points_detection(input_sequence):
+    # Copy the input sequence to avoid modifying the original data
+    f = input_sequence.copy()
+
+    # Smooth the data
+    kernel = np.array(list(range(1, CONVOLVE_KERNEL_SIZE // 2 + 1)) + list(range(CONVOLVE_KERNEL_SIZE // 2 - 1, 0, -1)))
+    kernel *= kernel
+    # Normalize the kernel
+    kernel = kernel / kernel.sum()
+    convolved_f = np.convolve(f, kernel, mode='same')
+    f[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] = convolved_f[
+        (CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)]
+
+    # Calculate first derivative of f
+    der_f = np.concat([np.array([0]), np.diff(f, n=1)])
+
+    # Calculate the derivative amplitude
+    der_amp = np.max(der_f) - np.min(der_f)
+
+    # Track change points in the derivative
+    threshold = CHANGE_THRESHOLD * der_amp / 100
+
+    # Apply sign_func over der_f
+    signs = [sign_func(x, threshold) for x in der_f]
+
+    # Filter the edges
+    signs = ([signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +
+             signs[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] +
+             [signs[-(CONVOLVE_KERNEL_SIZE - 1) // 2 - 1]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2))
+    if len(signs) < len(f):
+        signs = signs + [signs[-1]] * (len(f) - len(signs))
+    signs = np.array(signs)
+
+    # Extract feature points out of signs
+    signs_fps = feature_points(signs)
+
+    return signs_fps
+
+
+def mark_nodes_limits(len_seq, change_points):
+    """
+    Return a list of tuples representing the limits of the nodes in the graph, based on the change points.
+    The tuples are in the form of (start_index, end_index).
+    :param len_seq:
+    :param change_points:
+    :return:
+    """
+    nodes_limits = []
+    accumulated_gap = False
+    for i in range(0, len(change_points) - 1, 2):
+        # Extract the start and end indices of the current segment
+        start = change_points[i]
+        # Check if we need to attend gap from the previous segment
+        if accumulated_gap:
+            accumulated_gap = False
+            start = start - gap // 2
+        end = change_points[i + 1]
+
+        if i + 2 == len(change_points):
+            nodes_limits.append((start, end))
+            break
+
+        next_start = change_points[i + 2]
+        # Calculate the difference between one segment's end and the next segment's start
+        gap = int((next_start - 1) - (end + 1) + 1)
+        # If the gap is 1, we can merge the two segments into one
+        if gap == 1:
+            nodes_limits.append((start, end))
+        elif gap > len_seq * MIN_SEGMENT_PERCENTAGE / 100:
+            nodes_limits.append((start, end))
+            nodes_limits.append((end + 1, end + gap))
+        else:
+            nodes_limits.append((start, end + gap // 2))
+            accumulated_gap = True
+
+    return nodes_limits
+
+
+def extract_node_features(segment, len_sequence):
+    """
+    Given a segment, extract features for the node.
+    Specifically, we are interested in:
+    1) The mean curvature of the segment.
+    2) The mean difference between consecutive points in the segment.
+    3) The mean of the segment.
+    4) Segment amplitude (max - min).
+    5) The length of the segment.
+    6) The percentage of the segment that is increasing, decreasing, or constant.
+    :param sequence: The full sequence from which the segment is extracted.
+           Normalized to [0,1]!
+    :param segment: A segment of values representing a segment of the original segment.
+    :return: A feature vector containing the extracted features.
+    """
+    # Calculate the mean curvature of the segment
+    curvature = np.mean(np.abs(np.diff(segment, n=2)))
+
+    # Find the first derivative of the segment
+    der_f = np.diff(segment)
+
+    # Calculate the mean difference between consecutive points in the segment
+    mean_diff = np.mean(der_f)
+    mean_abs_diff = np.mean(np.abs(der_f))
+
+    # Calculate the segment amplitude (max - min)
+    amplitude = np.max(segment) - np.min(segment)
+
+    # Calculate the mean of the segment
+    mean_value = np.mean(segment)
+
+    # Calculate the length of the segment
+    length = len(segment) / len_sequence
+    # Track change points in the derivative
+    der_amp = np.max(der_f) - np.min(der_f)
+    threshold = CHANGE_THRESHOLD * der_amp / 100
+
+    # Calculate the percentage of the segment that is increasing, decreasing, or constant
+    increasing = np.sum(np.diff(segment) > threshold) / len(segment)
+    decreasing = np.sum(np.diff(segment) < threshold * (-1)) / len(segment)
+    constant = 1 - increasing - decreasing
+
+    # Summarize the features in a vector
+    features_vector = np.array([curvature, mean_diff, mean_abs_diff, mean_value, amplitude,
+                                length, increasing, decreasing, constant])
+    return features_vector
