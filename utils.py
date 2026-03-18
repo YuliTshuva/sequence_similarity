@@ -12,15 +12,19 @@ from pyts.preprocessing.discretizer import _uniform_bins
 from sklearn.metrics import mean_absolute_error
 from tslearn.metrics import dtw
 import time
+import matplotlib.pyplot as plt
+from matplotlib import rcParams
+from os.path import join
 
 # Constants
 STRATEGY = "uniform"
 TIMEOUT = 10  # seconds
+rcParams['font.family'] = 'Times New Roman'
 
 # Hyperparameters
 AMPLITUDE_PERCENTAGE, SEGMENT_PERCENTAGE, MIN_SEGMENT_PERCENTAGE = 3, 5, 2
 CONVOLVE_KERNEL_SIZE = 10
-CHANGE_THRESHOLD = 3
+CHANGE_THRESHOLD = 5
 
 # Old hyperparameters
 SEGMENT_THRESHOLD = 10  # minimum length (in percentages) of a segment to be considered for similarity
@@ -73,57 +77,6 @@ def sax_transform(data, n_bins=5):
     return data_sax, bins, sax
 
 
-def mae_distance(sax1, sax2):
-    sax1_int = [ord(x) - 96 for x in sax1]
-    sax2_int = [ord(x) - 96 for x in sax2]
-    return mean_absolute_error(sax1_int, sax2_int)
-
-
-def dtw_distance(sax1, sax2):
-    sax1_int = [ord(x) - 96 for x in sax1]
-    sax2_int = [ord(x) - 96 for x in sax2]
-    return dtw(sax1_int, sax2_int)
-
-
-def convert_subsection_to_proportion(subsection):
-    result = []
-    start_idx = 0
-    for i in range(len(subsection)):
-        if i + 1 == len(subsection) or subsection[i] != subsection[i + 1]:
-            segment_length = i - start_idx + 1
-            proportion = segment_length / len(subsection)
-            result.append((subsection[i], proportion))
-            start_idx = i + 1
-    return result
-
-
-def proportion_loss(subsection1, subsection2):
-    cs1 = convert_subsection_to_proportion(subsection1)
-    cs2 = convert_subsection_to_proportion(subsection2)
-
-    result = 0
-    for i in range(max(len(cs1), len(cs2))):
-        if i < len(cs1) and i < len(cs2):
-            result += abs(cs1[i][1] - cs2[i][1])
-        elif i < len(cs1):
-            result += cs1[i][1]
-        else:
-            result += cs2[i][1]
-
-    return result / 2
-
-
-def dist(abstraction1, abstraction2, alpha):
-    """Get two abstractions and return Dist(t, c) = Fdist(t, c) + α · PL(t, c)"""
-    return dtw_distance(abstraction1, abstraction2) + alpha * proportion_loss(abstraction1, abstraction2)
-
-
-def jony_change_points(points, pen=10, model="rbf"):
-    algo = rpt.Pelt(model=model).fit(points)
-    result = algo.predict(pen=pen)  # pen is the HP beta
-    return result
-
-
 def extract_segments(points, change_points, segment_threshold):
     segments = []
     for start_idx in range(len(change_points) - 1):
@@ -139,20 +92,6 @@ def extract_segments(points, change_points, segment_threshold):
 def load_data(file_path):
     df = pd.read_csv(file_path)
     return df["y"].to_numpy()
-
-
-def increase_sample_resolution(x, n):
-    """
-    Given a sequence x and a target length n, increase the sample resolution of x to length n by linear interpolation.
-    """
-    current_length = len(x)
-    if current_length >= n:
-        return x
-
-    # Create new indices
-    new_indices = np.linspace(0, current_length - 1, n)
-    new_x = np.interp(new_indices, np.arange(current_length), x)
-    return new_x
 
 
 def feature_points(f):
@@ -193,60 +132,6 @@ def feature_points(f):
         feature_pts.append(len(f) - 1)
 
     return feature_pts
-
-
-def original_sim_score(f1, f2):
-    """
-    Calculate similarity score between two sequences.
-    1) Identify change points and extract sequences of consecutive segments.
-    2) Normalize (by scaling) and smooth all segments.
-    3) Look for partial matches: Compute similarity of each segment of Ck with each segment of T.
-    """
-    # Identify change points
-    change_points_f1 = jony_change_points(f1, pen=CHANGE_POINTS_PEN)
-    change_points_f2 = jony_change_points(f2, pen=CHANGE_POINTS_PEN)
-
-    # Extract sequences of consecutive segments
-    segments_f1 = extract_segments(f1, change_points_f1, segment_threshold=SEGMENT_THRESHOLD * len(f1) / 100)
-    segments_f2 = extract_segments(f2, change_points_f2, segment_threshold=SEGMENT_THRESHOLD * len(f2) / 100)
-
-    # Apply SAX
-    sax_segments_f1 = [(sax_transform(segment[0])[0], segment[1]) for segment in segments_f1]
-    sax_segments_f2 = [(sax_transform(segment[0])[0], segment[1]) for segment in segments_f2]
-
-    # Look for partial matches
-    best_similarity = np.inf
-    index_f1, index_f2 = None, None
-    for segment_f1, idxs1 in sax_segments_f1:
-        for segment_f2, idxs2 in sax_segments_f2:
-            similarity = dist(segment_f1, segment_f2, alpha=PL_ALPHA)
-            if similarity < best_similarity:
-                best_similarity = similarity
-                index_f1, index_f2 = idxs1, idxs2
-
-    # Try and extend the best match by checking the neighboring segments
-    start = time.time()
-    new_sim = best_similarity
-    left_step1, right_step1 = index_f1[0], index_f1[1]
-    left_step2, right_step2 = index_f2[0], index_f2[1]
-    f1_percentage, f2_percentage = int(len(f1) / 100), int(len(f2) / 100)
-    while new_sim <= best_similarity + EPSILON and time.time() - start < TIMEOUT:
-        # Try to extend the segments in both directions
-        if left_step1 > 0:
-            left_step1 -= f1_percentage
-        if left_step2 > 0:
-            left_step2 -= f2_percentage
-        if right_step1 < len(f1):
-            right_step1 += f1_percentage
-        if right_step2 < len(f2):
-            right_step2 += f2_percentage
-
-        # Abstract the extended segments and calculate the new similarity
-        extended_segment_f1 = sax_transform(f1[left_step1:right_step1])[0]
-        extended_segment_f2 = sax_transform(f2[left_step2:right_step2])[0]
-        new_sim = dist(extended_segment_f1, extended_segment_f2, alpha=PL_ALPHA)
-
-    return new_sim, (left_step1, right_step1), (left_step2, right_step2)
 
 
 def change_points_detection(input_sequence):
@@ -373,3 +258,85 @@ def extract_node_features(segment, len_sequence):
     features_vector = np.array([curvature, mean_diff, mean_abs_diff, mean_value, amplitude,
                                 length, increasing, decreasing, constant])
     return features_vector
+
+
+def annotate_change_points_selection(input_sequence):
+    # Set a 2x1 grid for plots
+    fig, ax = plt.subplots(2, 1, figsize=(20, 15))
+
+    # Read data
+    f = input_sequence.copy()
+
+    # Smooth the data
+    kernel = np.array(
+        list(range(1, CONVOLVE_KERNEL_SIZE // 2 + 1)) + list(range(CONVOLVE_KERNEL_SIZE // 2 - 1, 0, -1)))
+    kernel *= kernel
+    # Normalize the kernel
+    kernel = kernel / kernel.sum()
+    convolved_f = np.convolve(f, kernel, mode='same')
+    f[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] = convolved_f[
+        (CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)]
+
+    # Calculate first derivative of f
+    der_f = np.concat([np.array([0]), np.diff(f, n=1)])
+
+    # Calculate the derivative amplitude
+    der_amp = np.max(der_f) - np.min(der_f)
+
+    # Track change points in the derivative
+    threshold = CHANGE_THRESHOLD * der_amp / 100
+
+    # Apply sign_func over der_f
+    signs = [sign_func(x, threshold) for x in der_f]
+
+    # Filter the edges
+    signs = ([signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +
+             signs[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] +
+             [signs[-(CONVOLVE_KERNEL_SIZE - 1) // 2 - 1]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2))
+    if len(signs) < len(f):
+        signs = signs + [signs[-1]] * (len(f) - len(signs))
+    signs = np.array(signs)
+
+    # Extract feature points out of signs
+    signs_fps = feature_points(signs)
+
+    # Plot the data
+    ax[0].scatter(range(len(signs)), signs, color='royalblue')
+    ax[0].scatter(signs_fps, signs[signs_fps], color='red', s=70)
+
+    # Set title
+    ax[0].set_title("Sequence's Trend", fontsize=30)
+    ax[0].set_ylabel("Value", fontsize=22)
+
+    # Plot the data
+    ax[1].plot(range(len(f)), f, color='royalblue')
+    ax[1].scatter(signs_fps, f[signs_fps], color='hotpink', s=70)
+
+    # Set title
+    ax[1].set_title("Input Sequence", fontsize=30)
+
+    ax[1].set_xlabel("Time", fontsize=22)
+    ax[1].set_ylabel("Value", fontsize=22)
+
+    # Set suptitle
+    plt.suptitle(f"Change point detection process", fontsize=42)
+    # Tight layout
+    plt.tight_layout()
+    # Save the figure
+    plt.show()
+
+
+def sinkhorn(A, max_iter=1000, tol=1e-9):
+    """Normalize a positive matrix so rows and columns all sum to 1."""
+    A = A.astype(float)
+    for _ in range(max_iter):
+        # Normalize rows
+        A /= A.sum(axis=1, keepdims=True)
+        # Normalize columns
+        A /= A.sum(axis=0, keepdims=True)
+
+        # Check convergence
+        if np.allclose(A.sum(axis=1), 1, atol=tol) and \
+                np.allclose(A.sum(axis=0), 1, atol=tol):
+            break
+    return A

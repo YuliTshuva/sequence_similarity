@@ -17,63 +17,88 @@ LR, MIN_LR = 1e-3, 1e-8
 PATIENCE = 10
 EPOCHS = 2000
 
+import torch
+import torch.nn as nn
+from torch.nn import Parameter
+
 
 class SequenceSimilarity(nn.Module):
     def __init__(self, initial_match_matrix, features1, features2):
-        """
-        param: initial_match_matrix: A 2D numpy array representing the initial similarity between nodes
-               of the two sequences, based on their features.
-        features1: A 2D numpy array of shape (n_nodes_seq1, feature_dim) representing the features of nodes in sequence 1.
-        features2: A 2D numpy array of shape (n_nodes_seq2, feature_dim) representing the features of nodes in sequence 2.
-        """
         super(SequenceSimilarity, self).__init__()
-        # Process the initial match matrix to create a learnable parameter
-        self.sigma = torch.tensor(initial_match_matrix, dtype=torch.float32, device=DEVICE)
-        self.sigma = Parameter(self.sigma, requires_grad=True)
-        # Set the features of each sequence
-        self.features1 = torch.tensor(features1, dtype=torch.float32, device=DEVICE)
-        self.features2 = torch.tensor(features2, dtype=torch.float32, device=DEVICE)
-        # Find the sum of each row and column of the initial match matrix
-        self.row_sums = torch.sum(self.sigma, dim=1)
-        self.col_sums = torch.sum(self.sigma, dim=0)
 
-    def compute_features_distance(self):
-        # Calculate a matrix where the (i, j) entry is the distance between features of node i in sequence 1 and node j in sequence 2
-        # Using squared Euclidean distance
-        features1_expanded = self.features1.unsqueeze(1)  # Shape: (n, 1, feature_dim)
-        features2_expanded = self.features2.unsqueeze(0)  # Shape: (1, m, feature_dim)
-        distance_matrix = torch.sum((features1_expanded - features2_expanded) ** 2, dim=2)  # Shape: (n, m)
-        # Multiply the distance matrix by the learnable sigma to get a weighted distance
-        weighted_distance = self.sigma * distance_matrix
-        # Sum over all pairs to get a single similarity score (or distance)
-        similarity_score = torch.sum(torch.sum(weighted_distance))
-        return similarity_score
+        # 1. Target Sums (Fixed Constraints) - Stored as buffers
+        row_sums = torch.sum(torch.tensor(initial_match_matrix, dtype=torch.float32), dim=1)
+        col_sums = torch.sum(torch.tensor(initial_match_matrix, dtype=torch.float32), dim=0)
+        self.register_buffer('target_row_sums', row_sums)
+        self.register_buffer('target_col_sums', col_sums)
 
-    @staticmethod
-    def compute_pairwise_structure_distance(i, j, k, l):
-        temporal_distance = (abs(i - j) - abs(k - l)) ** 2
-        return temporal_distance
+        # 2. Learnable Match Matrix in Log-Space
+        # We use Log-space so that when we apply exp() in forward,
+        # the values are strictly positive, which prevents division by zero.
+        # Adding epsilon prevents log(0)
+        epsilon = 1e-8
+        log_init = torch.log(torch.tensor(initial_match_matrix, dtype=torch.float32) + epsilon)
+        self.sigma_logits = Parameter(log_init)
 
-    def compute_structure_distance(self):
-        # Set a variable to store the total structure distance error
-        total_error = torch.tensor([0], device=DEVICE, dtype=torch.float32)
-        # Find the number of nodes in each sequence
-        n1, n2 = self.features1.shape[0], self.features2.shape[0]
-        # Iterate over all pairs of nodes in both sequences and calculate the structure distance error based on the current mapping (sigma)
-        for i, j in zip(range(n1), range(n1)):
-            for k, l in zip(range(n2), range(n2)):
-                total_error += self.sigma[i, k] * self.sigma[j, l] * self.compute_pairwise_structure_distance(i, j, k,
-                                                                                                              l)
-        return total_error
+        # 3. Features as buffers
+        self.register_buffer('features1', torch.tensor(features1, dtype=torch.float32))
+        self.register_buffer('features2', torch.tensor(features2, dtype=torch.float32))
+
+        # 4. Pre-compute Structural Distance Buffers
+        n1, n2 = features1.shape[0], features2.shape[0]
+        idx1 = torch.arange(n1, dtype=torch.float32)
+        idx2 = torch.arange(n2, dtype=torch.float32)
+        D1 = torch.abs(idx1.unsqueeze(1) - idx1.unsqueeze(0))
+        D2 = torch.abs(idx2.unsqueeze(1) - idx2.unsqueeze(0))
+        self.register_buffer('D1', D1)
+        self.register_buffer('D2', D2)
+
+    def get_constrained_sigma(self):
+        """
+        Applies normalization to ensure e^sigma satisfies both row and column sum constraints.
+        """
+        # Start with strictly positive values
+        sigma = torch.exp(self.sigma_logits)
+
+        # 5 iterations is usually enough to converge to the constraints
+        for _ in range(5):
+            # Normalize Columns to match target_col_sums
+            sigma = sigma / (sigma.sum(dim=0, keepdim=True) + 1e-9)
+            # Normalize Rows to match target_row_sums
+            sigma = sigma / (sigma.sum(dim=1, keepdim=True) + 1e-9)
+
+        return sigma
+
+    def compute_features_distance(self, sigma):
+        # Efficient squared Euclidean distance
+        dist_matrix = torch.cdist(self.features1, self.features2, p=2) ** 2
+        return torch.sum(sigma * dist_matrix)
+
+    def compute_structure_distance_vectorized(self, sigma):
+        # Term A & B (Constants based on target sums)
+        row_weights = self.target_row_sums.unsqueeze(1) * self.target_row_sums.unsqueeze(0)
+        term_a = torch.sum(row_weights * (self.D1 ** 2))
+
+        col_weights = self.target_col_sums.unsqueeze(1) * self.target_col_sums.unsqueeze(0)
+        term_b = torch.sum(col_weights * (self.D2 ** 2))
+
+        # Term C (Interaction)
+        inter_matrix = torch.matmul(torch.matmul(sigma.t(), self.D1), sigma)
+        term_c = -2 * torch.sum(inter_matrix * self.D2)
+
+        return term_a + term_b + term_c
 
     def forward(self):
-        return self.compute_features_distance() + ALPHA * self.compute_structure_distance()
+        # 1. Generate the normalized sigma (DO NOT re-assign self.sigma_logits)
+        sigma = self.get_constrained_sigma()
 
-    def regularization_loss(self):
-        """Add a regularization term to prevent weights collapse"""
-        rows_deviation = torch.sum((torch.sum(self.sigma, dim=1) - self.row_sums) ** 2)
-        cols_deviation = torch.sum((torch.sum(self.sigma, dim=0) - self.col_sums) ** 2)
-        return BETA * (rows_deviation + cols_deviation)
+        # 2. Compute distances
+        f_dist = self.compute_features_distance(sigma)
+        s_dist = self.compute_structure_distance_vectorized(sigma)
+
+        # 3. Combine
+        return f_dist + ALPHA * s_dist
+
 
 def train_model(model):
     # Set the optimizer
@@ -94,11 +119,9 @@ def train_model(model):
     for epoch in tqdm(range(EPOCHS), desc="Training", total=EPOCHS):
         # Calculate the loss
         match_loss = model()
-        reg_loss = model.regularization_loss()
-        loss = match_loss + reg_loss
         # Backpropagation
         optimizer.zero_grad()
-        loss.backward()
+        match_loss.backward()
         optimizer.step()
 
         # Check for improvement

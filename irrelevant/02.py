@@ -16,45 +16,6 @@ DATA_DIR = "data"
 PLOTS_DIR = join("plots", "change_points")
 
 
-def annotate_change_points_example():
-    # Load a sample data
-    file_name = "Atkinson_cycle_12.csv"
-    file_path = join(DATA_DIR, file_name)
-
-    # Read data
-    f = load_data(file_path)
-
-    # Create a figure with subplots
-    fig, axes = plt.subplots(3, 5, figsize=(20, 12))
-
-    # Set penalties to examine
-    pens = [5, 15, 50, 100, 300]
-    models = ["l1", "l2", "rbf"]
-
-    # Loop over models and penalties
-    for i in range(3):
-        for j in range(5):
-            # Find change points
-            f_change_points = change_points(f, pen=pens[j], model=models[i])
-
-            # Plot results
-            axes[i, j].plot(f, label='Signal', color='royalblue')
-            axes[i, j].vlines(f_change_points, ymin=min(f), ymax=max(f),
-                              colors='hotpink', linestyles='dashed', label='Change Points')
-
-    # Set labels
-    for j in range(5):
-        axes[0, j].set_title(f"Penalty: {pens[j]}", fontsize=15)
-    for i in range(3):
-        axes[i, 0].set_ylabel(f"Model: {models[i]}", fontsize=15)
-
-    # Set suptitle
-    plt.suptitle(f"Change Point Detection on {file_name}", fontsize=36)
-    plt.tight_layout(rect=(0, 0.03, 1, 0.95))
-    plt.savefig(join(PLOTS_DIR, "change_point_detection_grid.png"))
-    plt.show()
-
-
 def annotate_sax_example():
     # Load a sample data
     file_name = "Atkinson_cycle_12.csv"
@@ -164,12 +125,14 @@ def plot_derivatives():
         f = load_data(file_path).copy()
 
         # Smooth the data
-        kernel = np.array(list(range(1, CONVOLVE_KERNEL_SIZE//2 + 1)) + list(range(CONVOLVE_KERNEL_SIZE//2 - 1, 0, -1)))
+        kernel = np.array(
+            list(range(1, CONVOLVE_KERNEL_SIZE // 2 + 1)) + list(range(CONVOLVE_KERNEL_SIZE // 2 - 1, 0, -1)))
         kernel *= kernel
         # Normalize the kernel
         kernel = kernel / kernel.sum()
         convolved_f = np.convolve(f, kernel, mode='same')
-        f[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)] = convolved_f[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)]
+        f[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] = convolved_f[
+            (CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)]
 
         # Calculate first derivative of f
         der_f = np.concat([np.array([0]), np.diff(f, n=1)])
@@ -184,9 +147,9 @@ def plot_derivatives():
         signs = [sign_func(x, threshold) for x in der_f]
 
         # Filter the edges
-        signs = ([signs[(CONVOLVE_KERNEL_SIZE-1)//2]] * ((CONVOLVE_KERNEL_SIZE-1)//2) +
-                 signs[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)] +
-                 [signs[-(CONVOLVE_KERNEL_SIZE-1)//2 - 1]] * ((CONVOLVE_KERNEL_SIZE-1)//2))
+        signs = ([signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +
+                 signs[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] +
+                 [signs[-(CONVOLVE_KERNEL_SIZE - 1) // 2 - 1]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2))
         if len(signs) < len(f):
             signs = signs + [signs[-1]] * (len(f) - len(signs))
         signs = np.array(signs)
@@ -225,12 +188,14 @@ def plot_derivatives():
         f = load_data(file_path).copy()
 
         # Smooth the data
-        kernel = np.array(list(range(1, CONVOLVE_KERNEL_SIZE//2 + 1)) + list(range(CONVOLVE_KERNEL_SIZE//2 - 1, 0, -1)))
+        kernel = np.array(
+            list(range(1, CONVOLVE_KERNEL_SIZE // 2 + 1)) + list(range(CONVOLVE_KERNEL_SIZE // 2 - 1, 0, -1)))
         kernel *= kernel
         # Normalize the kernel
         kernel = kernel / kernel.sum()
         convolved_f = np.convolve(f, kernel, mode='same')
-        f[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)] = convolved_f[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)]
+        f[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] = convolved_f[
+            (CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)]
 
         # Calculate first derivative of f
         der_f = np.concat([np.array([0]), np.diff(f, n=1)])
@@ -245,9 +210,9 @@ def plot_derivatives():
         signs = [sign_func(x, threshold) for x in der_f]
 
         # Filter the edges
-        signs = ([signs[(CONVOLVE_KERNEL_SIZE-1)//2]] * ((CONVOLVE_KERNEL_SIZE-1)//2) +
-                 signs[(CONVOLVE_KERNEL_SIZE-1)//2:(CONVOLVE_KERNEL_SIZE-1)//2 * (-1)] +
-                 [signs[-(CONVOLVE_KERNEL_SIZE-1)//2 - 1]] * ((CONVOLVE_KERNEL_SIZE-1)//2))
+        signs = ([signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +
+                 signs[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] +
+                 [signs[-(CONVOLVE_KERNEL_SIZE - 1) // 2 - 1]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2))
         if len(signs) < len(f):
             signs = signs + [signs[-1]] * (len(f) - len(signs))
         signs = np.array(signs)
