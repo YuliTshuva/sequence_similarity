@@ -146,3 +146,4 @@ def train_model(model):
         model.load_state_dict(best_model_state)
 
     return model, best_loss
+

@@ -340,3 +340,4 @@ def sinkhorn(A, max_iter=1000, tol=1e-9):
                 np.allclose(A.sum(axis=0), 1, atol=tol):
             break
     return A
+
