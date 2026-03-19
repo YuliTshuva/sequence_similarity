@@ -8,6 +8,7 @@ Implementing the graph distance algorithm for sequence similarity.
 5) Refine the mapping using the optimization expression.
 6) Compute the similarity score based on the final mapping.
 """
+import matplotlib.pyplot as plt
 
 # Imports
 from utils import *
@@ -39,10 +40,21 @@ def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None, vlin
     plt.show()
 
 
+def plot_loss(losses, scheduler_steps, title=""):
+    plt.figure(figsize=(10, 5))
+    plt.plot(losses, color='darksalmon')
+    plt.xlabel("Epoch", fontsize=15)
+    plt.ylabel("Loss Value", fontsize=15)
+    plt.xticks([0] + scheduler_steps)
+    plt.title(title, fontsize=20)
+    plt.tight_layout()
+    plt.show()
+
+
 def seq_distance(seq1, seq2):
     # Normalize sequences to be in [0, 1]
     seq1 = (seq1 - np.min(seq1)) / (np.max(seq1) - np.min(seq1))
-    seq2 = (seq2 - np.min(seq2)) / (np.max(seq2) - np.min(seq2))
+    seq2 = (seq2 - np.min(seq2)) / (np.max(seq2) - np.min(seq2))\
 
     seq_1_change_points = change_points_detection(seq1)
     seq_2_change_points = change_points_detection(seq2)
@@ -50,6 +62,8 @@ def seq_distance(seq1, seq2):
     if PLOT_MODE:
         plot_two_sequences(seq1, seq2, suptitle="Sequences with Change Points",
                            vlines1=seq_1_change_points, vlines2=seq_2_change_points, vlines_label="Change Points")
+        annotate_change_points_selection(seq1)
+        annotate_change_points_selection(seq2)
 
     # Create nodes based on change points
     nodes_1 = mark_nodes_limits(len(seq1), seq_1_change_points)
@@ -91,7 +105,13 @@ def seq_distance(seq1, seq2):
     model = SequenceSimilarity(initial_mapping, features_seq_1, features_seq_2)
 
     # Send to training loop
-    model, best_match_loss = train_model(model)
+    if PLOT_MODE:
+        model, best_match_loss, loss_history, scheduler_steps = train_model(model, save_loss=True)
+        # Plot the loss history
+        plot_loss(loss_history, scheduler_steps, title="Training Loss History")
+    else:
+        model, best_match_loss = train_model(model)
+
     sigma = model.get_constrained_sigma()
 
     # Return the best match loss as the distance between the two sequences and the mapping matrix
@@ -121,4 +141,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

@@ -13,7 +13,7 @@ from tqdm.auto import tqdm
 # Constants
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ALPHA, BETA = 1, 1e10
-LR, MIN_LR = 1e-3, 1e-8
+LR, MIN_LR = 1e-1, 1e-8
 PATIENCE = 10
 EPOCHS = 2000
 
@@ -100,7 +100,7 @@ class SequenceSimilarity(nn.Module):
         return f_dist + ALPHA * s_dist
 
 
-def train_model(model):
+def train_model(model, save_loss=False):
     # Set the optimizer
     lr = LR
     optimizer = Adam(model.parameters(), lr=lr)
@@ -114,6 +114,11 @@ def train_model(model):
     best_loss = float('inf')
     epochs_without_improvement = 0
 
+    # Optionally track loss history
+    if save_loss:
+        loss_history = []
+        scheduler_steps = []
+
     # Train the model
     model.train()
     for epoch in tqdm(range(EPOCHS), desc="Training", total=EPOCHS):
@@ -124,8 +129,12 @@ def train_model(model):
         match_loss.backward()
         optimizer.step()
 
+        # Add loss to history if needed
+        if save_loss:
+            loss_history.append(match_loss.item())
+
         # Check for improvement
-        if match_loss.item() < best_loss:
+        if match_loss.item() < 0.99 * best_loss:
             best_loss = match_loss.item()
             best_model_state = model.state_dict()
             epochs_without_improvement = 0
@@ -137,6 +146,8 @@ def train_model(model):
             if lr < MIN_LR:
                 break
             else:
+                if save_loss:
+                    scheduler_steps.append(epoch)
                 scheduler.step()
                 lr *= 0.1
                 epochs_without_improvement = 0
@@ -145,5 +156,6 @@ def train_model(model):
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
 
+    if save_loss:
+        return model, best_loss, loss_history, scheduler_steps
     return model, best_loss
-
