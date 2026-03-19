@@ -108,7 +108,7 @@ def feature_points(f):
     for i in range(1, len(f)):
         if segment_max - segment_min > amp * AMPLITUDE_PERCENTAGE / 100:
             # Check segment size
-            if segment_size > len(f) * SEGMENT_PERCENTAGE / 100:
+            if segment_size > len(f) * SEGMENT_PERCENTAGE / 100 or segment_start == 0:
                 # Add feature points
                 feature_pts.append(segment_start)  # Start of segment
                 feature_pts.append(i - 2)  # End of segment
@@ -158,6 +158,8 @@ def change_points_detection(input_sequence):
 
     # Apply sign_func over der_f
     signs = [sign_func(x, threshold) for x in der_f]
+    # Level up the abstraction
+    signs = [2 * sign if sign != 0 else sign_func(x, threshold / 3) for sign, x in zip(signs, der_f)]
 
     # Filter the edges
     signs = ([signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +
@@ -288,6 +290,8 @@ def annotate_change_points_selection(input_sequence):
 
     # Apply sign_func over der_f
     signs = [sign_func(x, threshold) for x in der_f]
+    # Level up the abstraction
+    signs = [2 * sign if sign != 0 else sign_func(x, threshold / 3) for sign, x in zip(signs, der_f)]
 
     # Filter the edges
     signs = ([signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +

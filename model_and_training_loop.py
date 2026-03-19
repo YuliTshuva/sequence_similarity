@@ -13,7 +13,7 @@ from tqdm.auto import tqdm
 # Constants
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ALPHA, BETA = 1, 1e10
-LR, MIN_LR = 1e-1, 1e-8
+LR, MIN_LR = 1e-1, 1e-5
 PATIENCE = 10
 EPOCHS = 2000
 
