@@ -28,12 +28,6 @@ class SequenceSimilarity(nn.Module):
         # Store alpha and beta as buffers (not learnable parameters)
         self.register_buffer('alpha', torch.tensor(alpha, dtype=torch.float32))
 
-        # 1. Target Sums (Fixed Constraints) - Stored as buffers
-        row_sums = torch.sum(torch.tensor(initial_match_matrix, dtype=torch.float32), dim=1)
-        col_sums = torch.sum(torch.tensor(initial_match_matrix, dtype=torch.float32), dim=0)
-        self.register_buffer('target_row_sums', row_sums)
-        self.register_buffer('target_col_sums', col_sums)
-
         # 2. Learnable Match Matrix in Log-Space
         # We use Log-space so that when we apply exp() in forward,
         # the values are strictly positive, which prevents division by zero.
@@ -56,16 +50,11 @@ class SequenceSimilarity(nn.Module):
         self.register_buffer('D2', D2)
 
     def get_constrained_sigma(self):
-        sigma = torch.exp(self.sigma_logits) * torch.tensor(self.sigma_logits > -4, dtype=torch.float32)
+        # Apply a threshold to prevent tiny values, which can cause instability in the distance calculations.
+        sigma = torch.exp(self.sigma_logits) * (self.sigma_logits > -4)
 
-        for _ in range(5):
-            # Normalize Columns to match the SPECIFIC target_col_sums
-            col_sums = sigma.sum(dim=0, keepdim=True)
-            sigma = sigma * (self.target_col_sums / (col_sums + 1e-9))
-
-            # Normalize Rows to match the SPECIFIC target_row_sums
-            row_sums = sigma.sum(dim=1, keepdim=True)
-            sigma = sigma * (self.target_row_sums.unsqueeze(1) / (row_sums + 1e-9))
+        # Normalize the rows such that they will sum to 1
+        sigma = sigma / (sigma.sum(dim=1, keepdim=True) + 1e-9)
 
         return sigma
 
@@ -75,14 +64,19 @@ class SequenceSimilarity(nn.Module):
         return torch.sum(sigma * dist_matrix)
 
     def compute_structure_distance_vectorized(self, sigma):
-        # Term A & B (Constants based on target sums)
-        row_weights = self.target_row_sums.unsqueeze(1) * self.target_row_sums.unsqueeze(0)
+        # Use ACTUAL marginals of current sigma (not fixed targets)
+        row_sums = sigma.sum(dim=1)  # shape: (n1,)
+        col_sums = sigma.sum(dim=0)  # shape: (n2,)
+
+        # Term A: Σᵢⱼ rᵢ · rⱼ · D1²ᵢⱼ
+        row_weights = row_sums.unsqueeze(1) * row_sums.unsqueeze(0)
         term_a = torch.sum(row_weights * (self.D1 ** 2))
 
-        col_weights = self.target_col_sums.unsqueeze(1) * self.target_col_sums.unsqueeze(0)
+        # Term B: Σₖₗ cₖ · cₗ · D2²ₖₗ
+        col_weights = col_sums.unsqueeze(1) * col_sums.unsqueeze(0)
         term_b = torch.sum(col_weights * (self.D2 ** 2))
 
-        # Term C (Interaction)
+        # Term C: -2 Σᵢⱼₖₗ σᵢₖ · σⱼₗ · |i−j| · |k−l|
         inter_matrix = torch.matmul(torch.matmul(sigma.t(), self.D1), sigma)
         term_c = -2 * torch.sum(inter_matrix * self.D2)
 
@@ -95,9 +89,6 @@ class SequenceSimilarity(nn.Module):
         # 2. Compute distances
         f_dist = self.compute_features_distance(sigma)
         s_dist = self.compute_structure_distance_vectorized(sigma)
-
-        if s_dist < 0:
-            pass
 
         # 3. Combine
         return f_dist + self.alpha * s_dist

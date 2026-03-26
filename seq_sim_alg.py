@@ -16,10 +16,10 @@ import numpy as np
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = False
+PLOT_MODE = True
 
 # Model's parameters
-ALPHA, FEATURE_WEIGHTS = 1, np.array([1]*9)
+ALPHA, FEATURE_WEIGHTS = 1, np.array([1] * 9)
 
 # Make sure the feature weights sum to 1
 FEATURE_WEIGHTS = FEATURE_WEIGHTS / np.sum(FEATURE_WEIGHTS)
@@ -79,6 +79,10 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
     else:
         seq2 = np.zeros_like(seq2) + 0.5
 
+    # Plot the sequences
+    if PLOT_MODE:
+        plot_two_sequences(seq1, seq2, suptitle="Initial Sequences")
+
     seq_1_change_points = change_points_detection(seq1)
     seq_2_change_points = change_points_detection(seq2)
 
@@ -114,9 +118,6 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
     # Make sure the initial mapping is non-negative (cosine similarity can be negative)
     initial_mapping = np.maximum(initial_mapping, 0)
 
-    # Normalize columns
-    col_sums = initial_mapping.sum(axis=0, keepdims=True)
-    initial_mapping /= col_sums
     # Normalize rows
     row_sums = initial_mapping.sum(axis=1, keepdims=True)
     initial_mapping /= row_sums
@@ -142,10 +143,6 @@ def main():
     # Read two sequences
     seq1 = load_data("data/Atkinson_cycle_44.csv")
     seq2 = load_data("data/Atkinson_cycle_2.csv")
-
-    # Plot the sequences
-    if PLOT_MODE:
-        plot_two_sequences(seq1, seq2, suptitle="Initial Sequences")
 
     # Compute distance
     distance, sigma = seq_distance(seq1, seq2)
