@@ -319,6 +319,7 @@ def annotate_change_points_selection(input_sequence):
     # Set title
     ax[1].set_title("Input Sequence", fontsize=30)
 
+    # Set labels
     ax[1].set_xlabel("Time", fontsize=22)
     ax[1].set_ylabel("Value", fontsize=22)
 

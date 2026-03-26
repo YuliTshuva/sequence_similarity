@@ -6,16 +6,16 @@ Create a model for sequence similarity based on the graph distance algorithm.
 # Imports
 import torch
 import torch.nn as nn
+from torch.ao.nn.quantized.functional import threshold
 from torch.nn.parameter import Parameter
 from torch.optim import Adam
 from tqdm.auto import tqdm
 
 # Constants
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-ALPHA, BETA = 1, 1e10
-LR, MIN_LR = 1e-1, 1e-5
+LR, MIN_LR = 1, 1e-5
 PATIENCE = 10
-EPOCHS = 2000
+EPOCHS = 5000
 
 import torch
 import torch.nn as nn
@@ -23,8 +23,10 @@ from torch.nn import Parameter
 
 
 class SequenceSimilarity(nn.Module):
-    def __init__(self, initial_match_matrix, features1, features2):
+    def __init__(self, initial_match_matrix, features1, features2, alpha):
         super(SequenceSimilarity, self).__init__()
+        # Store alpha and beta as buffers (not learnable parameters)
+        self.register_buffer('alpha', torch.tensor(alpha, dtype=torch.float32))
 
         # 1. Target Sums (Fixed Constraints) - Stored as buffers
         row_sums = torch.sum(torch.tensor(initial_match_matrix, dtype=torch.float32), dim=1)
@@ -54,18 +56,16 @@ class SequenceSimilarity(nn.Module):
         self.register_buffer('D2', D2)
 
     def get_constrained_sigma(self):
-        """
-        Applies normalization to ensure e^sigma satisfies both row and column sum constraints.
-        """
-        # Start with strictly positive values
-        sigma = torch.exp(self.sigma_logits)
+        sigma = torch.exp(self.sigma_logits) * torch.tensor(self.sigma_logits > -4, dtype=torch.float32)
 
-        # 5 iterations is usually enough to converge to the constraints
         for _ in range(5):
-            # Normalize Columns to match target_col_sums
-            sigma = sigma / (sigma.sum(dim=0, keepdim=True) + 1e-9)
-            # Normalize Rows to match target_row_sums
-            sigma = sigma / (sigma.sum(dim=1, keepdim=True) + 1e-9)
+            # Normalize Columns to match the SPECIFIC target_col_sums
+            col_sums = sigma.sum(dim=0, keepdim=True)
+            sigma = sigma * (self.target_col_sums / (col_sums + 1e-9))
+
+            # Normalize Rows to match the SPECIFIC target_row_sums
+            row_sums = sigma.sum(dim=1, keepdim=True)
+            sigma = sigma * (self.target_row_sums.unsqueeze(1) / (row_sums + 1e-9))
 
         return sigma
 
@@ -96,8 +96,11 @@ class SequenceSimilarity(nn.Module):
         f_dist = self.compute_features_distance(sigma)
         s_dist = self.compute_structure_distance_vectorized(sigma)
 
+        if s_dist < 0:
+            pass
+
         # 3. Combine
-        return f_dist + ALPHA * s_dist
+        return f_dist + self.alpha * s_dist
 
 
 def train_model(model, save_loss=False):
@@ -121,7 +124,7 @@ def train_model(model, save_loss=False):
 
     # Train the model
     model.train()
-    for epoch in tqdm(range(EPOCHS), desc="Training", total=EPOCHS):
+    for epoch in range(EPOCHS):
         # Calculate the loss
         match_loss = model()
         # Backpropagation

@@ -8,7 +8,6 @@ Implementing the graph distance algorithm for sequence similarity.
 5) Refine the mapping using the optimization expression.
 6) Compute the similarity score based on the final mapping.
 """
-import matplotlib.pyplot as plt
 
 # Imports
 from utils import *
@@ -17,7 +16,13 @@ import numpy as np
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = True
+PLOT_MODE = False
+
+# Model's parameters
+ALPHA, FEATURE_WEIGHTS = 1, np.array([1]*9)
+
+# Make sure the feature weights sum to 1
+FEATURE_WEIGHTS = FEATURE_WEIGHTS / np.sum(FEATURE_WEIGHTS)
 
 
 def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None, vlines_label=""):
@@ -51,10 +56,28 @@ def plot_loss(losses, scheduler_steps, title=""):
     plt.show()
 
 
-def seq_distance(seq1, seq2):
+def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
+    """
+    Given any two numeric sequences, compute the distance between them as:
+    dist = min_sigma [ dist_features + alpha * dist_structure ]
+     - dist_features: distance between the features of the nodes (segments) in the two sequences
+     - dist_structure: distance between the structure of the two sequences (edges between nodes)
+        - sigma: the soft mapping matrix between the nodes of the two sequences (rows sum to 1)
+
+    :return: distance, sigma
+    """
+    # Make sure feature weights sum to 1
+    feature_weights = feature_weights / np.sum(feature_weights)
+
     # Normalize sequences to be in [0, 1]
-    seq1 = (seq1 - np.min(seq1)) / (np.max(seq1) - np.min(seq1))
-    seq2 = (seq2 - np.min(seq2)) / (np.max(seq2) - np.min(seq2))\
+    if np.max(seq1) - np.min(seq1) > 0:
+        seq1 = (seq1 - np.min(seq1)) / (np.max(seq1) - np.min(seq1))
+    else:
+        seq1 = np.zeros_like(seq1) + 0.5
+    if np.max(seq2) - np.min(seq2) > 0:
+        seq2 = (seq2 - np.min(seq2)) / (np.max(seq2) - np.min(seq2))
+    else:
+        seq2 = np.zeros_like(seq2) + 0.5
 
     seq_1_change_points = change_points_detection(seq1)
     seq_2_change_points = change_points_detection(seq2)
@@ -79,11 +102,14 @@ def seq_distance(seq1, seq2):
     len_seq1, len_seq2 = len(seq1), len(seq2)
     features_seq_1 = np.array([extract_node_features(seq1[node[0]:node[1] + 1], len_seq1) for node in nodes_1])
     features_seq_2 = np.array([extract_node_features(seq2[node[0]:node[1] + 1], len_seq2) for node in nodes_2])
+    # Apply feature weights
+    features_seq_1 *= feature_weights
+    features_seq_2 *= feature_weights
 
     # Estimate initial mapping using features similarity (cosine similarity)
-    features_seq_1 = features_seq_1 / np.linalg.norm(features_seq_1, axis=1, keepdims=True)
-    features_seq_2 = features_seq_2 / np.linalg.norm(features_seq_2, axis=1, keepdims=True)
-    initial_mapping = features_seq_1 @ features_seq_2.T
+    normalized_features_seq_1 = features_seq_1 / np.linalg.norm(features_seq_1, axis=1, keepdims=True)
+    normalized_features_seq_2 = features_seq_2 / np.linalg.norm(features_seq_2, axis=1, keepdims=True)
+    initial_mapping = normalized_features_seq_1 @ normalized_features_seq_2.T
 
     # Make sure the initial mapping is non-negative (cosine similarity can be negative)
     initial_mapping = np.maximum(initial_mapping, 0)
@@ -95,14 +121,8 @@ def seq_distance(seq1, seq2):
     row_sums = initial_mapping.sum(axis=1, keepdims=True)
     initial_mapping /= row_sums
 
-    # Check sum of rows and columns
-    row_sum, col_sum = np.mean(initial_mapping.sum(axis=1)), np.mean(initial_mapping.sum(axis=0))
-    print("Row sums (should be close to 1):", row_sum)
-    print("Column sums (should be close to 1):", col_sum)
-    print(initial_mapping)
-
     # Set a model instance
-    model = SequenceSimilarity(initial_mapping, features_seq_1, features_seq_2)
+    model = SequenceSimilarity(initial_mapping, features_seq_1, features_seq_2, alpha=alpha)
 
     # Send to training loop
     if PLOT_MODE:
@@ -133,10 +153,6 @@ def main():
     # Print the distance
     print("Distance between the two sequences:", distance)
     print("The best mapping matrix (sigma):\n", sigma)
-
-    # Print the sum of each row and column in the mapping matrix
-    print("Rows sum:", sigma.sum(axis=1))
-    print("Cols sum", sigma.sum(axis=0))
 
 
 if __name__ == "__main__":
