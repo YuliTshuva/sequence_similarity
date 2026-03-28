@@ -257,6 +257,11 @@ def extract_node_features(segment, len_sequence):
     # Summarize the features in a vector
     features_vector = np.array([curvature, mean_diff, mean_abs_diff, mean_value, amplitude,
                                 length, increasing, decreasing, constant])
+
+    # Balance the features to be in the same scale
+    features_vector = features_vector / np.array([0.018, 0.002, 0.018, 0.550,
+                                                  0.32193304, 0.18082032, 0.3333333, 0.3333333, 0.333333])
+
     return features_vector
 
 
@@ -369,30 +374,34 @@ def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to 
     vlines2 = [n[0] for n in nodes_2] + [nodes_2[-1][1]]
 
     # Plot the probability map of each node in seq1 to seq2
+    # Get a figure for the current node
+    plt.subplots(len(nodes_1), 2, figsize=(25, 5 * len(nodes_1)))
     for i in range(len(nodes_1)):
-        # Get a figure for the current node
-        plt.subplots(1, 2, figsize=(13, 5))
-        plt.subplot(1, 2, 1)
+        # Get the subplot of row i+1 column 1
+        plt.subplot(len(nodes_1), 2, 2 * i + 1)
         plt.plot(seq1, color='royalblue')
         plt.vlines(vlines1, ymin=0, ymax=1, color='turquoise', linestyle='--')
         plt.axvspan(nodes_1[i][0], nodes_1[i][1], color='salmon')
         plt.title(f"Node {i} in Sequence 1", fontsize=20)
-        plt.xlabel("Time", fontsize=15)
+        if i + 1 == len(nodes_1):
+            plt.xlabel("Time", fontsize=15)
         plt.ylabel("Value", fontsize=15)
         # Get the mapping probabilities for the current node
         mapping_probs = mapping[i]
         # Plot the second sequence with the mapping probabilities
-        plt.subplot(1, 2, 2)
+        # Get the subplot of row i+1 column 2
+        plt.subplot(len(nodes_1), 2, 2 * i + 1 + 1)
         plt.plot(seq2, color='dodgerblue')
         plt.vlines(vlines2, ymin=0, ymax=1, color='turquoise', linestyle='--')
         for j in range(len(nodes_2)):
             plt.axvspan(nodes_2[j][0], nodes_2[j][1], color='salmon', alpha=mapping_probs[j].item())
         plt.title(f"Mapping of Node {i} to Sequence 2", fontsize=20)
-        plt.xlabel("Time", fontsize=15)
-        plt.suptitle(title, fontsize=30)
-        plt.tight_layout()
-        plt.savefig(join("plots", "mapping", "mapping_node_" + str(i) + ".png"))
-        plt.show()
+        if i + 1 == len(nodes_1):
+            plt.xlabel("Time", fontsize=15)
+
+    plt.suptitle(title, fontsize=30)
+    plt.tight_layout()
+    plt.show()
 
     # Create a video out of the mapping plots
     # make_a_video_from_a_set_of_images(join("plots", "mapping"), join("plots", "mapping", "mapping_video.mp4"), fps=1)

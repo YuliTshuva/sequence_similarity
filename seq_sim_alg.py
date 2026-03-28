@@ -56,7 +56,7 @@ def plot_loss(losses, scheduler_steps, title=""):
     plt.show()
 
 
-def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
+def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS, save_loss=False):
     """
     Given any two numeric sequences, compute the distance between them as:
     dist = min_sigma [ dist_features + alpha * dist_structure ]
@@ -126,16 +126,19 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
     model = SequenceSimilarity(initial_mapping, features_seq_1, features_seq_2, alpha=alpha)
 
     # Send to training loop
-    if PLOT_MODE:
-        model, best_match_loss, loss_history, scheduler_steps = train_model(model, save_loss=True)
-        # Plot the loss history
-        plot_loss(loss_history, scheduler_steps, title="Training Loss History")
+    if save_loss:
+        model, best_match_loss, f_loss, s_loss, scheduler_steps = train_model(model, save_loss=True)
     else:
-        model, best_match_loss = train_model(model)
+        model, best_match_loss = train_model(model, save_loss=False)
+
+    if PLOT_MODE:
+        # Plot the loss history
+        plot_loss(np.array(f_loss) + alpha*np.array(s_loss), scheduler_steps, title="Training Loss History")
 
     sigma = model.get_constrained_sigma()
 
-    # Return the best match loss as the distance between the two sequences and the mapping matrix
+    if save_loss:
+        return best_match_loss, sigma, f_loss, s_loss, scheduler_steps
     return best_match_loss, sigma
 
 

@@ -91,7 +91,7 @@ class SequenceSimilarity(nn.Module):
         s_dist = self.compute_structure_distance_vectorized(sigma)
 
         # 3. Combine
-        return f_dist + self.alpha * s_dist
+        return f_dist, self.alpha, s_dist
 
 
 def train_model(model, save_loss=False):
@@ -110,14 +110,15 @@ def train_model(model, save_loss=False):
 
     # Optionally track loss history
     if save_loss:
-        loss_history = []
+        f_loss, s_loss = [], []
         scheduler_steps = []
 
     # Train the model
     model.train()
     for epoch in range(EPOCHS):
         # Calculate the loss
-        match_loss = model()
+        model_output = model()
+        match_loss = model_output[0] + model_output[1] * model_output[2]
         # Backpropagation
         optimizer.zero_grad()
         match_loss.backward()
@@ -125,7 +126,8 @@ def train_model(model, save_loss=False):
 
         # Add loss to history if needed
         if save_loss:
-            loss_history.append(match_loss.item())
+            f_loss.append(model_output[0].detach().numpy())
+            s_loss.append(model_output[2].detach().numpy())
 
         # Check for improvement
         if match_loss.item() < 0.99 * best_loss:
@@ -151,5 +153,5 @@ def train_model(model, save_loss=False):
         model.load_state_dict(best_model_state)
 
     if save_loss:
-        return model, best_loss, loss_history, scheduler_steps
+        return model, best_loss, f_loss, s_loss, scheduler_steps
     return model, best_loss

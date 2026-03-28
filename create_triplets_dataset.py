@@ -89,6 +89,18 @@ def label_dataset():
         df.to_csv(join(DATASET_DIR, DATASET_NAME), index=False)
 
 
+def plot_losses(f_loss, s_loss, scheduler_steps, title=""):
+    plt.figure(figsize=(10, 5))
+    plt.plot(f_loss, color='hotpink', label='Feature Distance')
+    plt.plot(s_loss, color='darksalmon', label='Structure Distance')
+    plt.xlabel("Epoch", fontsize=15)
+    plt.ylabel("Value", fontsize=15)
+    plt.xticks([0] + scheduler_steps)
+    plt.title(title, fontsize=20)
+    plt.tight_layout()
+    plt.show()
+
+
 def explore_distance_assignment():
     # Get the dataset in paths format
     paths = [join(DATA_DIR, f) for f in os.listdir(DATA_DIR)]
@@ -103,14 +115,20 @@ def explore_distance_assignment():
         negative_seq = load_data(paths[idxs[2]])
 
         # Calculate distances
-        alpha = 10
-        features = [1.0] * 6 + [100] * 3
-        pos_distance, pos_mapping = seq_distance(anchor_seq, positive_seq, alpha=alpha)
-        neg_distance, neg_mapping = seq_distance(anchor_seq, negative_seq, alpha=alpha)
+        alpha = 0.1
+        features = [1.0] * 6 + [5] * 3
+        pos_distance, pos_mapping, f_loss1, s_loss1, sch_steps1 = seq_distance(anchor_seq, positive_seq, alpha=alpha,
+                                                                               feature_weights=features, save_loss=True)
+        neg_distance, neg_mapping, f_loss2, s_loss2, sch_steps2 = seq_distance(anchor_seq, negative_seq, alpha=alpha,
+                                                                               feature_weights=features, save_loss=True)
+
+        # Plot the loss curves for the positive pair
+        plot_losses(f_loss1, s_loss1, sch_steps1, title="Feature Distance Loss (Anchor to First Sample)")
+        plot_losses(f_loss2, s_loss2, sch_steps2, title="Feature Distance Loss (Anchor to First Sample)")
 
         # Annotate the choice
-        annotate_mapping(anchor_seq, positive_seq, pos_mapping, title="Anchor vs First Sample")
-        annotate_mapping(anchor_seq, negative_seq, neg_mapping, title="Anchor vs Second Sample")
+        annotate_mapping(anchor_seq, positive_seq, pos_mapping, title="Anchor to First Sample")
+        annotate_mapping(anchor_seq, negative_seq, neg_mapping, title="Anchor to Second Sample")
         print(f"Positive distance: {pos_distance:.4f}, Negative distance: {neg_distance:.4f}")
 
 
