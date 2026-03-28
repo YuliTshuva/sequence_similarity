@@ -4,14 +4,12 @@ Utility functions for similarity.
 """
 
 # Imports
+import cv2
+import os
 import pandas as pd
 import numpy as np
-import ruptures as rpt
 from pyts.approximation import SymbolicAggregateApproximation
 from pyts.preprocessing.discretizer import _uniform_bins
-from sklearn.metrics import mean_absolute_error
-from tslearn.metrics import dtw
-import time
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 from os.path import join
@@ -346,3 +344,76 @@ def sinkhorn(A, max_iter=1000, tol=1e-9):
             break
     return A
 
+
+def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to seq2"):
+    # Normalize sequences to be in [0, 1]
+    if np.max(seq1) - np.min(seq1) > 0:
+        seq1 = (seq1 - np.min(seq1)) / (np.max(seq1) - np.min(seq1))
+    else:
+        seq1 = np.zeros_like(seq1) + 0.5
+    if np.max(seq2) - np.min(seq2) > 0:
+        seq2 = (seq2 - np.min(seq2)) / (np.max(seq2) - np.min(seq2))
+    else:
+        seq2 = np.zeros_like(seq2) + 0.5
+
+    # Find the change points in both sequences
+    seq_1_change_points = change_points_detection(seq1)
+    seq_2_change_points = change_points_detection(seq2)
+
+    # Create nodes based on change points
+    nodes_1 = mark_nodes_limits(len(seq1), seq_1_change_points)
+    nodes_2 = mark_nodes_limits(len(seq2), seq_2_change_points)
+
+    # Get the separating lines between the nodes
+    vlines1 = [n[0] for n in nodes_1] + [nodes_1[-1][1]]
+    vlines2 = [n[0] for n in nodes_2] + [nodes_2[-1][1]]
+
+    # Plot the probability map of each node in seq1 to seq2
+    for i in range(len(nodes_1)):
+        # Get a figure for the current node
+        plt.subplots(1, 2, figsize=(13, 5))
+        plt.subplot(1, 2, 1)
+        plt.plot(seq1, color='royalblue')
+        plt.vlines(vlines1, ymin=0, ymax=1, color='turquoise', linestyle='--')
+        plt.axvspan(nodes_1[i][0], nodes_1[i][1], color='salmon')
+        plt.title(f"Node {i} in Sequence 1", fontsize=20)
+        plt.xlabel("Time", fontsize=15)
+        plt.ylabel("Value", fontsize=15)
+        # Get the mapping probabilities for the current node
+        mapping_probs = mapping[i]
+        # Plot the second sequence with the mapping probabilities
+        plt.subplot(1, 2, 2)
+        plt.plot(seq2, color='dodgerblue')
+        plt.vlines(vlines2, ymin=0, ymax=1, color='turquoise', linestyle='--')
+        for j in range(len(nodes_2)):
+            plt.axvspan(nodes_2[j][0], nodes_2[j][1], color='salmon', alpha=mapping_probs[j].item())
+        plt.title(f"Mapping of Node {i} to Sequence 2", fontsize=20)
+        plt.xlabel("Time", fontsize=15)
+        plt.suptitle(title, fontsize=30)
+        plt.tight_layout()
+        plt.savefig(join("plots", "mapping", "mapping_node_" + str(i) + ".png"))
+        plt.show()
+
+    # Create a video out of the mapping plots
+    # make_a_video_from_a_set_of_images(join("plots", "mapping"), join("plots", "mapping", "mapping_video.mp4"), fps=1)
+
+
+def make_a_video_from_a_set_of_images(image_folder, output_video_path, fps=1):
+    # Get all image files in the folder
+    images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
+    images.sort()  # Sort the images by name
+
+    # Read the first image to get the dimensions
+    frame = cv2.imread(os.path.join(image_folder, images[0]))
+    height, width, layers = frame.shape
+
+    # Create a video writer object
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for .mp4
+    video = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
+
+    # Write each image to the video
+    for image in images:
+        video.write(cv2.imread(os.path.join(image_folder, image)))
+
+    # Release the video writer object
+    video.release()

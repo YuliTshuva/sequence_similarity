@@ -5,9 +5,8 @@ Creating a dataset of triplets (anchor, positive, negative) for tuning our model
 
 # Imports
 import os
-
+from seq_sim_alg import seq_distance
 import matplotlib.pyplot as plt
-
 from utils import *
 
 # Constants
@@ -90,9 +89,33 @@ def label_dataset():
         df.to_csv(join(DATASET_DIR, DATASET_NAME), index=False)
 
 
+def explore_distance_assignment():
+    # Get the dataset in paths format
+    paths = [join(DATA_DIR, f) for f in os.listdir(DATA_DIR)]
+    # We will create N_TRIPLETS triplets for tuning
+    for _ in range(1):
+        # Randomly sample three different indices
+        idxs = np.random.choice(len(paths), size=3, replace=False)
+
+        # Load the sequences
+        anchor_seq = load_data(paths[idxs[0]])
+        positive_seq = load_data(paths[idxs[1]])
+        negative_seq = load_data(paths[idxs[2]])
+
+        # Calculate distances
+        alpha = 10
+        features = [1.0] * 6 + [100] * 3
+        pos_distance, pos_mapping = seq_distance(anchor_seq, positive_seq, alpha=alpha)
+        neg_distance, neg_mapping = seq_distance(anchor_seq, negative_seq, alpha=alpha)
+
+        # Annotate the choice
+        annotate_mapping(anchor_seq, positive_seq, pos_mapping, title="Anchor vs First Sample")
+        annotate_mapping(anchor_seq, negative_seq, neg_mapping, title="Anchor vs Second Sample")
+        print(f"Positive distance: {pos_distance:.4f}, Negative distance: {neg_distance:.4f}")
+
+
 def main():
-    # create_triplets_randomly()
-    label_dataset()
+    explore_distance_assignment()
 
 
 if __name__ == "__main__":

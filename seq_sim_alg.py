@@ -16,7 +16,7 @@ import numpy as np
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = True
+PLOT_MODE = False
 
 # Model's parameters
 ALPHA, FEATURE_WEIGHTS = 1, np.array([1] * 9)
@@ -150,6 +150,9 @@ def main():
     # Print the distance
     print("Distance between the two sequences:", distance)
     print("The best mapping matrix (sigma):\n", sigma)
+
+    # Annotate the mapping on the sequences
+    annotate_mapping(seq1, seq2, sigma)
 
 
 if __name__ == "__main__":

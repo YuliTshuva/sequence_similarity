@@ -12,6 +12,35 @@ DATASET_DIR = "datasets"
 DATASET_NAME = "triplets_random.csv"
 
 
+def check_default_parameters():
+    """Got 12/27 successful triplets with default parameters."""
+    # Load the dataset
+    df = pd.read_csv(join(DATASET_DIR, DATASET_NAME))
+    # Filter out rows without labels
+    df = df[df["first_sample_label"].notna()]
+    # Get the anchor, positive, negative paths and labels
+    anchors = df["anchor"].tolist()
+    positives = df["first_sample"].tolist()
+    negatives = df["second_sample"].tolist()
+
+    # Iterate over the triplets and compute the loss
+    total_success = 0
+    for anchor_path, positive_path, negative_path in tqdm(zip(anchors, positives, negatives)):
+        anchor_seq = load_data(join(anchor_path.split("\\")[0], anchor_path.split("\\")[1]))
+        positive_seq = load_data(join(positive_path.split("\\")[0], positive_path.split("\\")[1]))
+        negative_seq = load_data(join(negative_path.split("\\")[0], negative_path.split("\\")[1]))
+
+        # Compute distances
+        pos_distance, _ = seq_distance(anchor_seq, positive_seq)
+        neg_distance, _ = seq_distance(anchor_seq, negative_seq)
+
+        # Check if the positive is closer than the negative
+        if pos_distance < neg_distance:
+            total_success += 1
+
+    print("Default parameters success rate:", total_success, "/", len(anchors))
+
+
 def tune_parameters():
     # Load the dataset
     df = pd.read_csv(join(DATASET_DIR, DATASET_NAME))
