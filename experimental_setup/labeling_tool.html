@@ -299,10 +299,6 @@ function drawSignal(canvas, pts, color, h) {
   ctx.beginPath();
   pts.forEach((v, i) => { const x = (i/(pts.length-1))*W; i===0 ? ctx.moveTo(x,fy(v)) : ctx.lineTo(x,fy(v)); });
   ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
-  ctx.beginPath();
-  pts.forEach((v, i) => { const x = (i/(pts.length-1))*W; i===0 ? ctx.moveTo(x,fy(v)) : ctx.lineTo(x,fy(v)); });
-  ctx.lineTo(W, fy(0)); ctx.lineTo(0, fy(0)); ctx.closePath();
-  ctx.fillStyle = color + '20'; ctx.fill();
 }
 
 /* ── Grid view ── */
