@@ -16,7 +16,7 @@ import numpy as np
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = False
+PLOT_MODE = True
 
 # Model's parameters
 ALPHA, FEATURE_WEIGHTS = 1, np.array([1] * 9)

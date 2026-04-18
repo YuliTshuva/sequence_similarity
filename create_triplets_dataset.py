@@ -4,10 +4,9 @@ Creating a dataset of triplets (anchor, positive, negative) for tuning our model
 """
 
 # Imports
-import os
 from seq_sim_alg import seq_distance
-import matplotlib.pyplot as plt
 from utils import *
+from generate_sequences import get_stock_trend
 
 # Constants
 DATA_DIR = "data"

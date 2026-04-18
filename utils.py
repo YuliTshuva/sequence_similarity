@@ -403,9 +403,6 @@ def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to 
     plt.tight_layout()
     plt.show()
 
-    # Create a video out of the mapping plots
-    # make_a_video_from_a_set_of_images(join("plots", "mapping"), join("plots", "mapping", "mapping_video.mp4"), fps=1)
-
 
 def make_a_video_from_a_set_of_images(image_folder, output_video_path, fps=1):
     # Get all image files in the folder
