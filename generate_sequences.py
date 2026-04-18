@@ -515,7 +515,7 @@ def permute_sequence(seq, permutation_level=0.05):
     return permuted_seq
 
 
-def shrink_and_stretch_sequence(seq, change_level_level=0.05, factor=2.0):
+def shrink_and_stretch_sequence(seq, change_level=0.05, factor=2.0):
     """Adds random noise to a sequence."""
     # Normalize sequences to be in [0, 1]
     if np.max(seq) - np.min(seq) > 0:
@@ -529,7 +529,7 @@ def shrink_and_stretch_sequence(seq, change_level_level=0.05, factor=2.0):
     nodes_1 = mark_nodes_limits(len(seq), seq_1_change_points)
 
     # Get a permutation of a sample of the nodes (the number of nodes to permute is determined by the permutation level)
-    nodes_to_change = np.random.choice(len(nodes_1), size=int(len(nodes_1) * change_level_level), replace=False)
+    nodes_to_change = np.random.choice(len(nodes_1), size=int(len(nodes_1) * change_level), replace=False)
 
     # Stretch/shrink the segments in the sequence
     changed_sequence = []
@@ -554,7 +554,7 @@ def main():
     seq1 = load_data("data/Atkinson_cycle_44.csv")
     noisy_seq = add_noise_to_sequence(seq1, noise_level=0.1)
     permuted_sequence = permute_sequence(seq1, permutation_level=0.5)
-    stretched_sequence = shrink_and_stretch_sequence(seq1, change_level_level=0.4, factor=4.5)
+    stretched_sequence = shrink_and_stretch_sequence(seq1, change_level=0.4, factor=4.5)
     # plot_two_sequences(seq1, noisy_seq, suptitle="Adding Noise to a sequence")
     plot_two_sequences(seq1, stretched_sequence, suptitle="Stretching/Shrinking a sequence")
 

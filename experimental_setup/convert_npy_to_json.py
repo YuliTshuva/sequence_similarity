@@ -17,19 +17,11 @@ Expected folder structure:
             anchor.npy
             ...
         ...
-
-Usage:
-    python convert_npy_to_json.py --data_dir /path/to/data_root --output data.json
-
-    # Or with explicit list of folders:
-    python convert_npy_to_json.py --folders sample_0 sample_1 sample_3 --output data.json
 """
 
-import argparse
 import json
 import os
 import sys
-
 import numpy as np
 
 
@@ -56,39 +48,10 @@ def load_sample(folder_path: str) -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Convert .npy sample folders to JSON for the labeling tool.")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "--data_dir",
-        type=str,
-        help="Root directory containing sample_* sub-folders. All sub-folders are included, sorted by name.",
-    )
-    group.add_argument(
-        "--folders",
-        nargs="+",
-        type=str,
-        help="Explicit list of sample folder paths to include (in order).",
-    )
-    parser.add_argument(
-        "--output",
-        type=str,
-        default="data.json",
-        help="Output JSON file path (default: data.json)",
-    )
-    args = parser.parse_args()
-
-    if args.data_dir:
-        root = args.data_dir
-        if not os.path.isdir(root):
-            sys.exit(f"Error: {root} is not a directory.")
-        folders = sorted(
-            [os.path.join(root, d) for d in os.listdir(root) if os.path.isdir(os.path.join(root, d))]
-        )
-    else:
-        folders = args.folders
-
-    if not folders:
-        sys.exit("Error: No sample folders found.")
+    # Set the variables
+    output = "data.json"
+    root = "labeling_data"
+    folders = sorted([os.path.join(root, d) for d in os.listdir(root) if os.path.isdir(os.path.join(root, d))])
 
     samples = []
     for folder in folders:
@@ -104,11 +67,11 @@ def main():
         sys.exit("Error: No valid samples loaded.")
 
     output_data = {"samples": samples}
-    with open(args.output, "w") as f:
+    with open(output, "w") as f:
         json.dump(output_data, f)
 
-    print(f"\nDone. {len(samples)} sample(s) written to: {args.output}")
-    print(f"File size: {os.path.getsize(args.output) / 1024:.1f} KB")
+    print(f"\nDone. {len(samples)} sample(s) written to: {output}")
+    print(f"File size: {os.path.getsize(output) / 1024:.1f} KB")
 
 
 if __name__ == "__main__":

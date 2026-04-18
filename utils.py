@@ -423,3 +423,16 @@ def make_a_video_from_a_set_of_images(image_folder, output_video_path, fps=1):
 
     # Release the video writer object
     video.release()
+
+
+def increase_sequence_resolution(seq, new_length):
+    """
+    Increases the resolution of a sequence by linear interpolation.
+    """
+    old_length = len(seq)
+    if old_length == new_length:
+        return seq
+    x_old = np.arange(old_length)
+    x_new = np.linspace(0, old_length - 1, new_length)
+    seq_new = np.interp(x_new, x_old, seq)
+    return seq_new
