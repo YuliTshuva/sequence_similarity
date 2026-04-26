@@ -111,6 +111,19 @@
   .done-screen { text-align: center; padding: 4rem 2rem; }
   .done-screen h2 { font-size: 22px; font-weight: 500; margin-bottom: 0.5rem; }
   .done-screen p { color: var(--text-secondary); margin-bottom: 1.5rem; }
+
+  /* ── qualification screen ── */
+  #qual { display: none; }
+  .qual-intro { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; line-height: 1.7; font-size: 14px; color: var(--text-secondary); }
+  .qual-intro strong { color: var(--text-primary); }
+  .qual-intro ul { margin: 0.5rem 0 0 1.2rem; }
+  .qual-feedback { border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.25rem; font-size: 14px; line-height: 1.6; display: none; }
+  .qual-feedback.pass { background: #eaf6f0; border: 1px solid #5ec496; color: #1a5c38; }
+  .qual-feedback.fail { background: var(--red-light); border: 1px solid var(--red-border); color: var(--red); }
+  @media (prefers-color-scheme: dark) {
+    .qual-feedback.pass { background: #0d2e1e; border-color: #2d7a52; color: #7dd4a8; }
+  }
+  .qual-feedback .fb-title { font-weight: 600; margin-bottom: 4px; font-size: 15px; }
 </style>
 </head>
 <body>
@@ -134,6 +147,54 @@
     <div class="err-msg" id="errMsg"></div>
   </div>
 
+  <!-- ── Qualification ── -->
+  <div id="qual">
+    <div class="top-bar">
+      <h2>Qualification test</h2>
+      <span class="progress-pill">Before you begin</span>
+    </div>
+
+    <div class="qual-intro">
+      <strong>Please read before starting.</strong> In each labeling task you will see an anchor signal and several candidates. Your job is to:
+      <ul>
+        <li>Rank candidates from <strong>most similar</strong> to <strong>least similar</strong> to the anchor by dragging them.</li>
+        <li>Mark any candidate that is <strong>not similar at all</strong> as rejected.</li>
+      </ul>
+      <br>To make sure you understand the task, complete this short warm-up example. The correct answer will be checked automatically.
+    </div>
+
+    <div>
+      <div class="section-label">Anchor sequence</div>
+      <div class="anchor-card">
+        <canvas id="qualAnchorCanvas" height="70"></canvas>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="section-label" style="margin-bottom:0">Candidates — drag to rank · reject if not similar</div>
+      <div class="mode-toggle">
+        <button class="active" id="qualModeGridBtn" onclick="qualSetMode('grid')">Grid</button>
+        <button id="qualModeRankBtn" onclick="qualSetMode('rank')">Rank view</button>
+      </div>
+    </div>
+
+    <div id="qualGridView">
+      <div class="candidates-grid" id="qualCandGrid"></div>
+    </div>
+    <div id="qualRankView" style="display:none">
+      <div class="rank-list" id="qualRankList"></div>
+    </div>
+
+    <div id="qualFeedback" class="qual-feedback"></div>
+
+    <div class="bottom-bar">
+      <span class="status-msg" id="qualStatusMsg">Rank the candidates, reject the one that doesn't belong, then submit.</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" id="qualSubmitBtn" onclick="submitQual()">Check my answer →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── App ── -->
   <div id="app">
     <div class="top-bar">
@@ -152,10 +213,10 @@
       <p>When you finish ranking, you can submit the ranking by clicking on "Submit & next"
         and move on to the nage page. It will download the ranking file as .json file. Please keep it.
         There are 11 pages of ranking overall, but you can decide to stop ranking at any page you reach.
-        After you finish ranking, please send me all the .json files downloaded to your computer during the experiment.</p>
+        After you finish ranking, please send me all the .json files downloaded to your computer during
+        the experiment, grouped into a zip file.</p>
     </div>
-    <br>
-    <br>
+    <br><br>
 
     <div>
       <div class="section-label">Anchor sequence — <span id="sampleName"></span></div>
@@ -227,8 +288,8 @@ fetch('/auto-data')
   })
   .then(json => {
     if (!json.samples || !Array.isArray(json.samples)) throw new Error('Missing "samples" array.');
-    sampleData = json.samples;
-    startApp();
+    window._pendingSampleData = json.samples;
+    showQual();
   })
   .catch(() => {
     showManualLoader('Auto-load unavailable — drop your <code>data.json</code> below, or run <code>python serve.py</code> for automatic loading.');
@@ -244,8 +305,8 @@ function readFile(file) {
         if (!Array.isArray(s.anchor)) throw new Error(`Sample ${i}: missing anchor array.`);
         if (!Array.isArray(s.candidates) || s.candidates.length < 9) throw new Error(`Sample ${i}: need 9 candidates.`);
       });
-      sampleData = json.samples;
-      startApp();
+      window._pendingSampleData = json.samples;
+      showQual();
     } catch(err) {
       document.getElementById('errMsg').textContent = 'Error: ' + err.message;
     }
@@ -267,19 +328,205 @@ function morphSig(a, amount, seed) {
   return a.map(v => Math.max(-2, Math.min(2, v+(rng()-0.5)*amount)));
 }
 function loadDemo() {
-  sampleData = Array.from({length:5}, (_, s) => {
+  window._pendingSampleData = Array.from({length:5}, (_, s) => {
     const anchor = randSig(s*100+42);
     const candidates = Array.from({length:9}, (_, i) =>
       i===8 ? randSig(s*77+i*31) : morphSig(anchor, [0.15,0.3,0.5,0.6,0.8,0.9,1.1,1.4][i], s*13+i)
     );
     return { name: `sample_${s}`, anchor, candidates };
   });
-  startApp();
+  showQual();
 }
 
-/* ── App init ── */
-function startApp() {
+/* ── Qualification test ── */
+// Candidates: 0 = identical sine, 1 = cropped sine, 2 = random noise
+// Correct answer: rank [0, 1] (identical first, cropped second), reject [2]
+const QUAL_N = 120;
+function makeSine() {
+  return Array.from({length: QUAL_N}, (_, i) => Math.sin(2 * Math.PI * i / 30));
+}
+function makeCropped() {
+  // Same sine but only the first third has signal; rest is flat zero
+  return Array.from({length: QUAL_N}, (_, i) => i < QUAL_N / 3 ? Math.sin(2 * Math.PI * i / 30) : 0);
+}
+function makeNoise() {
+  const rng = mulberry32(42);
+  return Array.from({length: QUAL_N}, () => (rng() - 0.5) * 4);
+}
+
+const qualData = {
+  anchor: makeSine(),
+  candidates: [makeSine(), makeCropped(), makeNoise()],
+  // Ground truth: candidate 0 = rank 1, candidate 1 = rank 2, candidate 2 = rejected
+  correctRank: [0, 1],   // indices in order
+  correctReject: new Set([2])
+};
+
+let qualRankOrder = [0, 1, 2];
+let qualRejected = new Set();
+let qualMode = 'grid';
+let qualDragSrc = null;
+let qualPassed = false;
+
+function showQual() {
   document.getElementById('loader').style.display = 'none';
+  document.getElementById('qual').style.display = 'block';
+  qualRankOrder = [0, 1, 2];
+  qualRejected = new Set();
+  document.getElementById('qualFeedback').style.display = 'none';
+  document.getElementById('qualSubmitBtn').textContent = 'Check my answer →';
+  document.getElementById('qualSubmitBtn').onclick = submitQual;
+  document.getElementById('qualStatusMsg').textContent = 'Rank the candidates, reject the one that doesn\'t belong, then submit.';
+  setTimeout(() => {
+    drawSignal(document.getElementById('qualAnchorCanvas'), qualData.anchor, '#378ADD', 70);
+    qualRenderGrid();
+  }, 20);
+}
+
+function qualSetMode(mode) {
+  qualMode = mode;
+  document.getElementById('qualGridView').style.display = mode === 'grid' ? '' : 'none';
+  document.getElementById('qualRankView').style.display = mode === 'rank' ? '' : 'none';
+  document.getElementById('qualModeGridBtn').classList.toggle('active', mode === 'grid');
+  document.getElementById('qualModeRankBtn').classList.toggle('active', mode === 'rank');
+  if (mode === 'rank') qualRenderRankList();
+}
+
+const QUAL_NAMES = ['Candidate A', 'Candidate B', 'Candidate C'];
+const QUAL_COLORS = ['#378ADD', '#1D9E75', '#D4537E'];
+
+function qualRenderGrid() {
+  const grid = document.getElementById('qualCandGrid');
+  grid.innerHTML = '';
+  qualRankOrder.forEach(ci => {
+    const isRej = qualRejected.has(ci);
+    const validRank = qualRankOrder.filter(x => !qualRejected.has(x)).indexOf(ci);
+    const card = document.createElement('div');
+    card.className = 'cand-card' + (isRej ? ' rejected' : '');
+    card.dataset.ci = ci;
+    card.draggable = !isRej;
+    card.innerHTML = `<div class="sig-label">
+      <span>${QUAL_NAMES[ci]}</span>
+      ${!isRej && validRank >= 0 ? `<span class="rank-badge">${validRank + 1}</span>` : ''}
+    </div>
+    <canvas height="60"></canvas>
+    <button class="reject-btn ${isRej ? 'undo' : ''}" onclick="qualToggleReject(${ci})">${isRej ? 'Restore' : 'Not similar'}</button>`;
+    qualSetupGridDrag(card);
+    grid.appendChild(card);
+    setTimeout(() => drawSignal(card.querySelector('canvas'), qualData.candidates[ci], isRej ? '#888780' : QUAL_COLORS[ci], 60), 10);
+  });
+}
+
+function qualRenderRankList() {
+  const list = document.getElementById('qualRankList');
+  list.innerHTML = '';
+  const active = qualRankOrder.filter(ci => !qualRejected.has(ci));
+  active.forEach((ci, rank) => {
+    const row = document.createElement('div');
+    row.className = 'rank-row'; row.dataset.ci = ci; row.draggable = true;
+    row.innerHTML = `<span class="rank-num">${rank + 1}</span>
+      <canvas height="40"></canvas>
+      <span class="row-name">${QUAL_NAMES[ci]}</span>
+      <button class="reject-btn" onclick="qualToggleReject(${ci})">Reject</button>`;
+    qualSetupRankDrag(row);
+    list.appendChild(row);
+    setTimeout(() => drawSignal(row.querySelector('canvas'), qualData.candidates[ci], QUAL_COLORS[ci], 40), 10);
+  });
+  if (qualRejected.size > 0) {
+    const sep = document.createElement('div');
+    sep.innerHTML = `<div class="section-label" style="margin-top:14px;margin-bottom:6px;">Rejected</div>`;
+    list.appendChild(sep);
+    [...qualRejected].forEach(ci => {
+      const row = document.createElement('div');
+      row.className = 'rank-row'; row.style.opacity = '0.4';
+      row.innerHTML = `<span class="rank-num" style="color:var(--text-tertiary)">—</span>
+        <canvas height="40"></canvas>
+        <span class="row-name">${QUAL_NAMES[ci]}</span>
+        <button class="reject-btn undo" onclick="qualToggleReject(${ci})">Restore</button>`;
+      list.appendChild(row);
+      setTimeout(() => drawSignal(row.querySelector('canvas'), qualData.candidates[ci], '#888780', 40), 10);
+    });
+  }
+}
+
+function qualToggleReject(ci) {
+  if (qualRejected.has(ci)) qualRejected.delete(ci); else qualRejected.add(ci);
+  qualRenderGrid(); qualRenderRankList();
+}
+
+function qualSetupGridDrag(card) {
+  card.addEventListener('dragstart', () => { qualDragSrc = card; card.classList.add('dragging'); });
+  card.addEventListener('dragend', () => { card.classList.remove('dragging'); document.querySelectorAll('#qualCandGrid .cand-card').forEach(c => c.classList.remove('drag-over')); });
+  card.addEventListener('dragover', e => { e.preventDefault(); if (card !== qualDragSrc) card.classList.add('drag-over'); });
+  card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+  card.addEventListener('drop', e => {
+    e.preventDefault(); card.classList.remove('drag-over');
+    if (!qualDragSrc || qualDragSrc === card) return;
+    const from = +qualDragSrc.dataset.ci, to = +card.dataset.ci;
+    const fi = qualRankOrder.indexOf(from), ti = qualRankOrder.indexOf(to);
+    qualRankOrder.splice(fi, 1); qualRankOrder.splice(ti, 0, from);
+    qualRenderGrid(); qualRenderRankList();
+  });
+}
+
+function qualSetupRankDrag(row) {
+  row.addEventListener('dragstart', () => { qualDragSrc = row; row.classList.add('dragging'); });
+  row.addEventListener('dragend', () => { row.classList.remove('dragging'); document.querySelectorAll('#qualRankList .rank-row').forEach(r => r.classList.remove('drag-over')); });
+  row.addEventListener('dragover', e => { e.preventDefault(); if (row !== qualDragSrc) row.classList.add('drag-over'); });
+  row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+  row.addEventListener('drop', e => {
+    e.preventDefault(); row.classList.remove('drag-over');
+    if (!qualDragSrc || qualDragSrc === row) return;
+    const from = +qualDragSrc.dataset.ci, to = +row.dataset.ci;
+    const fi = qualRankOrder.indexOf(from), ti = qualRankOrder.indexOf(to);
+    qualRankOrder.splice(fi, 1); qualRankOrder.splice(ti, 0, from);
+    qualRenderGrid(); qualRenderRankList();
+  });
+}
+
+function submitQual() {
+  const activeRank = qualRankOrder.filter(ci => !qualRejected.has(ci));
+  const fb = document.getElementById('qualFeedback');
+
+  // Check rejected set matches
+  const rejCorrect = qualData.correctReject.size === qualRejected.size &&
+    [...qualData.correctReject].every(ci => qualRejected.has(ci));
+
+  // Check rank order of non-rejected matches (must equal correctRank exactly)
+  const rankCorrect = activeRank.length === qualData.correctRank.length &&
+    activeRank.every((ci, i) => ci === qualData.correctRank[i]);
+
+  fb.style.display = 'block';
+
+  if (rejCorrect && rankCorrect) {
+    qualPassed = true;
+    fb.className = 'qual-feedback pass';
+    fb.innerHTML = `<div class="fb-title">✓ Correct — well done!</div>
+      You correctly identified <strong>Candidate A</strong> (identical sine) as most similar,
+      <strong>Candidate B</strong> (cropped sine) as second, and rejected
+      <strong>Candidate C</strong> (random noise) as not similar. You're ready to label.`;
+    document.getElementById('qualSubmitBtn').textContent = 'Start labeling →';
+    document.getElementById('qualSubmitBtn').onclick = () => {
+      document.getElementById('qual').style.display = 'none';
+      startApp();
+    };
+    document.getElementById('qualStatusMsg').textContent = 'Great job! Press "Start labeling" to begin.';
+  } else {
+    qualPassed = false;
+    fb.className = 'qual-feedback fail';
+    let hint = '';
+    if (!rejCorrect) hint += 'Hint: one candidate is completely unrelated to the anchor — reject it. ';
+    if (!rankCorrect && rejCorrect) hint += 'Hint: think about which remaining candidate is most identical to the anchor. ';
+    fb.innerHTML = `<div class="fb-title">✗ Not quite right</div>
+      ${hint}Please adjust your answer and try again.`;
+    document.getElementById('qualStatusMsg').textContent = 'Review the hint above and adjust your ranking.';
+  }
+}
+
+/* wire startApp to go through qual first */
+function startApp() {
+  sampleData = window._pendingSampleData;
+  document.getElementById('qual').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   currentSample = 0;
   allLabels = [];
