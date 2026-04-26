@@ -479,6 +479,12 @@ def add_noise_to_sequence(seq, noise_level=0.05):
     linear_interp = np.linspace(seq[node_end], seq[next_node_start], int(len(seq) * noise_level))
     # Add some random noise to the linear interpolation
     linear_interp += np.random.normal(0, 0.03, size=linear_interp.shape)
+    # Add a bias to the linear interpolation to make it more likely to be above or below the original values
+    linear_interp += np.random.normal(0, 0.3)
+
+    # Smooth aggressively to get a clear trend
+    window_size = 8
+    linear_interp = np.convolve(linear_interp, np.ones(window_size) / window_size, mode="valid")
 
     # Insert the linear interpolation into the sequence at the end of the current node
     noisy_seq = np.insert(seq, next_node_start, linear_interp)
