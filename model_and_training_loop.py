@@ -23,24 +23,28 @@ from torch.nn import Parameter
 
 
 class SequenceSimilarity(nn.Module):
-    def __init__(self, initial_match_matrix, features1, features2, alpha):
+    def __init__(self, initial_match_matrix, features1, features2, alpha, gamma):
         super(SequenceSimilarity, self).__init__()
-        # Store alpha and beta as buffers (not learnable parameters)
+
+        # 1. Store alpha and gamma as buffers (not learnable parameters)
         self.register_buffer('alpha', torch.tensor(alpha, dtype=torch.float32))
+        self.register_buffer('gamma', torch.tensor(gamma, dtype=torch.float32))
 
         # 2. Learnable Match Matrix in Log-Space
-        # We use Log-space so that when we apply exp() in forward,
-        # the values are strictly positive, which prevents division by zero.
-        # Adding epsilon prevents log(0)
         epsilon = 1e-8
         log_init = torch.log(torch.tensor(initial_match_matrix, dtype=torch.float32) + epsilon)
         self.sigma_logits = Parameter(log_init)
 
         # 3. Features as buffers
-        self.register_buffer('features1', torch.tensor(features1, dtype=torch.float32))
-        self.register_buffer('features2', torch.tensor(features2, dtype=torch.float32))
+        f1 = torch.tensor(features1, dtype=torch.float32)
+        f2 = torch.tensor(features2, dtype=torch.float32)
+        self.register_buffer('features1', f1)
+        self.register_buffer('features2', f2)
 
-        # 4. Pre-compute Structural Distance Buffers
+        # 4. Pre-compute Feature Distance Matrix (fixed, since features are constant)
+        self.register_buffer('feat_dist_matrix', torch.cdist(f1, f2, p=2) ** 2)
+
+        # 5. Pre-compute Structural Distance Buffers
         n1, n2 = features1.shape[0], features2.shape[0]
         idx1 = torch.arange(n1, dtype=torch.float32)
         idx2 = torch.arange(n2, dtype=torch.float32)
@@ -49,51 +53,46 @@ class SequenceSimilarity(nn.Module):
         self.register_buffer('D1', D1)
         self.register_buffer('D2', D2)
 
+        # 6. Pre-compute Index Proximity Distance Buffer (assumes n1 == n2)
+        n = n1
+        idx = torch.arange(n, dtype=torch.float32)
+        self.register_buffer('index_dist', (idx.unsqueeze(1) - idx.unsqueeze(0)) ** 2)
+
     def get_constrained_sigma(self):
-        # Apply a threshold to prevent tiny values, which can cause instability in the distance calculations.
         sigma = torch.exp(self.sigma_logits) * (self.sigma_logits > -4)
-
-        # Normalize the rows such that they will sum to 1
         sigma = sigma / (sigma.sum(dim=1, keepdim=True) + 1e-9)
-
         return sigma
 
     def compute_features_distance(self, sigma):
-        # Efficient squared Euclidean distance
-        dist_matrix = torch.cdist(self.features1, self.features2, p=2) ** 2
-        return torch.sum(sigma * dist_matrix)
+        # feat_dist_matrix is pre-computed, so this is now a simple weighted sum
+        return torch.sum(sigma * self.feat_dist_matrix)
 
     def compute_structure_distance_vectorized(self, sigma):
-        # Use ACTUAL marginals of current sigma (not fixed targets)
-        row_sums = sigma.sum(dim=1)  # shape: (n1,)
-        col_sums = sigma.sum(dim=0)  # shape: (n2,)
+        row_sums = sigma.sum(dim=1)
+        col_sums = sigma.sum(dim=0)
 
-        # Term A: Σᵢⱼ rᵢ · rⱼ · D1²ᵢⱼ
         row_weights = row_sums.unsqueeze(1) * row_sums.unsqueeze(0)
         term_a = torch.sum(row_weights * (self.D1 ** 2))
 
-        # Term B: Σₖₗ cₖ · cₗ · D2²ₖₗ
         col_weights = col_sums.unsqueeze(1) * col_sums.unsqueeze(0)
         term_b = torch.sum(col_weights * (self.D2 ** 2))
 
-        # Term C: -2 Σᵢⱼₖₗ σᵢₖ · σⱼₗ · |i−j| · |k−l|
         inter_matrix = torch.matmul(torch.matmul(sigma.t(), self.D1), sigma)
         term_c = -2 * torch.sum(inter_matrix * self.D2)
 
         return term_a + term_b + term_c
 
+    def compute_index_proximity_cost(self, sigma):
+        return torch.sum(sigma * self.index_dist)
+
     def forward(self):
-        # 1. Generate the normalized sigma (DO NOT re-assign self.sigma_logits)
         sigma = self.get_constrained_sigma()
 
-        # 2. Compute distances
-        f_dist = self.compute_features_distance(sigma)
-        s_dist = self.compute_structure_distance_vectorized(sigma)
+        f_dist   = self.compute_features_distance(sigma)
+        s_dist   = self.compute_structure_distance_vectorized(sigma)
+        idx_dist = self.compute_index_proximity_cost(sigma)
 
-        # 3. Combine
-        return f_dist, self.alpha, s_dist
-
-
+        return f_dist, self.alpha, s_dist, self.gamma, idx_dist
 def train_model(model, save_loss=False):
     # Set the optimizer
     lr = LR

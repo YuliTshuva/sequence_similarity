@@ -480,7 +480,7 @@ def add_noise_to_sequence(seq, noise_level=0.05):
     # Add some random noise to the linear interpolation
     linear_interp += np.random.normal(0, 0.03, size=linear_interp.shape)
     # Add a bias to the linear interpolation to make it more likely to be above or below the original values
-    linear_interp += np.random.normal(0, 0.3)
+    linear_interp += np.random.uniform(low=-0.5, high=0.5)
 
     # Smooth aggressively to get a clear trend
     window_size = 8

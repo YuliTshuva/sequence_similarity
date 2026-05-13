@@ -16,10 +16,10 @@ import numpy as np
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = True
+PLOT_MODE = False
 
 # Model's parameters
-ALPHA, FEATURE_WEIGHTS = 1, np.array([1] * 9)
+ALPHA, FEATURE_WEIGHTS = 0.01, np.array([1] * 11)
 
 # Make sure the feature weights sum to 1
 FEATURE_WEIGHTS = FEATURE_WEIGHTS / np.sum(FEATURE_WEIGHTS)
@@ -45,13 +45,19 @@ def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None, vlin
     plt.show()
 
 
-def plot_loss(losses, scheduler_steps, title=""):
-    plt.figure(figsize=(10, 5))
-    plt.plot(losses, color='darksalmon')
+def plot_loss(loss1, loss2, loss3, scheduler_steps, title=""):
+    plt.figure(figsize=(8, 5))
+    x = range(len(loss1))
+    plt.plot(x, loss1, color='turquoise', label="Total Distance")
+    plt.plot(x, loss2, color='hotpink', label="Feature Distance")
+    plt.plot(x, loss3, color='royalblue', label="Structural Distance")
     plt.xlabel("Epoch", fontsize=15)
     plt.ylabel("Loss Value", fontsize=15)
     plt.xticks([0] + scheduler_steps)
+    # plt.yticks([1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1, 1e2, 1e3])
+    # plt.yscale('log')
     plt.title(title, fontsize=20)
+    plt.legend()
     plt.tight_layout()
     plt.show()
 
@@ -93,11 +99,23 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS, save_
         annotate_change_points_selection(seq2)
 
     # Create nodes based on change points
-    nodes_1 = mark_nodes_limits(len(seq1), seq_1_change_points)
-    nodes_2 = mark_nodes_limits(len(seq2), seq_2_change_points)
+    nodes_1 = mark_nodes_limits(seq1, len(seq1), seq_1_change_points)
+    nodes_2 = mark_nodes_limits(seq2, len(seq2), seq_2_change_points)
 
     if PLOT_MODE:
         plot_two_sequences(seq1, seq2, suptitle="Sequences with Nodes Limits",
+                           vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
+                           vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
+                           vlines_label="Node Limits")
+
+    # Apply agglomerative merging
+    if len(nodes_1) > len(nodes_2):
+        nodes_1 = merge_intervals(nodes_1, len(nodes_2))
+    elif len(nodes_2) > len(nodes_1):
+        nodes_2 = merge_intervals(nodes_2, len(nodes_1))
+
+    if PLOT_MODE:
+        plot_two_sequences(seq1, seq2, suptitle="Sequences after agglomerative Merging",
                            vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
                            vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
                            vlines_label="Node Limits")
@@ -131,9 +149,10 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS, save_
     else:
         model, best_match_loss = train_model(model, save_loss=False)
 
-    if PLOT_MODE:
-        # Plot the loss history
-        plot_loss(np.array(f_loss) + alpha*np.array(s_loss), scheduler_steps, title="Training Loss History")
+    # if PLOT_MODE:
+    # Plot the loss history
+    plot_loss(np.array(f_loss) + alpha*np.array(s_loss), np.array(f_loss),
+              alpha*np.array(s_loss), scheduler_steps, title="Training Loss History")
 
     sigma = model.get_constrained_sigma()
 
@@ -144,18 +163,29 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS, save_
 
 def main():
     # Read two sequences
-    seq1 = load_data("data/Atkinson_cycle_44.csv")
-    seq2 = load_data("data/Atkinson_cycle_2.csv")
+    seq1 = np.load(join("experimental_setup", "labeling_data", "sample_1", "anchor.npy"))
+    seq2 = np.load(join("experimental_setup", "labeling_data", "sample_2", "anchor.npy"))
 
     # Compute distance
-    distance, sigma = seq_distance(seq1, seq2)
+    distance, sigma, f_loss, s_loss, scheduler_steps = seq_distance(seq1, seq2, save_loss=True, alpha=ALPHA)
 
     # Print the distance
     print("Distance between the two sequences:", distance)
-    print("The best mapping matrix (sigma):\n", sigma)
+    # print("The best mapping matrix (sigma):\n", sigma)
+
+    # Plot sigma as a heatmap
+    plt.figure(figsize=(8, 6))
+    plt.imshow(sigma.detach().numpy(), cmap='viridis', aspect='auto')
+    plt.colorbar(label='Mapping Strength')
+    plt.xlabel('Nodes in Sequence 2', fontsize=15)
+    plt.ylabel('Nodes in Sequence 1', fontsize=15)
+    plt.title(f'Mapping Matrix (Sigma) - Alpha={ALPHA:.1f}', fontsize=20)
+    plt.tight_layout()
+    plt.show()
 
     # Annotate the mapping on the sequences
-    annotate_mapping(seq1, seq2, sigma)
+    if PLOT_MODE:
+        annotate_mapping(seq1, seq2, sigma, save_path=join("plots", "alpha_effect", f"alpha_{ALPHA:.1f}.png"))
 
 
 if __name__ == "__main__":

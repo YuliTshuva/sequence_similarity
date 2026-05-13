@@ -71,7 +71,7 @@
 
   .section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 8px; }
 
-  .anchor-card { background: var(--bg-primary); border: 1.5px solid var(--blue); border-radius: var(--radius-lg); padding: 12px 16px; margin-bottom: 1.5rem; }
+  .anchor-card { background: var(--bg-primary); border: 1.5px solid var(--blue); border-radius: var(--radius-lg); padding: 12px 16px; margin-bottom: 1.5rem; width: calc(50% - 5px); }
   .anchor-card .sig-name { font-size: 12px; font-weight: 500; color: var(--blue-dark); margin-bottom: 6px; }
 
   .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -524,8 +524,21 @@ function submitQual() {
 }
 
 /* wire startApp to go through qual first */
+function shuffle(arr) {
+  // Fisher-Yates
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+let shuffledOrder = [];   // original indices in the order they'll be shown
+
 function startApp() {
-  sampleData = window._pendingSampleData;
+  const raw = window._pendingSampleData;
+  shuffledOrder = shuffle(Array.from({length: raw.length}, (_, i) => i));
+  sampleData = shuffledOrder.map(i => raw[i]);
   document.getElementById('qual').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   currentSample = 0;
@@ -672,8 +685,9 @@ function collectLabel() {
   const s = sampleData[currentSample];
   const ranked = rankOrder.filter(ci => !rejected.has(ci));
   return {
-    sample_index: currentSample,
-    sample_name: s.name || `sample_${currentSample}`,
+    original_sample_index: shuffledOrder[currentSample],
+    display_order: currentSample + 1,
+    sample_name: s.name || `sample_${shuffledOrder[currentSample]}`,
     ranked_by_similarity: ranked.map((ci, i) => ({ rank: i+1, candidate: `candidate${ci+1}` })),
     rejected: [...rejected].map(ci => `candidate${ci+1}`),
     timestamp: new Date().toISOString()

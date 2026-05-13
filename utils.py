@@ -20,7 +20,7 @@ TIMEOUT = 10  # seconds
 rcParams['font.family'] = 'Times New Roman'
 
 # Hyperparameters
-AMPLITUDE_PERCENTAGE, SEGMENT_PERCENTAGE, MIN_SEGMENT_PERCENTAGE = 3, 5, 2
+AMPLITUDE_PERCENTAGE, SEGMENT_PERCENTAGE, MIN_SEGMENT_PERCENTAGE = 3, 5, 4
 CONVOLVE_KERNEL_SIZE = 10
 CHANGE_THRESHOLD = 5
 
@@ -105,8 +105,10 @@ def feature_points(f):
     segment_size = 1
     for i in range(1, len(f)):
         if segment_max - segment_min > amp * AMPLITUDE_PERCENTAGE / 100:
+            # Update segment size
+            segment_size -= 1
             # Check segment size
-            if segment_size > len(f) * SEGMENT_PERCENTAGE / 100 or segment_start == 0:
+            if segment_size > len(f) * SEGMENT_PERCENTAGE / 100:
                 # Add feature points
                 feature_pts.append(segment_start)  # Start of segment
                 feature_pts.append(i - 2)  # End of segment
@@ -125,8 +127,9 @@ def feature_points(f):
         feature_pts.append(len(f) - 1)
 
     if 0 not in feature_pts:
-        feature_pts.append(0)
+        feature_pts[0] = 0
     if len(f) - 1 not in feature_pts:
+        feature_pts.append(feature_pts[-1] + 1)
         feature_pts.append(len(f) - 1)
 
     return feature_pts
@@ -173,7 +176,7 @@ def change_points_detection(input_sequence):
     return signs_fps
 
 
-def mark_nodes_limits(len_seq, change_points):
+def mark_nodes_limits(f, len_seq, change_points):
     """
     Return a list of tuples representing the limits of the nodes in the graph, based on the change points.
     The tuples are in the form of (start_index, end_index).
@@ -186,6 +189,8 @@ def mark_nodes_limits(len_seq, change_points):
     for i in range(0, len(change_points) - 1, 2):
         # Extract the start and end indices of the current segment
         start = change_points[i]
+        if start == 760:
+            pass
         # Check if we need to attend gap from the previous segment
         if accumulated_gap:
             accumulated_gap = False
@@ -196,11 +201,12 @@ def mark_nodes_limits(len_seq, change_points):
             nodes_limits.append((start, end))
             break
 
-        next_start = change_points[i + 2]
+        next_start, next_end = change_points[i + 2], change_points[i + 3]
         # Calculate the difference between one segment's end and the next segment's start
         gap = int((next_start - 1) - (end + 1) + 1)
+        next_segment_y_size = f[next_start:next_end + 1].max() - f[next_start:next_end + 1].min()
         # If the gap is 1, we can merge the two segments into one
-        if gap == 1:
+        if gap <= 1:
             nodes_limits.append((start, end))
         elif gap > len_seq * MIN_SEGMENT_PERCENTAGE / 100:
             nodes_limits.append((start, end))
@@ -227,7 +233,6 @@ def extract_node_features(segment, len_sequence):
     :param segment: A segment of values representing a segment of the original segment.
     :return: A feature vector containing the extracted features.
     """
-    # Calculate the mean curvature of the segment
     curvature = np.mean(np.abs(np.diff(segment, n=2)))
 
     # Find the first derivative of the segment
@@ -250,17 +255,20 @@ def extract_node_features(segment, len_sequence):
     threshold = CHANGE_THRESHOLD * der_amp / 100
 
     # Calculate the percentage of the segment that is increasing, decreasing, or constant
-    increasing = np.sum(np.diff(segment) > threshold) / len(segment)
-    decreasing = np.sum(np.diff(segment) < threshold * (-1)) / len(segment)
-    constant = 1 - increasing - decreasing
+    sharp_increasing = np.sum(np.diff(segment) > threshold) / len(segment)
+    light_increasing = np.sum(np.diff(segment) > threshold / 3) / len(segment) - sharp_increasing
+    sharp_decreasing = np.sum(np.diff(segment) < threshold * (-1)) / len(segment)
+    light_decreasing = np.sum(np.diff(segment) < threshold / 3 * (-1)) / len(segment) - sharp_decreasing
+    constant = 1 - sharp_increasing - light_increasing - sharp_decreasing - light_decreasing
 
     # Summarize the features in a vector
     features_vector = np.array([curvature, mean_diff, mean_abs_diff, mean_value, amplitude,
-                                length, increasing, decreasing, constant])
+                                length, sharp_increasing, light_increasing, sharp_decreasing,
+                                light_decreasing, constant])
 
     # Balance the features to be in the same scale
-    features_vector = features_vector / np.array([0.018, 0.002, 0.018, 0.550,
-                                                  0.32193304, 0.18082032, 0.3333333, 0.3333333, 0.333333])
+    features_vector = features_vector / np.array([0.018, 0.002, 0.018, 0.550, 0.32193304,
+                                                  0.18082032, 0.2, 0.2, 0.2, 0.2, 0.2])
 
     return features_vector
 
@@ -350,7 +358,39 @@ def sinkhorn(A, max_iter=1000, tol=1e-9):
     return A
 
 
-def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to seq2"):
+def merge_intervals(intervals: list[tuple[int, int]], target_size: int) -> list[tuple[int, int]]:
+    """
+    Reduce a list of intervals to target_size by agglomeratively merging
+    the closest adjacent pairs until the desired length is reached.
+
+    Merge criterion: smallest combined span (end - start) of two adjacent intervals.
+    """
+    if target_size >= len(intervals):
+        return intervals
+    if target_size <= 1:
+        return [(intervals[0][0], intervals[-1][1])]
+
+    intervals = [list(i) for i in intervals]  # work with mutable copies
+
+    while len(intervals) > target_size:
+        # Find the adjacent pair with the smallest merged span
+        best_idx = None
+        best_span = float('inf')
+
+        for i in range(len(intervals) - 1):
+            merged_span = intervals[i + 1][1] - intervals[i][0]
+            if merged_span < best_span:
+                best_span = merged_span
+                best_idx = i
+
+        # Merge the best pair into one interval
+        intervals[best_idx] = [intervals[best_idx][0], intervals[best_idx + 1][1]]
+        intervals.pop(best_idx + 1)
+
+    return [tuple(i) for i in intervals]
+
+
+def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to seq2", save_path=None):
     # Normalize sequences to be in [0, 1]
     if np.max(seq1) - np.min(seq1) > 0:
         seq1 = (seq1 - np.min(seq1)) / (np.max(seq1) - np.min(seq1))
@@ -366,8 +406,13 @@ def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to 
     seq_2_change_points = change_points_detection(seq2)
 
     # Create nodes based on change points
-    nodes_1 = mark_nodes_limits(len(seq1), seq_1_change_points)
-    nodes_2 = mark_nodes_limits(len(seq2), seq_2_change_points)
+    nodes_1 = mark_nodes_limits(seq1, len(seq1), seq_1_change_points)
+    nodes_2 = mark_nodes_limits(seq2, len(seq2), seq_2_change_points)
+
+    if len(nodes_1) > len(nodes_2):
+        nodes_1 = merge_intervals(nodes_1, len(nodes_2))
+    elif len(nodes_2) > len(nodes_1):
+        nodes_2 = merge_intervals(nodes_2, len(nodes_1))
 
     # Get the separating lines between the nodes
     vlines1 = [n[0] for n in nodes_1] + [nodes_1[-1][1]]
@@ -401,6 +446,8 @@ def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to 
 
     plt.suptitle(title, fontsize=30)
     plt.tight_layout()
+    if save_path is not None:
+        plt.savefig(save_path)
     plt.show()
 
 
