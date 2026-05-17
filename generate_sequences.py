@@ -9,6 +9,7 @@ from matplotlib import rcParams
 import yfinance as yf
 from sequence_similarity.seq_sim_alg import plot_two_sequences
 from sequence_similarity.utils import change_points_detection, mark_nodes_limits, load_data
+import random
 
 # Constants
 R = 1.0
@@ -466,7 +467,7 @@ def add_noise_to_sequence(seq, noise_level=0.05):
     seq_1_change_points = change_points_detection(seq)
 
     # Create nodes based on change points
-    nodes_1 = mark_nodes_limits(len(seq), seq_1_change_points)
+    nodes_1 = mark_nodes_limits(seq, len(seq), seq_1_change_points)
 
     # Randomly pick a node
     random_node_index = np.random.randint(0, len(nodes_1) - 1)
@@ -478,9 +479,9 @@ def add_noise_to_sequence(seq, noise_level=0.05):
     # Create a linear interpolation of size len(seq)*noise_level between the value of the end of the current node and the start of the next node
     linear_interp = np.linspace(seq[node_end], seq[next_node_start], int(len(seq) * noise_level))
     # Add some random noise to the linear interpolation
-    linear_interp += np.random.normal(0, 0.03, size=linear_interp.shape)
+    linear_interp += np.random.normal(0, 0.1, size=linear_interp.shape)
     # Add a bias to the linear interpolation to make it more likely to be above or below the original values
-    linear_interp += np.random.uniform(low=-0.5, high=0.5)
+    # linear_interp += np.random.uniform(low=-0.5, high=0.5)
 
     # Smooth aggressively to get a clear trend
     window_size = 8
@@ -492,7 +493,7 @@ def add_noise_to_sequence(seq, noise_level=0.05):
     return noisy_seq
 
 
-def permute_sequence(seq, permutation_level=0.05):
+def permute_sequence(seq, permutation_level):
     """Adds random noise to a sequence."""
     # Normalize sequences to be in [0, 1]
     if np.max(seq) - np.min(seq) > 0:
@@ -503,10 +504,10 @@ def permute_sequence(seq, permutation_level=0.05):
     seq_1_change_points = change_points_detection(seq)
 
     # Create nodes based on change points
-    nodes_1 = mark_nodes_limits(len(seq), seq_1_change_points)
+    nodes_1 = mark_nodes_limits(seq, len(seq), seq_1_change_points)
 
     # Get a permutation of a sample of the nodes (the number of nodes to permute is determined by the permutation level)
-    nodes_to_permute = np.random.choice(len(nodes_1), size=int(len(nodes_1) * permutation_level), replace=False)
+    nodes_to_permute = np.random.choice(len(nodes_1), size=max(int(len(nodes_1) * permutation_level), 2), replace=False)
     permutation = np.random.permutation(nodes_to_permute)
     # Permute the nodes in the sequence according to the permutation
     permuted_nodes = []
@@ -521,7 +522,7 @@ def permute_sequence(seq, permutation_level=0.05):
     return permuted_seq
 
 
-def shrink_and_stretch_sequence(seq, change_level=0.05, factor=2.0):
+def shrink_and_stretch_sequence(seq, change_level=0.05, factor=3.0):
     """Adds random noise to a sequence."""
     # Normalize sequences to be in [0, 1]
     if np.max(seq) - np.min(seq) > 0:
@@ -532,7 +533,7 @@ def shrink_and_stretch_sequence(seq, change_level=0.05, factor=2.0):
     seq_1_change_points = change_points_detection(seq)
 
     # Create nodes based on change points
-    nodes_1 = mark_nodes_limits(len(seq), seq_1_change_points)
+    nodes_1 = mark_nodes_limits(seq, len(seq), seq_1_change_points)
 
     # Get a permutation of a sample of the nodes (the number of nodes to permute is determined by the permutation level)
     nodes_to_change = np.random.choice(len(nodes_1), size=int(len(nodes_1) * change_level), replace=False)
@@ -543,7 +544,7 @@ def shrink_and_stretch_sequence(seq, change_level=0.05, factor=2.0):
         if i in nodes_to_change:
             # Stretch/shrink the segment by the factor
             segment = seq[nodes_1[i][0]:nodes_1[i][1] + 1]
-            new_length = int(len(segment) * factor ** np.random.uniform(-1, 1))
+            new_length = int(len(segment) * factor)
             changed_segment = np.interp(np.linspace(0, len(segment) - 1, new_length), np.arange(len(segment)),
                                         segment)
             changed_sequence.append(changed_segment)
@@ -557,12 +558,12 @@ def shrink_and_stretch_sequence(seq, change_level=0.05, factor=2.0):
 
 
 def main():
-    seq1 = load_data("data/Atkinson_cycle_44.csv")
+    seq1 = np.load("experimental_setup/labeling_data/sample_0/anchor.npy")
     noisy_seq = add_noise_to_sequence(seq1, noise_level=0.1)
-    permuted_sequence = permute_sequence(seq1, permutation_level=0.5)
+    permuted_sequence = permute_sequence(seq1, permutation_level=0.3)
     stretched_sequence = shrink_and_stretch_sequence(seq1, change_level=0.4, factor=4.5)
     # plot_two_sequences(seq1, noisy_seq, suptitle="Adding Noise to a sequence")
-    plot_two_sequences(seq1, stretched_sequence, suptitle="Stretching/Shrinking a sequence")
+    plot_two_sequences(seq1, permuted_sequence, suptitle="Stretching/Shrinking a sequence")
 
 
 if __name__ == "__main__":

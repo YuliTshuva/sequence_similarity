@@ -45,7 +45,7 @@
     }
   }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-tertiary); color: var(--text-primary); min-height: 100vh; }
-  .shell { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem; }
+  .shell { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
 
   /* ── loader screen ── */
   #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; gap: 1.5rem; text-align: center; }
@@ -71,7 +71,7 @@
 
   .section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: 8px; }
 
-  .anchor-card { background: var(--bg-primary); border: 1.5px solid var(--blue); border-radius: var(--radius-lg); padding: 12px 16px; margin-bottom: 1.5rem; width: calc(50% - 5px); }
+  .anchor-card { background: var(--bg-primary); border: 1.5px solid var(--blue); border-radius: var(--radius-lg); padding: 12px 16px; margin-bottom: 1.5rem; width: 33.333%; margin-left: auto; margin-right: auto; }
   .anchor-card .sig-name { font-size: 12px; font-weight: 500; color: var(--blue-dark); margin-bottom: 6px; }
 
   .toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -80,7 +80,7 @@
   .mode-toggle button.active { background: var(--bg-secondary); color: var(--text-primary); font-weight: 500; }
 
   /* grid */
-  .candidates-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+  .candidates-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
   .cand-card { background: var(--bg-primary); border: 0.5px solid var(--border-light); border-radius: var(--radius-lg); padding: 10px 12px; cursor: grab; user-select: none; transition: border-color 0.15s, transform 0.1s; }
   .cand-card:active { cursor: grabbing; }
   .cand-card.dragging { opacity: 0.4; transform: scale(0.97); }
@@ -166,7 +166,7 @@
     <div>
       <div class="section-label">Anchor sequence</div>
       <div class="anchor-card">
-        <canvas id="qualAnchorCanvas" height="70"></canvas>
+        <canvas id="qualAnchorCanvas" height="110"></canvas>
       </div>
     </div>
 
@@ -221,7 +221,7 @@
     <div>
       <div class="section-label">Anchor sequence — <span id="sampleName"></span></div>
       <div class="anchor-card">
-        <canvas id="anchorCanvas" height="70"></canvas>
+        <canvas id="anchorCanvas" height="110"></canvas>
       </div>
     </div>
 
@@ -347,7 +347,7 @@ function makeSine() {
 }
 function makeCropped() {
   // Same sine but only the first third has signal; rest is flat zero
-  return Array.from({length: QUAL_N}, (_, i) => i < QUAL_N / 3 ? Math.sin(2 * Math.PI * i / 30) : 0);
+  return Array.from({length: QUAL_N}, (_, i) => i < QUAL_N / 1.5 ? Math.sin(2 * Math.PI * i / 30) : 0);
 }
 function makeNoise() {
   const rng = mulberry32(42);
@@ -378,7 +378,7 @@ function showQual() {
   document.getElementById('qualSubmitBtn').onclick = submitQual;
   document.getElementById('qualStatusMsg').textContent = 'Rank the candidates, reject the one that doesn\'t belong, then submit.';
   setTimeout(() => {
-    drawSignal(document.getElementById('qualAnchorCanvas'), qualData.anchor, '#378ADD', 70);
+    drawSignal(document.getElementById('qualAnchorCanvas'), qualData.anchor, '#378ADD', 110);
     qualRenderGrid();
   }, 20);
 }
@@ -409,11 +409,11 @@ function qualRenderGrid() {
       <span>${QUAL_NAMES[ci]}</span>
       ${!isRej && validRank >= 0 ? `<span class="rank-badge">${validRank + 1}</span>` : ''}
     </div>
-    <canvas height="60"></canvas>
+    <canvas height="100"></canvas>
     <button class="reject-btn ${isRej ? 'undo' : ''}" onclick="qualToggleReject(${ci})">${isRej ? 'Restore' : 'Not similar'}</button>`;
     qualSetupGridDrag(card);
     grid.appendChild(card);
-    setTimeout(() => drawSignal(card.querySelector('canvas'), qualData.candidates[ci], isRej ? '#888780' : QUAL_COLORS[ci], 60), 10);
+    setTimeout(() => drawSignal(card.querySelector('canvas'), qualData.candidates[ci], isRej ? '#888780' : QUAL_COLORS[ci], 100), 10);
   });
 }
 
@@ -554,7 +554,7 @@ function initSample() {
   document.getElementById('sampleName').textContent = sampleData[currentSample].name || `sample_${currentSample}`;
   document.getElementById('statusMsg').textContent = 'Rank sequences by similarity, reject outliers, then submit.';
   setTimeout(() => {
-    drawSignal(document.getElementById('anchorCanvas'), sampleData[currentSample].anchor, '#378ADD', 70);
+    drawSignal(document.getElementById('anchorCanvas'), sampleData[currentSample].anchor, '#378ADD', 110);
     if (currentMode === 'grid') renderGrid(); else renderRankList();
   }, 20);
 }
@@ -593,11 +593,11 @@ function renderGrid() {
       <span>Candidate ${ci + 1}</span>
       ${!isRej && validRank >= 0 ? `<span class="rank-badge">${validRank+1}</span>` : ''}
     </div>
-    <canvas data-ci="${ci}" height="60"></canvas>
+    <canvas data-ci="${ci}" height="100"></canvas>
     <button class="reject-btn ${isRej?'undo':''}" onclick="toggleReject(${ci})">${isRej?'Restore':'Not similar'}</button>`;
     setupGridDrag(card);
     grid.appendChild(card);
-    setTimeout(() => drawSignal(card.querySelector('canvas'), data.candidates[ci], isRej ? '#888780' : COLORS[ci%COLORS.length], 60), 10);
+    setTimeout(() => drawSignal(card.querySelector('canvas'), data.candidates[ci], isRej ? '#888780' : COLORS[ci%COLORS.length], 100), 10);
   });
 }
 

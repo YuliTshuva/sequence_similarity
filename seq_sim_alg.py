@@ -16,10 +16,10 @@ import numpy as np
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = False
+PLOT_MODE = True
 
 # Model's parameters
-ALPHA, FEATURE_WEIGHTS = 0.01, np.array([1] * 11)
+ALPHA, BETA, FEATURE_WEIGHTS = 1, 0.0003, np.array([1] * 11)
 
 # Make sure the feature weights sum to 1
 FEATURE_WEIGHTS = FEATURE_WEIGHTS / np.sum(FEATURE_WEIGHTS)
@@ -141,7 +141,8 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS, save_
     initial_mapping /= row_sums
 
     # Set a model instance
-    model = SequenceSimilarity(initial_mapping, features_seq_1, features_seq_2, alpha=alpha)
+    model = SequenceSimilarity(initial_mapping, normalized_features_seq_1,
+                               normalized_features_seq_2, alpha=alpha, beta=BETA)
 
     # Send to training loop
     if save_loss:
@@ -149,10 +150,10 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS, save_
     else:
         model, best_match_loss = train_model(model, save_loss=False)
 
-    # if PLOT_MODE:
-    # Plot the loss history
-    plot_loss(np.array(f_loss) + alpha*np.array(s_loss), np.array(f_loss),
-              alpha*np.array(s_loss), scheduler_steps, title="Training Loss History")
+    if PLOT_MODE:
+        # Plot the loss history
+        plot_loss(np.array(f_loss) + alpha*np.array(s_loss), np.array(f_loss),
+                  alpha*np.array(s_loss), scheduler_steps, title="Training Loss History")
 
     sigma = model.get_constrained_sigma()
 
@@ -184,8 +185,8 @@ def main():
     plt.show()
 
     # Annotate the mapping on the sequences
-    if PLOT_MODE:
-        annotate_mapping(seq1, seq2, sigma, save_path=join("plots", "alpha_effect", f"alpha_{ALPHA:.1f}.png"))
+    # if PLOT_MODE:
+    annotate_mapping(seq1, seq2, sigma)
 
 
 if __name__ == "__main__":

@@ -7,8 +7,9 @@ Creating a dataset for labeling.
 import numpy as np
 import os
 from os.path import join
-from generate_sequences import get_stock_trend, shrink_and_stretch_sequence, permute_sequence, add_noise_to_sequence
+from generate_sequences import get_stock_trend, shrink_and_stretch_sequence, permute_sequence, add_noise_to_sequence, plot_two_sequences
 from utils import increase_sequence_resolution
+import shutil
 
 # Constants
 LABELING_DIR = join("experimental_setup", "labeling_data")
@@ -27,6 +28,8 @@ def main():
         # Create a path for the sequence
         seq_path = join(LABELING_DIR, f"sample_{idx}")
         # Create the folder
+        if os.path.exists(seq_path):
+            shutil.rmtree(seq_path)
         os.makedirs(seq_path, exist_ok=False)
 
         # Save the sequence as anchor.npy
@@ -37,11 +40,11 @@ def main():
         noisy_seq1 = add_noise_to_sequence(seq, noise_level=0.1)
         noisy_seq2 = add_noise_to_sequence(seq, noise_level=0.25)
         # Permute the original sequence
-        permuted_seq1 = permute_sequence(seq, permutation_level=0.20)
-        permuted_seq2 = permute_sequence(seq, permutation_level=0.40)
+        permuted_seq1 = permute_sequence(seq, permutation_level=0.34)
+        permuted_seq2 = permute_sequence(seq, permutation_level=0.67)
         # Shrink and stretch the original sequence
-        stretched_seq1 = shrink_and_stretch_sequence(seq, change_level=0.25)
-        stretched_seq2 = shrink_and_stretch_sequence(seq, change_level=0.5)
+        stretched_seq1 = shrink_and_stretch_sequence(seq, change_level=0.34)
+        stretched_seq2 = shrink_and_stretch_sequence(seq, change_level=0.67)
         # Sample two other sequences
         other_seq1 = sequences[(idx + 1) % len(sequences)]
         other_seq2 = sequences[(idx + 2) % len(sequences)]
