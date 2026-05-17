@@ -20,7 +20,9 @@ TIMEOUT = 10  # seconds
 rcParams['font.family'] = 'Times New Roman'
 
 # Hyperparameters
-AMPLITUDE_PERCENTAGE, SEGMENT_PERCENTAGE, MIN_SEGMENT_PERCENTAGE = 3, 5, 4
+AMPLITUDE_PERCENTAGE, ROBUSTNESS_PERCENTAGE = 3, 3
+MIN_SEGMENT_PERCENTAGE = 5
+SEGMENT_PERCENTAGE = 3
 CONVOLVE_KERNEL_SIZE = 10
 CHANGE_THRESHOLD = 5
 
@@ -135,6 +137,25 @@ def feature_points(f):
     return feature_pts
 
 
+def robust_partition(f, feature_pts):
+    result = list(feature_pts)  # Work on a copy
+    i = 0
+    while True:
+        n = len(result)
+        if 2 * i + 2 >= n:
+            break
+        segment_value = f[result[2 * i]]
+        next_segment_value = f[result[2 * i + 2]]
+        if segment_value == next_segment_value:
+            if result[2 * i + 2] - result[2 * i + 1] < len(f) * ROBUSTNESS_PERCENTAGE / 100:
+                # Drop elements at 2*i+1 and 2*i+2
+                result = result[:2 * i + 1] + result[2 * i + 3:]
+                # Don't increment i — recheck from same position after removal
+                continue
+        i += 1
+    return result
+
+
 def change_points_detection(input_sequence):
     # Copy the input sequence to avoid modifying the original data
     f = input_sequence.copy()
@@ -172,6 +193,8 @@ def change_points_detection(input_sequence):
 
     # Extract feature points out of signs
     signs_fps = feature_points(signs)
+    # Robust the partition
+    signs_fps = robust_partition(signs, signs_fps)
 
     return signs_fps
 
@@ -314,6 +337,8 @@ def annotate_change_points_selection(input_sequence):
 
     # Extract feature points out of signs
     signs_fps = feature_points(signs)
+    # Robust the partition
+    signs_fps = robust_partition(signs, signs_fps)
 
     # Plot the data
     ax[0].scatter(range(len(signs)), signs, color='royalblue')

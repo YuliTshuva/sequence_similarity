@@ -39,6 +39,9 @@ def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None, vlin
     for ax_i in axes:
         ax_i.set_xlabel("Timestep", fontsize=21)
     axes[0].set_ylabel("Value", fontsize=21)
+    if vlines1 and vlines2:
+        axes[0].set_xticks(vlines1)
+        axes[1].set_xticks(vlines2)
     axes[0].legend(fontsize=15)
     axes[1].legend(fontsize=15)
     plt.tight_layout()
@@ -107,18 +110,7 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS, save_
                            vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
                            vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
                            vlines_label="Node Limits")
-
-    # Apply agglomerative merging
-    if len(nodes_1) > len(nodes_2):
-        nodes_1 = merge_intervals(nodes_1, len(nodes_2))
-    elif len(nodes_2) > len(nodes_1):
-        nodes_2 = merge_intervals(nodes_2, len(nodes_1))
-
-    if PLOT_MODE:
-        plot_two_sequences(seq1, seq2, suptitle="Sequences after agglomerative Merging",
-                           vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
-                           vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
-                           vlines_label="Node Limits")
+    return
 
     # Extract features for each node
     len_seq1, len_seq2 = len(seq1), len(seq2)
