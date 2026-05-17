@@ -8,6 +8,7 @@ Implementing the graph distance algorithm for sequence similarity.
 5) Refine the mapping using the optimization expression.
 6) Compute the similarity score based on the final mapping.
 """
+import matplotlib.pyplot as plt
 
 # Imports
 from utils import *
@@ -16,7 +17,7 @@ import numpy as np
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = True
+PLOT_MODE = False
 
 # Model's parameters
 ALPHA, BETA, FEATURE_WEIGHTS = 1, 0.0003, np.array([1] * 11)
@@ -110,7 +111,6 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS, save_
                            vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
                            vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
                            vlines_label="Node Limits")
-    return
 
     # Extract features for each node
     len_seq1, len_seq2 = len(seq1), len(seq2)
@@ -172,7 +172,9 @@ def main():
     plt.colorbar(label='Mapping Strength')
     plt.xlabel('Nodes in Sequence 2', fontsize=15)
     plt.ylabel('Nodes in Sequence 1', fontsize=15)
-    plt.title(f'Mapping Matrix (Sigma) - Alpha={ALPHA:.1f}', fontsize=20)
+    plt.title(f'Mapping Matrix (Sigma)', fontsize=20)
+    plt.xticks(range(sigma.shape[1]))
+    plt.yticks(range(sigma.shape[0]))
     plt.tight_layout()
     plt.show()
 

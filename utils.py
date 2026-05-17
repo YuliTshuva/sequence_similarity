@@ -128,6 +128,11 @@ def feature_points(f):
         feature_pts.append(segment_start)
         feature_pts.append(len(f) - 1)
 
+    # If no feature points were found, return the whole sequence as one segment
+    if len(feature_pts) == 0:
+        return [0, len(f) - 1]
+
+    # Make sure the first and last points are included as feature points
     if 0 not in feature_pts:
         feature_pts[0] = 0
     if len(f) - 1 not in feature_pts:
@@ -433,11 +438,6 @@ def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to 
     # Create nodes based on change points
     nodes_1 = mark_nodes_limits(seq1, len(seq1), seq_1_change_points)
     nodes_2 = mark_nodes_limits(seq2, len(seq2), seq_2_change_points)
-
-    if len(nodes_1) > len(nodes_2):
-        nodes_1 = merge_intervals(nodes_1, len(nodes_2))
-    elif len(nodes_2) > len(nodes_1):
-        nodes_2 = merge_intervals(nodes_2, len(nodes_1))
 
     # Get the separating lines between the nodes
     vlines1 = [n[0] for n in nodes_1] + [nodes_1[-1][1]]
