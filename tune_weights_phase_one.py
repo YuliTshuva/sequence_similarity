@@ -19,17 +19,17 @@ from scipy.stats import kendalltau
 from os.path import join
 
 from mine_data import load_sequences
-from seq_sim_alg import seq_distance, ALPHA
+from seq_sim_alg import seq_distance, ALPHA, FEATURE_WEIGHTS
 from compare_baselines import dtw_distance, lcss_distance
 
 # ── config ────────────────────────────────────────────────────────────────────
 
 DATA_PATH      = join("data", "stock_sequences.npz")
 META_PATH      = join("data", "stock_sequences_meta.json")
-N_CANDIDATES   = 100        # number of candidates to rank against the anchor
+N_CANDIDATES   = 20        # number of candidates to rank against the anchor
 INTERP_LEN     = 1000      # match main() in seq_sim_alg.py
-TOP_K          = 20        # evaluate agreement on top-k ranking
-N_TRIALS       = 100        # Optuna trials (each trial = one weight config)
+TOP_K          = 10        # evaluate agreement on top-k ranking
+N_TRIALS       = 50        # Optuna trials (each trial = one weight config)
 SEED           = 42
 ANCHOR_IDX     = None      # set to an int to fix the anchor, or None to pick randomly
 RESULTS_PATH   = "results/tuned_weights.json"
@@ -80,8 +80,8 @@ def precompute_baseline_rankings(anchor, candidates, candidate_ids):
         "dtw":  sorted(dtw_scores,  key=dtw_scores.__getitem__),
         "lcss": sorted(lcss_scores, key=lcss_scores.__getitem__),
     }
-    print(f"  DTW  top-5: {rankings['dtw'][:5]}")
-    print(f"  LCSS top-5: {rankings['lcss'][:5]}\n")
+    print(f"  DTW  top-10: {rankings['dtw'][:10]}")
+    print(f"  LCSS top-10: {rankings['lcss'][:10]}\n")
     return rankings
 
 
@@ -106,8 +106,8 @@ def top_k_kendall_tau(our_ranking, baseline_ranking, k):
 def objective(trial, anchor, candidates, candidate_ids, baseline_rankings):
     # Sample weights in log-space so all are positive
     raw_weights = np.array([
-        trial.suggest_float(f"w_{name}", 1e-2, 20.0, log=True)
-        for name in FEATURE_NAMES
+        weight + trial.suggest_float(f"w_{name}", 1e-2, 1.0, log=True)
+        for weight, name in zip(FEATURE_WEIGHTS, FEATURE_NAMES)
     ])
     weights = raw_weights / raw_weights.sum()
 
@@ -126,7 +126,7 @@ def objective(trial, anchor, candidates, candidate_ids, baseline_rankings):
     ]
     mean_tau = float(np.mean(tau_scores))
     print(f"  trial {trial.number:3d}: τ = {mean_tau:.4f}  "
-          f"our top-5 = {our_ranking[:5]}  weights = {np.round(weights, 3)}")
+          f"our top-10 = {our_ranking[:10]}  weights = {np.round(weights, 3)}")
     return mean_tau
 
 

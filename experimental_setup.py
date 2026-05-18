@@ -396,7 +396,7 @@ def plot_top_similar(
                 )
                 ax.set_ylim(-0.05, 1.05)
                 ax.grid(alpha=0.25)
-                ax.legend(fontsize=7, loc="upper right")
+                ax.legend(fontsize=7, loc="upper left")
 
                 # Row label on leftmost subplot
                 if col_idx == 0:
