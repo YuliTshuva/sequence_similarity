@@ -17,7 +17,6 @@ import numpy as np
 import optuna
 from scipy.stats import kendalltau
 from os.path import join
-
 from mine_data import load_sequences
 from seq_sim_alg import seq_distance, ALPHA, FEATURE_WEIGHTS
 from compare_baselines import dtw_distance, lcss_distance
