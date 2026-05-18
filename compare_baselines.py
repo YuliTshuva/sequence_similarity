@@ -104,7 +104,7 @@ def all_distances(a, b, dtw_band: float = 0.1, lcss_eps: float = 0.1) -> dict:
         "dtw_sakoe_chiba": dtw_sakoe_chiba(a, b, band=dtw_band),
         "lcss": lcss_distance(a, b, eps=lcss_eps),
         "pearson": pearson_distance(a, b),
-        "ours": seq_distance(a, b)[0]
+        "ours": seq_distance(a, b)[0] + seq_distance(b, a)[0]
     }
 
 

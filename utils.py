@@ -136,8 +136,7 @@ def feature_points(f):
     if 0 not in feature_pts:
         feature_pts[0] = 0
     if len(f) - 1 not in feature_pts:
-        feature_pts.append(feature_pts[-1] + 1)
-        feature_pts.append(len(f) - 1)
+        feature_pts[-1] = len(f) - 1
 
     return feature_pts
 
@@ -152,12 +151,17 @@ def robust_partition(f, feature_pts):
         segment_value = f[result[2 * i]]
         next_segment_value = f[result[2 * i + 2]]
         if segment_value == next_segment_value:
-            if result[2 * i + 2] - result[2 * i + 1] < len(f) * ROBUSTNESS_PERCENTAGE / 100:
-                # Drop elements at 2*i+1 and 2*i+2
-                result = result[:2 * i + 1] + result[2 * i + 3:]
-                # Don't increment i — recheck from same position after removal
-                continue
+            # if result[2 * i + 2] - result[2 * i + 1] < len(f) * ROBUSTNESS_PERCENTAGE / 100:
+            # Drop elements at 2*i+1 and 2*i+2
+            result = result[:2 * i + 1] + result[2 * i + 3:]
+            # Don't increment i — recheck from same position after removal
+            continue
         i += 1
+
+    # Move the start of each segment to the end of the former
+    for i in range(2, len(result), 2):
+        result[i] = result[i - 1] + 1
+
     return result
 
 
@@ -438,6 +442,12 @@ def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to 
     # Create nodes based on change points
     nodes_1 = mark_nodes_limits(seq1, len(seq1), seq_1_change_points)
     nodes_2 = mark_nodes_limits(seq2, len(seq2), seq_2_change_points)
+
+    # Merge intervals of the sequence with the less nodes
+    if len(nodes_1) < len(nodes_2):
+        nodes_2 = merge_intervals(nodes_2, len(nodes_1))
+    elif len(nodes_2) < len(nodes_1):
+        nodes_1 = merge_intervals(nodes_1, len(nodes_2))
 
     # Get the separating lines between the nodes
     vlines1 = [n[0] for n in nodes_1] + [nodes_1[-1][1]]

@@ -11,8 +11,8 @@ from torch.optim import Adam
 
 # Constants
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-LR, MIN_LR = 1, 1e-2
-PATIENCE = 5
+LR, MIN_LR = 1, 1e-6
+PATIENCE = 50
 EPOCHS = 5000
 
 
@@ -45,8 +45,8 @@ class SequenceSimilarity(nn.Module):
         # 5. Pre-compute and normalize Index Proximity Matrix — (n1, n2)
         #    Normalize indices to [0, 1] so that sequences of different lengths
         #    are compared on the same relative scale
-        idx1 = torch.arange(n1, dtype=torch.float32) / n1  # (n1,)
-        idx2 = torch.arange(n2, dtype=torch.float32) / n2  # (n2,)
+        idx1 = torch.arange(n1, dtype=torch.float32) / (n1-1)  # (n1,)
+        idx2 = torch.arange(n2, dtype=torch.float32) / (n2-1)  # (n2,)
         index_dist = (idx1.unsqueeze(1) - idx2.unsqueeze(0)) ** 2  # (n1, n2)
         self.register_buffer('index_dist', index_dist / (index_dist.sum() + epsilon))
 
@@ -72,10 +72,10 @@ class SequenceSimilarity(nn.Module):
         idx_dist = self.compute_index_proximity_cost(sigma)
         entropy = self.compute_entropy(sigma)
 
-        return f_dist, self.alpha, idx_dist, self.beta, entropy
+        return f_dist + self.alpha * idx_dist - self.beta * entropy
 
 
-def train_model(model, save_loss=False):
+def train_model(model):
     # Set the optimizer
     lr = LR
     optimizer = Adam(model.parameters(), lr=lr)
@@ -89,26 +89,15 @@ def train_model(model, save_loss=False):
     best_loss = float('inf')
     epochs_without_improvement = 0
 
-    # Optionally track loss history
-    if save_loss:
-        f_loss, s_loss = [], []
-        scheduler_steps = []
-
     # Train the model
     model.train()
     for epoch in range(EPOCHS):
         # Calculate the loss
-        model_output = model()
-        match_loss = model_output[0] + model_output[1] * model_output[2] - model_output[3] * model_output[4]
+        match_loss = model()
         # Backpropagation
         optimizer.zero_grad()
         match_loss.backward()
         optimizer.step()
-
-        # Add loss to history if needed
-        if save_loss:
-            f_loss.append(model_output[0].detach().numpy())
-            s_loss.append(model_output[2].detach().numpy())
 
         # Check for improvement
         if match_loss.item() < 0.99 * best_loss:
@@ -123,8 +112,6 @@ def train_model(model, save_loss=False):
             if lr < MIN_LR:
                 break
             else:
-                if save_loss:
-                    scheduler_steps.append(epoch)
                 scheduler.step()
                 lr *= 0.1
                 epochs_without_improvement = 0
@@ -133,6 +120,4 @@ def train_model(model, save_loss=False):
     if best_model_state is not None:
         model.load_state_dict(best_model_state)
 
-    if save_loss:
-        return model, best_loss, f_loss, s_loss, scheduler_steps
     return model, best_loss

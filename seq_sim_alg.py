@@ -8,19 +8,33 @@ Implementing the graph distance algorithm for sequence similarity.
 5) Refine the mapping using the optimization expression.
 6) Compute the similarity score based on the final mapping.
 """
-import matplotlib.pyplot as plt
 
 # Imports
 from utils import *
 from model_and_training_loop import *
 import numpy as np
+from mine_data import load_sequences
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
 PLOT_MODE = False
 
 # Model's parameters
-ALPHA, BETA, FEATURE_WEIGHTS = 1, 0.0003, np.array([1] * 11)
+ALPHA, BETA = 10, 0
+
+FEATURE_WEIGHTS = np.array([
+    0.021928,  # curvature
+    0.190995,  # mean_diff
+    0.002217,  # mean_abs_diff
+    0.461986,  # mean_value
+    0.002718,  # amplitude
+    0.065946,  # length
+    0.054540,  # sharp_increasing
+    0.053425,  # light_increasing
+    0.027068,  # sharp_decreasing
+    0.117376,  # light_decreasing
+    0.001802,  # constant
+])
 
 # Make sure the feature weights sum to 1
 FEATURE_WEIGHTS = FEATURE_WEIGHTS / np.sum(FEATURE_WEIGHTS)
@@ -66,7 +80,7 @@ def plot_loss(loss1, loss2, loss3, scheduler_steps, title=""):
     plt.show()
 
 
-def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS, save_loss=False):
+def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
     """
     Given any two numeric sequences, compute the distance between them as:
     dist = min_sigma [ dist_features + alpha * dist_structure ]
@@ -112,6 +126,18 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS, save_
                            vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
                            vlines_label="Node Limits")
 
+    # Merge intervals of the sequence with the less nodes
+    if len(nodes_1) < len(nodes_2):
+        nodes_2 = merge_intervals(nodes_2, len(nodes_1))
+    elif len(nodes_2) < len(nodes_1):
+        nodes_1 = merge_intervals(nodes_1, len(nodes_2))
+
+    if PLOT_MODE:
+        plot_two_sequences(seq1, seq2, suptitle="Sequences with Nodes Limits",
+                           vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
+                           vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
+                           vlines_label="Node Limits")
+
     # Extract features for each node
     len_seq1, len_seq2 = len(seq1), len(seq2)
     features_seq_1 = np.array([extract_node_features(seq1[node[0]:node[1] + 1], len_seq1) for node in nodes_1])
@@ -137,34 +163,28 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS, save_
                                normalized_features_seq_2, alpha=alpha, beta=BETA)
 
     # Send to training loop
-    if save_loss:
-        model, best_match_loss, f_loss, s_loss, scheduler_steps = train_model(model, save_loss=True)
-    else:
-        model, best_match_loss = train_model(model, save_loss=False)
-
-    if PLOT_MODE:
-        # Plot the loss history
-        plot_loss(np.array(f_loss) + alpha*np.array(s_loss), np.array(f_loss),
-                  alpha*np.array(s_loss), scheduler_steps, title="Training Loss History")
+    model, best_match_loss = train_model(model)
 
     sigma = model.get_constrained_sigma()
+    distance = model.compute_features_distance(sigma).item()
 
-    if save_loss:
-        return best_match_loss, sigma, f_loss, s_loss, scheduler_steps
-    return best_match_loss, sigma
+    return distance, sigma
 
 
 def main():
+    # Load all sequences
+    seqs, _ = load_sequences(join("data", "stock_sequences.npz"), join("data", "stock_sequences_meta.json"))
+    # Make the seqs of length 1000
+    seqs = [np.interp(np.linspace(0, len(seq) - 1, 1000), np.arange(len(seq)), seq) for seq in seqs]
     # Read two sequences
-    seq1 = np.load(join("experimental_setup", "labeling_data", "sample_1", "anchor.npy"))
-    seq2 = np.load(join("experimental_setup", "labeling_data", "sample_2", "anchor.npy"))
+    seq1 = seqs[555]
+    seq2 = seqs[45]
 
     # Compute distance
-    distance, sigma, f_loss, s_loss, scheduler_steps = seq_distance(seq1, seq2, save_loss=True, alpha=ALPHA)
+    distance, sigma = seq_distance(seq1, seq2, alpha=ALPHA)
 
     # Print the distance
     print("Distance between the two sequences:", distance)
-    # print("The best mapping matrix (sigma):\n", sigma)
 
     # Plot sigma as a heatmap
     plt.figure(figsize=(8, 6))
@@ -179,7 +199,6 @@ def main():
     plt.show()
 
     # Annotate the mapping on the sequences
-    # if PLOT_MODE:
     annotate_mapping(seq1, seq2, sigma)
 
 
