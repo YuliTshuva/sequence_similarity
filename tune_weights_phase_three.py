@@ -30,6 +30,7 @@ RESULTS_PATH   = join("results", "human_tuning_results.json")
 TOP_K          = 3      # top-k human ranks treated as positives
 N_TRIALS       = 50
 SEED           = 42
+PLOT_MODE = True
 
 FEATURE_NAMES = [
     "curvature", "mean_diff", "mean_abs_diff", "mean_value",
@@ -114,6 +115,26 @@ def average_precision_vs_human(method_scores, candidates, top_k=TOP_K):
     return len(our_top_k & human_top_k) / n_pos
 
 
+def plot_methods_ranking(anchor, our_scores, candidates):
+    our_ranking = sorted(range(len(our_scores)), key=lambda i: our_scores[i])
+
+    plt.subplots(4, 3, figsize=(12, 8))
+    plt.subplot(4, 3, 2)
+    plt.plot(anchor, color='royalblue')
+    plt.title("Anchor Sequence", fontsize=20)
+
+    for i, idx in enumerate(our_ranking):
+        cseq = candidates[idx]["seq"]
+        label = "Positive" if candidates[idx]["label"] == 1 else "Negative"
+        color = 'green' if label == "Positive" else 'red'
+        plt.subplot(4, 3, 4 + i)
+        plt.plot(cseq, color=color)
+        plt.title(f"Rank {i+1}: {label}", fontsize=15)
+
+    plt.tight_layout()
+    plt.show()
+
+
 def evaluate_all_methods(groups, feature_weights=None):
     """
     For each anchor group, compute distances with all methods and score vs humans.
@@ -137,6 +158,9 @@ def evaluate_all_methods(groups, feature_weights=None):
             scores["ours"].append(dist_ours)
             scores["dtw"].append(dtw_distance(anchor, cseq))
             scores["lcss"].append(lcss_distance(anchor, cseq))
+
+        if PLOT_MODE:
+            plot_methods_ranking(anchor, scores["ours"], cands)
 
         for m in methods:
             records.append({

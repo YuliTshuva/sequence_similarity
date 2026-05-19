@@ -22,17 +22,17 @@ PLOT_MODE = False
 ALPHA = 10
 
 FEATURE_WEIGHTS = np.array([
-    0.021928,  # curvature
-    0.190995,  # mean_diff
-    0.002217,  # mean_abs_diff
-    0.461986,  # mean_value
-    0.002718,  # amplitude
-    0.065946,  # length
-    0.054540,  # sharp_increasing
-    0.053425,  # light_increasing
-    0.027068,  # sharp_decreasing
-    0.117376,  # light_decreasing
-    0.001802,  # constant
+    0.127774,  # curvature
+    0.059324,  # mean_diff
+    0.194151,  # mean_abs_diff
+    0.153703,  # mean_value
+    0.069695,  # amplitude
+    0.174445,  # length
+    0.141257,  # sharp_increasing
+    0.001659,  # light_increasing
+    0.001452,  # sharp_decreasing
+    0.012653,  # light_decreasing
+    0.063887,  # constant
 ])
 
 # Make sure the feature weights sum to 1
