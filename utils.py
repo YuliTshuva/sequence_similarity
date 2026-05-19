@@ -22,7 +22,8 @@ rcParams['font.family'] = 'Times New Roman'
 # Hyperparameters
 AMPLITUDE_PERCENTAGE, ROBUSTNESS_PERCENTAGE = 3, 3
 MIN_SEGMENT_PERCENTAGE = 5
-SEGMENT_PERCENTAGE = 3
+SEGMENT_PERCENTAGE = 2
+MIN_DISTANCE_BETWEEN_FEATURE_POINTS = 1
 CONVOLVE_KERNEL_SIZE = 10
 CHANGE_THRESHOLD = 5
 
@@ -148,31 +149,169 @@ def robust_partition(f, feature_pts):
         n = len(result)
         if 2 * i + 2 >= n:
             break
-        segment_value = f[result[2 * i]]
-        next_segment_value = f[result[2 * i + 2]]
+        segment_value = np.round(np.mean(f[result[2 * i]:result[2 * i + 1] + 1]))
+        next_segment_value = np.round(np.mean(f[result[2 * i + 2]:result[2 * i + 3] + 1]))
         if segment_value == next_segment_value:
-            # if result[2 * i + 2] - result[2 * i + 1] < len(f) * ROBUSTNESS_PERCENTAGE / 100:
-            # Drop elements at 2*i+1 and 2*i+2
             result = result[:2 * i + 1] + result[2 * i + 3:]
-            # Don't increment i — recheck from same position after removal
             continue
         i += 1
-
-    # Move the start of each segment to the end of the former
-    # for i in range(2, len(result), 2):
-    #     result[i] = result[i - 1] + 1
 
     return result
 
 
-def change_points_detection(input_sequence):
+def find_local_extrema(der_f, f, min_prominence):
+    """
+    Detect local peaks and valleys directly from the raw derivative,
+    bypassing the noisy sign array entirely.
+
+    Strategy:
+      1. Smooth der_f with a wide moving average to suppress noise.
+      2. Find zero-crossings of the smoothed derivative — these are
+         the true peaks (positive -> negative) and valleys (negative -> positive).
+      3. Filter by prominence: the extremum must stand out by at least
+         min_prominence from the surrounding local range.
+
+    Parameters
+    ----------
+    der_f          : raw first derivative array (output of np.diff)
+    f              : smoothed sequence (same length as der_f)
+    min_prominence : minimum local range around the extremum to keep it
+
+    Returns
+    -------
+    sorted list of extremum indices
+    """
+    # Smooth the derivative with a wide window to suppress noise
+    smooth_win = max(11, len(f) // 30)
+    kernel = np.ones(smooth_win) / smooth_win
+    smooth_der = np.convolve(der_f, kernel, mode='same')
+
+    # Find zero-crossings of the smoothed derivative
+    extrema = []
+    for i in range(1, len(smooth_der)):
+        if smooth_der[i - 1] > 0 and smooth_der[i] <= 0:
+            extrema.append(i)  # peak
+        elif smooth_der[i - 1] < 0 and smooth_der[i] >= 0:
+            extrema.append(i)  # valley
+
+    snapped = []
+    half_snap = max(5, smooth_win // 2)
+    for idx in extrema:
+        lo = max(0, idx - half_snap)
+        hi = min(len(f), idx + half_snap + 1)
+        window = f[lo:hi]
+        mean = np.mean(window)
+        # Pick whichever is further from the mean — max or min
+        if np.max(window) - mean >= mean - np.min(window):
+            snapped.append(lo + np.argmax(window))  # peak
+        else:
+            snapped.append(lo + np.argmin(window))  # valley
+    extrema = snapped
+
+    # Filter by prominence using a tight local window
+    # A smaller window ensures we measure the local stand-out of the extremum
+    # rather than the global amplitude, catching mid-sequence peaks/valleys
+    half_win = max(5, len(f) // 50)
+    filtered = []
+    for idx in extrema:
+        lo = max(0, idx - half_win)
+        hi = min(len(f), idx + half_win)
+        local_range = np.max(f[lo:hi]) - np.min(f[lo:hi])
+        if local_range >= min_prominence:
+            filtered.append(idx)
+
+    return filtered
+
+
+def drop_false_extrema(signs_fps, signs):
+    if len(signs_fps) < 4:
+        return signs_fps
+    result = list(signs_fps)
+    i = 0
+    while i < len(result) - 2:
+        # Dominant sign of segment i and segment i+1
+        seg_a = signs[result[i]:result[i + 1] + 1]
+        seg_b = signs[result[i + 1]:result[i + 2] + 1] if i + 2 < len(result) else []
+        if len(seg_a) == 0 or len(seg_b) == 0:
+            i += 1
+            continue
+        dir_a = np.sign(np.round(np.mean(seg_a)))
+        dir_b = np.sign(np.round(np.mean(seg_b)))
+        if dir_a == dir_b and dir_a != 0:
+            # Same direction on both sides — drop the boundary point between them
+            result = result[:i + 1] + result[i + 2:]
+        else:
+            i += 1
+    return result
+
+
+def merge_nearby_points(fps, f, min_distance=None):
+    """
+    Merge feature points that are closer than min_distance by keeping
+    the one whose f-value is most extreme (furthest from local mean).
+
+    Parameters
+    ----------
+    fps          : sorted list of feature point indices
+    f            : the smoothed sequence
+    min_distance : minimum allowed distance between two feature points.
+                   Defaults to len(f) // 40.
+
+    Returns
+    -------
+    filtered sorted list of feature point indices
+    """
+    if min_distance is None:
+        min_distance = max(5, MIN_DISTANCE_BETWEEN_FEATURE_POINTS * len(f) // 100)
+
+    result = list(fps)
+    changed = True
+    while changed:
+        changed = False
+        i = 0
+        while i < len(result) - 1:
+            if result[i + 1] - result[i] < min_distance:
+                # Keep the point further from local mean
+                lo = max(0, result[i] - min_distance)
+                hi = min(len(f), result[i + 1] + min_distance)
+                local_mean = np.mean(f[lo:hi])
+                dev_i = abs(f[result[i]] - local_mean)
+                dev_j = abs(f[result[i + 1]] - local_mean)
+                # Drop the less extreme point
+                drop = i if dev_i < dev_j else i + 1
+                result.pop(drop)
+                changed = True
+            else:
+                i += 1
+
+    # Merge neighboring points that are in the same height
+    new_results = []
+    amp_f = np.max(f) - np.min(f)
+    skip = False
+    for i in range(len(result) - 1):
+        if skip:
+            skip = False
+            continue
+        if abs(f[result[i]] - f[result[i + 1]]) < amp_f * 0.01:
+            new_results.append((result[i] + result[i + 1]) // 2)
+            skip = True
+        else:
+            new_results.append(result[i])
+    result = new_results
+
+    return result
+
+
+def change_points_detection(input_sequence, return_signs=False):
     # Copy the input sequence to avoid modifying the original data
     f = input_sequence.copy()
 
     # Smooth the data
-    kernel = np.array(list(range(1, CONVOLVE_KERNEL_SIZE // 2 + 1)) + list(range(CONVOLVE_KERNEL_SIZE // 2 - 1, 0, -1)))
+    kernel = np.array(
+        list(range(1, CONVOLVE_KERNEL_SIZE // 2 + 1)) +
+        list(range(CONVOLVE_KERNEL_SIZE // 2 - 1, 0, -1))
+    )
     kernel *= kernel
-    # Normalize the kernel
     kernel = kernel / kernel.sum()
     convolved_f = np.convolve(f, kernel, mode='same')
     f[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] = convolved_f[
@@ -189,22 +328,64 @@ def change_points_detection(input_sequence):
 
     # Apply sign_func over der_f
     signs = [sign_func(x, threshold) for x in der_f]
-    # Level up the abstraction
-    # signs = [2 * sign if sign != 0 else sign_func(x, threshold / 3) for sign, x in zip(signs, der_f)]
 
     # Filter the edges
-    signs = ([signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +
-             signs[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] +
-             [signs[-(CONVOLVE_KERNEL_SIZE - 1) // 2 - 1]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2))
+    signs = (
+            [signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +
+            signs[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] +
+            [signs[-(CONVOLVE_KERNEL_SIZE - 1) // 2 - 1]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2)
+    )
     if len(signs) < len(f):
         signs = signs + [signs[-1]] * (len(f) - len(signs))
     signs = np.array(signs)
 
-    # Extract feature points out of signs
+    # Extract feature points out of signs - in pairs [start1, end1, start2, end2, ...]
     signs_fps = feature_points(signs)
-    # Robust the partition
+    # Merge adjacent segments with the same trend
     signs_fps = robust_partition(signs, signs_fps)
 
+    # ── Add local extrema ─────────────────────────────────────────────────────
+    # Minimum prominence: extremum must span at least this fraction of the
+    # sequence amplitude to be included. Tune if too many/few are added.
+    amp = np.max(f) - np.min(f)
+    min_prominence = amp * 0.07  # 7% of total amplitude
+
+    extrema = find_local_extrema(der_f, f, min_prominence)
+
+    # Merge extrema into existing feature points and re-sort
+    if extrema:
+        combined = []
+        i, j = 0, 0
+        while i < len(signs_fps) and j < len(extrema):
+            if signs_fps[i] < extrema[j]:
+                combined.append(signs_fps[i])
+                i += 1
+            elif signs_fps[i] == extrema[j]:
+                i += 1
+                j += 1
+                combined.append(signs_fps[i])
+            else:
+                combined.append(extrema[j] - 1)
+                combined.append(extrema[j])
+                j += 1
+        # Add any remaining points
+        combined += signs_fps[i:]
+
+        # Re-apply robust partition to clean up any duplicates or same-trend
+        # adjacent segments introduced by the new points
+        signs_fps = robust_partition(signs, combined)
+
+    signs_fps = drop_false_extrema(signs_fps, signs)
+
+    signs_fps = merge_nearby_points(signs_fps, f)
+
+    if len(input_sequence) - 1 not in signs_fps:
+        signs_fps.append(len(input_sequence) - 1)
+    if 0 not in signs_fps:
+        signs_fps = [0] + signs_fps
+
+    if return_signs:
+        return signs_fps, signs
     return signs_fps
 
 
@@ -309,45 +490,9 @@ def annotate_change_points_selection(input_sequence):
     # Set a 2x1 grid for plots
     fig, ax = plt.subplots(2, 1, figsize=(20, 15))
 
-    # Read data
-    f = input_sequence.copy()
-
-    # Smooth the data
-    kernel = np.array(
-        list(range(1, CONVOLVE_KERNEL_SIZE // 2 + 1)) + list(range(CONVOLVE_KERNEL_SIZE // 2 - 1, 0, -1)))
-    kernel *= kernel
-    # Normalize the kernel
-    kernel = kernel / kernel.sum()
-    convolved_f = np.convolve(f, kernel, mode='same')
-    f[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] = convolved_f[
-        (CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)]
-
-    # Calculate first derivative of f
-    der_f = np.concat([np.array([0]), np.diff(f, n=1)])
-
-    # Calculate the derivative amplitude
-    der_amp = np.max(der_f) - np.min(der_f)
-
-    # Track change points in the derivative
-    threshold = CHANGE_THRESHOLD * der_amp / 100
-
-    # Apply sign_func over der_f
-    signs = [sign_func(x, threshold) for x in der_f]
-    # Level up the abstraction
-    # signs = [2 * sign if sign != 0 else sign_func(x, threshold / 3) for sign, x in zip(signs, der_f)]
-
-    # Filter the edges
-    signs = ([signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +
-             signs[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] +
-             [signs[-(CONVOLVE_KERNEL_SIZE - 1) // 2 - 1]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2))
-    if len(signs) < len(f):
-        signs = signs + [signs[-1]] * (len(f) - len(signs))
-    signs = np.array(signs)
-
-    # Extract feature points out of signs
-    signs_fps = feature_points(signs)
     # Robust the partition
-    signs_fps = robust_partition(signs, signs_fps)
+    signs_fps, signs = change_points_detection(input_sequence, return_signs=True)
+    f = input_sequence.copy()
 
     # Plot the data
     ax[0].scatter(range(len(signs)), signs, color='royalblue')

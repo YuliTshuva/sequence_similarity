@@ -103,35 +103,38 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
         seq2 = np.zeros_like(seq2) + 0.5
 
     # Plot the sequences
-    if PLOT_MODE:
+    if PLOT_MODE and False:
         plot_two_sequences(seq1, seq2, suptitle="Initial Sequences")
 
     seq_1_change_points = change_points_detection(seq1)
     seq_2_change_points = change_points_detection(seq2)
 
-    if PLOT_MODE:
+    if PLOT_MODE and False:
         plot_two_sequences(seq1, seq2, suptitle="Sequences with Change Points",
                            vlines1=seq_1_change_points, vlines2=seq_2_change_points, vlines_label="Change Points")
-        annotate_change_points_selection(seq1)
-        annotate_change_points_selection(seq2)
-
-    return 1, None
 
     # Create nodes based on change points
-    nodes_1 = mark_nodes_limits(seq1, len(seq1), seq_1_change_points)
-    nodes_2 = mark_nodes_limits(seq2, len(seq2), seq_2_change_points)
+    nodes_1 = [(seq_1_change_points[i], seq_1_change_points[i + 1] - 1) for i in range(len(seq_1_change_points) - 1)]
+    nodes_2 = [(seq_2_change_points[i], seq_2_change_points[i + 1] - 1) for i in range(len(seq_2_change_points) - 1)]
+    # Correct the last node to include the end of the sequence
+    nodes_1[-1] = (nodes_1[-1][0], len(seq1) - 1)
+    nodes_2[-1] = (nodes_2[-1][0], len(seq2) - 1)
 
     if PLOT_MODE:
         plot_two_sequences(seq1, seq2, suptitle="Sequences with Nodes Limits",
                            vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
                            vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
                            vlines_label="Node Limits")
+        annotate_change_points_selection(seq1)
+        annotate_change_points_selection(seq2)
 
-    # Merge intervals of the sequence with the less nodes
-    if len(nodes_1) < len(nodes_2):
-        nodes_2 = merge_intervals(nodes_2, len(nodes_1))
-    elif len(nodes_2) < len(nodes_1):
-        nodes_1 = merge_intervals(nodes_1, len(nodes_2))
+    return 1, 1
+
+    # # Merge intervals of the sequence with the less nodes
+    # if len(nodes_1) < len(nodes_2):
+    #     nodes_2 = merge_intervals(nodes_2, len(nodes_1))
+    # elif len(nodes_2) < len(nodes_1):
+    #     nodes_1 = merge_intervals(nodes_1, len(nodes_2))
 
     if PLOT_MODE:
         plot_two_sequences(seq1, seq2, suptitle="Sequences with Merged segments",
