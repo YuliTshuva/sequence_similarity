@@ -361,9 +361,9 @@ def change_points_detection(input_sequence, return_signs=False):
                 combined.append(signs_fps[i])
                 i += 1
             elif signs_fps[i] == extrema[j]:
+                combined.append(signs_fps[i])
                 i += 1
                 j += 1
-                combined.append(signs_fps[i])
             else:
                 combined.append(extrema[j] - 1)
                 combined.append(extrema[j])

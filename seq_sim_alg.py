@@ -79,7 +79,7 @@ def plot_loss(loss1, loss2, loss3, scheduler_steps, title=""):
     plt.show()
 
 
-def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
+def directional_seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
     """
     Given any two numeric sequences, compute the distance between them as:
     dist = min_sigma [ dist_features + alpha * dist_structure ]
@@ -170,6 +170,21 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
 
     sigma = model.get_constrained_sigma()
     distance = model.compute_features_distance(sigma).item()
+
+    return distance, sigma
+
+def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
+    """
+    Wrapper for directional_seq_distance to compute a symmetric distance between two sequences.
+    """
+    dist_1_to_2, sigma_1_to_2 = directional_seq_distance(seq1, seq2, alpha=alpha, feature_weights=feature_weights)
+    dist_2_to_1, sigma_2_to_1 = directional_seq_distance(seq2, seq1, alpha=alpha, feature_weights=feature_weights)
+
+    # Average the distances to get a symmetric distance
+    distance = (dist_1_to_2 + dist_2_to_1) / 2
+
+    # Average the mapping matrices (after transposing the second one to match dimensions)
+    sigma = (sigma_1_to_2 + sigma_2_to_1.T) / 2
 
     return distance, sigma
 

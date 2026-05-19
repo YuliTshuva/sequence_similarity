@@ -217,10 +217,9 @@ def plot_evaluation(results_df, save_path=None):
 def objective(trial, groups, init_weights):
     """Optuna objective: maximise mean AP@TOP_K vs human rankings."""
     raw = np.array([
-        w + trial.suggest_float(f"w_{n}", -w, 100)
+        trial.suggest_int(f"w_{n}", 1, 1000)
         for w, n in zip(init_weights, FEATURE_NAMES)
     ])
-    raw = np.clip(raw, 1e-6, None)
     weights = raw / raw.sum()
 
     aps = []
@@ -255,7 +254,7 @@ def tune_weights(groups, init_weights, n_trials=N_TRIALS):
 
     best    = study.best_trial
     raw     = np.array([
-        init_weights[i] + best.params[f"w_{n}"]
+        best.params[f"w_{n}"]
         for i, n in enumerate(FEATURE_NAMES)
     ])
     raw     = np.clip(raw, 1e-6, None)
