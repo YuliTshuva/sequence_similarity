@@ -580,19 +580,18 @@ def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to 
     else:
         seq2 = np.zeros_like(seq2) + 0.5
 
-    # Find the change points in both sequences
+    # Get change points for both sequences
     seq_1_change_points = change_points_detection(seq1)
     seq_2_change_points = change_points_detection(seq2)
 
     # Create nodes based on change points
-    nodes_1 = mark_nodes_limits(seq1, len(seq1), seq_1_change_points)
-    nodes_2 = mark_nodes_limits(seq2, len(seq2), seq_2_change_points)
-
-    # Merge intervals of the sequence with the less nodes
-    if len(nodes_1) < len(nodes_2):
-        nodes_2 = merge_intervals(nodes_2, len(nodes_1))
-    elif len(nodes_2) < len(nodes_1):
-        nodes_1 = merge_intervals(nodes_1, len(nodes_2))
+    nodes_1 = [(seq_1_change_points[i], seq_1_change_points[i + 1] - 1) for i in
+               range(len(seq_1_change_points) - 1)]
+    nodes_2 = [(seq_2_change_points[i], seq_2_change_points[i + 1] - 1) for i in
+               range(len(seq_2_change_points) - 1)]
+    # Correct the last node to include the end of the sequence
+    nodes_1[-1] = (nodes_1[-1][0], len(seq1) - 1)
+    nodes_2[-1] = (nodes_2[-1][0], len(seq2) - 1)
 
     # Get the separating lines between the nodes
     vlines1 = [n[0] for n in nodes_1] + [nodes_1[-1][1]]

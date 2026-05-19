@@ -17,14 +17,13 @@ EPOCHS = 5000
 
 
 class SequenceSimilarity(nn.Module):
-    def __init__(self, initial_match_matrix, features1, features2, alpha, beta=0):
+    def __init__(self, initial_match_matrix, features1, features2, alpha):
         super(SequenceSimilarity, self).__init__()
 
         epsilon = 1e-8
 
         # 1. Store alpha/beta as buffers (not learnable)
         self.register_buffer('alpha', torch.tensor(alpha, dtype=torch.float32))
-        self.register_buffer('beta', torch.tensor(beta, dtype=torch.float32))
 
         # 2. Learnable Match Matrix in Log-Space — now n1 x n2
         log_init = torch.log(torch.tensor(initial_match_matrix, dtype=torch.float32) + epsilon)
@@ -62,17 +61,13 @@ class SequenceSimilarity(nn.Module):
     def compute_index_proximity_cost(self, sigma):
         return torch.sum(sigma * self.index_dist)
 
-    def compute_entropy(self, sigma):
-        return -torch.sum(sigma * torch.log(sigma.clamp(min=1e-9)))
-
     def forward(self):
         sigma = self.get_constrained_sigma()
 
         f_dist = self.compute_features_distance(sigma)
         idx_dist = self.compute_index_proximity_cost(sigma)
-        entropy = self.compute_entropy(sigma)
 
-        return f_dist + self.alpha * idx_dist - self.beta * entropy
+        return f_dist + self.alpha * idx_dist
 
 
 def train_model(model):

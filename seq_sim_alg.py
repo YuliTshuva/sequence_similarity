@@ -16,10 +16,10 @@ import numpy as np
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = True
+PLOT_MODE = False
 
 # Model's parameters
-ALPHA, BETA = 10, 0
+ALPHA = 10
 
 FEATURE_WEIGHTS = np.array([
     0.021928,  # curvature
@@ -103,13 +103,13 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
         seq2 = np.zeros_like(seq2) + 0.5
 
     # Plot the sequences
-    if PLOT_MODE and False:
+    if PLOT_MODE:
         plot_two_sequences(seq1, seq2, suptitle="Initial Sequences")
 
     seq_1_change_points = change_points_detection(seq1)
     seq_2_change_points = change_points_detection(seq2)
 
-    if PLOT_MODE and False:
+    if PLOT_MODE:
         plot_two_sequences(seq1, seq2, suptitle="Sequences with Change Points",
                            vlines1=seq_1_change_points, vlines2=seq_2_change_points, vlines_label="Change Points")
 
@@ -128,19 +128,18 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
         annotate_change_points_selection(seq1)
         annotate_change_points_selection(seq2)
 
-    return 1, 1
 
-    # # Merge intervals of the sequence with the less nodes
+    # ## Merge intervals of the sequence with the less nodes
     # if len(nodes_1) < len(nodes_2):
     #     nodes_2 = merge_intervals(nodes_2, len(nodes_1))
     # elif len(nodes_2) < len(nodes_1):
     #     nodes_1 = merge_intervals(nodes_1, len(nodes_2))
-
-    if PLOT_MODE:
-        plot_two_sequences(seq1, seq2, suptitle="Sequences with Merged segments",
-                           vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
-                           vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
-                           vlines_label="Node Limits")
+    #
+    # if PLOT_MODE:
+    #     plot_two_sequences(seq1, seq2, suptitle="Sequences with Merged segments",
+    #                        vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
+    #                        vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
+    #                        vlines_label="Node Limits")
 
     # Extract features for each node
     len_seq1, len_seq2 = len(seq1), len(seq2)
@@ -164,7 +163,7 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
 
     # Set a model instance
     model = SequenceSimilarity(initial_mapping, normalized_features_seq_1,
-                               normalized_features_seq_2, alpha=alpha, beta=BETA)
+                               normalized_features_seq_2, alpha=alpha)
 
     # Send to training loop
     model, best_match_loss = train_model(model)
