@@ -24,7 +24,7 @@ from compare_baselines import dtw_distance, lcss_distance
 
 # ── config ────────────────────────────────────────────────────────────────────
 
-DATASET_PATH   = join("data", "dataset.csv")
+DATASET_PATH   = join("data", "dataset.json")
 SEQ_DIR        = join("data", "name_data")
 RESULTS_PATH   = join("results", "human_tuning_results.json")
 TOP_K          = 3      # top-k human ranks treated as positives
@@ -55,22 +55,23 @@ def load_sequence(name):
 
 def load_dataset():
     """
-    Load dataset.csv and return a list of anchor groups:
+    Load dataset.json and return a list of anchor groups:
     [
       {
         "anchor": anchor_name,
+        "anchor_seq": array,
         "candidates": [
-          {"name": name, "human_rank": rank, "seq": array},
+          {"name": name, "label": 1 or 0, "seq": array},
           ...
-        ],
-        "anchor_seq": array
+        ]
       },
       ...
     ]
+    label: 1 = positive (human top-k), 0 = negative.
     """
-    df = pd.read_csv(DATASET_PATH, header=None, names=["anchor", "candidate", "human_rank"])
+    with open(DATASET_PATH) as f:
+        data = json.load(f)
 
-    # Cache sequences to avoid re-reading the same file
     seq_cache = {}
     def get_seq(name):
         if name not in seq_cache:
@@ -78,23 +79,21 @@ def load_dataset():
         return seq_cache[name]
 
     groups = []
-    for anchor_name, group in df.groupby("anchor", sort=False):
-        anchor_seq = get_seq(anchor_name)
+    for anchor_name, splits in data.items():
         candidates = []
-        for _, row in group.iterrows():
-            candidates.append({
-                "name":       row["candidate"],
-                "human_rank": int(row["human_rank"]),
-                "seq":        get_seq(row["candidate"]),
-            })
+        for name in splits["positives"]:
+            candidates.append({"name": name, "label": 1, "seq": get_seq(name)})
+        for name in splits["negatives"]:
+            candidates.append({"name": name, "label": 0, "seq": get_seq(name)})
         groups.append({
             "anchor":     anchor_name,
-            "anchor_seq": anchor_seq,
+            "anchor_seq": get_seq(anchor_name),
             "candidates": candidates,
         })
 
-    print(f"Loaded {len(groups)} anchors, "
-          f"{sum(len(g['candidates']) for g in groups)} total pairs.\n")
+    n_pos = sum(sum(c["label"] for c in g["candidates"]) for g in groups)
+    n_neg = sum(sum(1 - c["label"] for c in g["candidates"]) for g in groups)
+    print(f"Loaded {len(groups)} anchors — {n_pos} positives, {n_neg} negatives.\n")
     return groups
 
 
@@ -104,19 +103,15 @@ def load_dataset():
 
 def average_precision_vs_human(method_scores, candidates, top_k=TOP_K):
     """
-    Precision@top_k: what fraction of the human top-k did our method
-    also place in its own top-k.
-    method_scores: list of distances (lower = more similar).
+    Precision@top_k: what fraction of the human positives did our method
+    place in its own top-k (smallest distances).
     """
-    # Indices our method ranks in top_k (smallest distances)
-    our_top_k = set(
-        sorted(range(len(method_scores)), key=lambda i: method_scores[i])[:top_k]
-    )
-    # Indices humans ranked in top_k
-    human_top_k = set(
-        i for i, c in enumerate(candidates) if c["human_rank"] <= top_k
-    )
-    return len(our_top_k & human_top_k) / top_k
+    our_top_k   = set(sorted(range(len(method_scores)), key=lambda i: method_scores[i])[:top_k])
+    human_top_k = set(i for i, c in enumerate(candidates) if c["label"] == 1)
+    n_pos       = len(human_top_k)
+    if n_pos == 0:
+        return 0.0
+    return len(our_top_k & human_top_k) / n_pos
 
 
 def evaluate_all_methods(groups, feature_weights=None):
@@ -222,7 +217,7 @@ def plot_evaluation(results_df, save_path=None):
 def objective(trial, groups, init_weights):
     """Optuna objective: maximise mean AP@TOP_K vs human rankings."""
     raw = np.array([
-        w + trial.suggest_float(f"w_{n}", -w * 0.5, w * 0.5)
+        w + trial.suggest_float(f"w_{n}", -w, 100)
         for w, n in zip(init_weights, FEATURE_NAMES)
     ])
     raw = np.clip(raw, 1e-6, None)

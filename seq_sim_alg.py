@@ -13,11 +13,10 @@ Implementing the graph distance algorithm for sequence similarity.
 from utils import *
 from model_and_training_loop import *
 import numpy as np
-from mine_data import load_sequences
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = False
+PLOT_MODE = True
 
 # Model's parameters
 ALPHA, BETA = 10, 0
@@ -116,6 +115,8 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
         annotate_change_points_selection(seq1)
         annotate_change_points_selection(seq2)
 
+    return 1, None
+
     # Create nodes based on change points
     nodes_1 = mark_nodes_limits(seq1, len(seq1), seq_1_change_points)
     nodes_2 = mark_nodes_limits(seq2, len(seq2), seq_2_change_points)
@@ -133,7 +134,7 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
         nodes_1 = merge_intervals(nodes_1, len(nodes_2))
 
     if PLOT_MODE:
-        plot_two_sequences(seq1, seq2, suptitle="Sequences with Nodes Limits",
+        plot_two_sequences(seq1, seq2, suptitle="Sequences with Merged segments",
                            vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
                            vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
                            vlines_label="Node Limits")
@@ -172,13 +173,25 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
 
 
 def main():
-    # Load all sequences
-    seqs, _ = load_sequences(join("data", "stock_sequences.npz"), join("data", "stock_sequences_meta.json"))
-    # Make the seqs of length 1000
-    seqs = [np.interp(np.linspace(0, len(seq) - 1, 1000), np.arange(len(seq)), seq) for seq in seqs]
-    # Read two sequences
-    seq1 = seqs[555]
-    seq2 = seqs[45]
+    seqs = []
+    for name in ["Rebecca", "Paula"]:
+        # Read two sequences
+        path = join("data", "name_data", f"{name}.csv")
+        seq = pd.read_csv(path, header=None).values.flatten()
+        # skip header if present
+        if str(seq[0]).isalpha():
+            seq = seq[1:].astype(float)
+        # Normalize to [0, 1]
+        mn, mx = seq.min(), seq.max()
+        if mx - mn > 1e-6:
+            seq = (seq - mn) / (mx - mn)
+        seqs.append(seq)
+    seq1, seq2 = seqs
+
+    # Make the sequences f length 1000 by interpolation
+    new_length = 1000
+    seq1 = np.interp(np.linspace(0, len(seq1) - 1, new_length), np.arange(len(seq1)), seq1)
+    seq2 = np.interp(np.linspace(0, len(seq2) - 1, new_length), np.arange(len(seq2)), seq2)
 
     # Compute distance
     distance, sigma = seq_distance(seq1, seq2, alpha=ALPHA)

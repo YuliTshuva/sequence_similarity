@@ -36,7 +36,7 @@ N_ANCHORS          = 5     # synthetic anchors to generate per trial evaluation
 N_POSITIVES        = 6     # similar candidates per anchor (2 per transformation)
 N_NEGATIVES        = 14    # dissimilar candidates per anchor
 SEQ_LEN            = 200   # length of generated sequences
-N_SEGMENTS         = 3     # number of hills/segments per sequence
+N_SEGMENTS         = 2     # number of hills/segments per sequence
 N_TRIALS           = 50    # Optuna trials
 SEED               = 42
 RESULTS_PATH       = "results/tuned_weights_phase2.json"
@@ -193,7 +193,8 @@ def build_benchmark(rng):
     # Negatives: independently generated sequences (different structure)
     for _ in range(N_NEGATIVES):
         # Randomize n_segments too so structure genuinely differs
-        n_seg = rng.integers(2, N_SEGMENTS + 3)
+        # n_seg = rng.integers(2, N_SEGMENTS + 3)
+        n_seg = N_SEGMENTS
         cseq = make_sequence(n_segments=int(n_seg), rng=rng)
         candidates.append((cseq, 0, "negative"))
 

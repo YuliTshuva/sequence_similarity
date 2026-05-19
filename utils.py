@@ -159,8 +159,8 @@ def robust_partition(f, feature_pts):
         i += 1
 
     # Move the start of each segment to the end of the former
-    for i in range(2, len(result), 2):
-        result[i] = result[i - 1] + 1
+    # for i in range(2, len(result), 2):
+    #     result[i] = result[i - 1] + 1
 
     return result
 
@@ -190,7 +190,7 @@ def change_points_detection(input_sequence):
     # Apply sign_func over der_f
     signs = [sign_func(x, threshold) for x in der_f]
     # Level up the abstraction
-    signs = [2 * sign if sign != 0 else sign_func(x, threshold / 3) for sign, x in zip(signs, der_f)]
+    # signs = [2 * sign if sign != 0 else sign_func(x, threshold / 3) for sign, x in zip(signs, der_f)]
 
     # Filter the edges
     signs = ([signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +
@@ -334,7 +334,7 @@ def annotate_change_points_selection(input_sequence):
     # Apply sign_func over der_f
     signs = [sign_func(x, threshold) for x in der_f]
     # Level up the abstraction
-    signs = [2 * sign if sign != 0 else sign_func(x, threshold / 3) for sign, x in zip(signs, der_f)]
+    # signs = [2 * sign if sign != 0 else sign_func(x, threshold / 3) for sign, x in zip(signs, der_f)]
 
     # Filter the edges
     signs = ([signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +
