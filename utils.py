@@ -4,7 +4,6 @@ Utility functions for similarity.
 """
 
 # Imports
-import cv2
 import os
 import pandas as pd
 import numpy as np
@@ -628,27 +627,6 @@ def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to 
     if save_path is not None:
         plt.savefig(save_path)
     plt.show()
-
-
-def make_a_video_from_a_set_of_images(image_folder, output_video_path, fps=1):
-    # Get all image files in the folder
-    images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
-    images.sort()  # Sort the images by name
-
-    # Read the first image to get the dimensions
-    frame = cv2.imread(os.path.join(image_folder, images[0]))
-    height, width, layers = frame.shape
-
-    # Create a video writer object
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for .mp4
-    video = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
-
-    # Write each image to the video
-    for image in images:
-        video.write(cv2.imread(os.path.join(image_folder, image)))
-
-    # Release the video writer object
-    video.release()
 
 
 def increase_sequence_resolution(seq, new_length):

@@ -4,6 +4,7 @@ import random
 import json
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from os.path import join
 
 # ── Sector universe ────────────────────────────────────────────────────────────
 SECTORS = {
@@ -154,8 +155,8 @@ def generate_stock_sequences(
 # ── Loading utility ────────────────────────────────────────────────────────────
 
 def load_sequences(
-        save_path: str = "stock_sequences.npz",
-        metadata_path: str = "stock_sequences_meta.json",
+        save_path: str = join("data", "stock_sequences.npz"),
+        metadata_path: str = join("data", "stock_sequences_meta.json"),
 ) -> tuple[list[np.ndarray], list[dict]]:
     """Reload sequences and metadata saved by generate_stock_sequences."""
     data = np.load(save_path, allow_pickle=False)
