@@ -13,13 +13,14 @@ Implementing the graph distance algorithm for sequence similarity.
 from utils import *
 from model_and_training_loop import *
 import numpy as np
+from mine_data import load_sequences
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = False
+PLOT_MODE = True
 
 # Model's parameters
-ALPHA = 10
+ALPHA = 5
 
 FEATURE_WEIGHTS = np.array([
     0.127774,  # curvature
@@ -103,13 +104,13 @@ def directional_seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WE
         seq2 = np.zeros_like(seq2) + 0.5
 
     # Plot the sequences
-    if PLOT_MODE:
+    if PLOT_MODE and False:
         plot_two_sequences(seq1, seq2, suptitle="Initial Sequences")
 
     seq_1_change_points = change_points_detection(seq1)
     seq_2_change_points = change_points_detection(seq2)
 
-    if PLOT_MODE:
+    if PLOT_MODE and False:
         plot_two_sequences(seq1, seq2, suptitle="Sequences with Change Points",
                            vlines1=seq_1_change_points, vlines2=seq_2_change_points, vlines_label="Change Points")
 
@@ -121,13 +122,14 @@ def directional_seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WE
     nodes_2[-1] = (nodes_2[-1][0], len(seq2) - 1)
 
     if PLOT_MODE:
-        plot_two_sequences(seq1, seq2, suptitle="Sequences with Nodes Limits",
-                           vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
-                           vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
-                           vlines_label="Node Limits")
+        # plot_two_sequences(seq1, seq2, suptitle="Sequences with Nodes Limits",
+        #                    vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
+        #                    vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
+        #                    vlines_label="Node Limits")
         annotate_change_points_selection(seq1)
         annotate_change_points_selection(seq2)
 
+    return
 
     # ## Merge intervals of the sequence with the less nodes
     # if len(nodes_1) < len(nodes_2):
@@ -190,20 +192,9 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
 
 
 def main():
-    seqs = []
-    for name in ["Rebecca", "Paula"]:
-        # Read two sequences
-        path = join("data", "name_data", f"{name}.csv")
-        seq = pd.read_csv(path, header=None).values.flatten()
-        # skip header if present
-        if str(seq[0]).isalpha():
-            seq = seq[1:].astype(float)
-        # Normalize to [0, 1]
-        mn, mx = seq.min(), seq.max()
-        if mx - mn > 1e-6:
-            seq = (seq - mn) / (mx - mn)
-        seqs.append(seq)
-    seq1, seq2 = seqs
+    seqs, _ = load_sequences()
+    import random
+    seq1, seq2 = seqs[random.randint(0, 1000)], seqs[random.randint(0, 1000)]
 
     # Make the sequences f length 1000 by interpolation
     new_length = 1000
@@ -211,7 +202,7 @@ def main():
     seq2 = np.interp(np.linspace(0, len(seq2) - 1, new_length), np.arange(len(seq2)), seq2)
 
     # Compute distance
-    distance, sigma = seq_distance(seq1, seq2, alpha=ALPHA)
+    distance, sigma = directional_seq_distance(seq1, seq2, alpha=ALPHA)
 
     # Print the distance
     print("Distance between the two sequences:", distance)
@@ -228,8 +219,7 @@ def main():
     plt.tight_layout()
     plt.show()
 
-    # Annotate the mapping on the sequences
-    annotate_mapping(seq1, seq2, sigma)
+    annotate_mapping(seq1, seq2, sigma.detach().numpy())
 
 
 if __name__ == "__main__":

@@ -19,15 +19,35 @@ def read_results():
             file_results = pickle.load(f)
             results.update(file_results)
 
+    # Set list to store anchors to use for labeling
     anchors_to_use = []
+    # Set a counter for storage
     sample_index = 0
-    count = 0
     for anchor_index, res in results.items():
-        examples_in_top = set(res["top_dtw"]).intersection(set(res['adversarial_examples']))
-        examples_in_bottom = set(res["bottom_dtw"]).intersection(set(res['adversarial_examples']))
-        if len(examples_in_top) >= 6 and len(examples_in_bottom) >= 3:
-            count += 1
-        if len(examples_in_top) >= 6 and len(examples_in_bottom) >= 3:
+        # Stop after 50 samples
+        if sample_index == 50:
+            break
+
+        # Extract ranks for each method
+        rank_ours = list(res["rank_ours"])
+
+        # Extract classes
+        class_1 = res["class_1"]
+        class_2 = res["class_2"]
+        class_3 = res["class_3"]
+        class_4 = res["class_4"]
+
+        # Rank the classes by our method's rank to get the top 2 examples from each class
+        class_1 = sorted(class_1, key=lambda x: rank_ours.index(x))
+        class_2 = sorted(class_2, key=lambda x: rank_ours.index(x))
+        class_3 = sorted(class_3, key=lambda x: rank_ours.index(x))
+        class_4 = sorted(class_4, key=lambda x: rank_ours.index(x))
+
+        if anchor_index == 29:
+            pass
+
+        # Check if there's at least 2 examples in each class
+        if len(class_1) >= 2 and len(class_2) >= 2 and len(class_3) >= 2 and len(class_4) >= 2:
             anchors_to_use.append(anchor_index)
 
             os.makedirs(index_to_sample_dir(sample_index), exist_ok=True)
@@ -35,17 +55,37 @@ def read_results():
             seq = seqs[anchor_index]
             np.save(join(index_to_sample_dir(sample_index), "anchor.npy"), seq)
 
-            for i, pos in enumerate(list(examples_in_bottom)[:3]):
+            for i, pos in enumerate(class_1[:2]):
                 seq = seqs[pos]
-                np.save(join(index_to_sample_dir(sample_index), f"candidate_{i + 1}.npy"), seq)
+                np.save(join(index_to_sample_dir(sample_index), f"candidate{i + 1}.npy"), seq)
 
-            for i, neg in enumerate(list(examples_in_top)[:6]):
+            i, count = 0, 0
+            while count < 2:
+                pos = class_2[i]
+                i += 1
+                if pos in class_1[:2]:
+                    continue
+                seq = seqs[pos]
+                np.save(join(index_to_sample_dir(sample_index), f"candidate{count + 3}.npy"), seq)
+                count += 1
+
+            for i, neg in enumerate(class_3[:2]):
                 seq = seqs[neg]
-                np.save(join(index_to_sample_dir(sample_index), f"candidate_{i + 4}.npy"), seq)
+                np.save(join(index_to_sample_dir(sample_index), f"candidate{i + 5}.npy"), seq)
+
+            i, count = 0, 0
+            while count < 2:
+                pos = class_4[i]
+                i += 1
+                if pos in class_3[:2]:
+                    continue
+                seq = seqs[pos]
+                np.save(join(index_to_sample_dir(sample_index), f"candidate{count + 7}.npy"), seq)
+                count += 1
 
             sample_index += 1
 
-            if anchor_index == 16 and False:
+            if sample_index == 0:
                 # Plotting
                 plt.subplots(4, 3, figsize=(15, 20))
 
@@ -57,7 +97,7 @@ def read_results():
                 plt.ylim(0, 1)
 
                 # Plot positives
-                for i, pos in enumerate(list(examples_in_bottom)[:3]):
+                for i, pos in enumerate(class_1[:2] + class_2[:2]):
                     plt.subplot(4, 3, i + 4)
                     plt.title(f"Positive {i + 1}: {pos}")
                     seq = seqs[pos]
@@ -65,7 +105,7 @@ def read_results():
                     plt.ylim(0, 1)
 
                 # Plot negatives
-                for i, neg in enumerate(list(examples_in_top)[:6]):
+                for i, neg in enumerate(class_3[:2] + class_4[:2]):
                     plt.subplot(4, 3, i + 7)
                     plt.title(f"Negative {i + 1}: {neg}")
                     seq = seqs[neg]
@@ -77,7 +117,6 @@ def read_results():
 
     print(f'Anchors to use ({len(anchors_to_use)}):', anchors_to_use)
 
-    print("count:", count)
 
 
 if __name__ == "__main__":

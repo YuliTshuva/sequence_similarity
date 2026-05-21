@@ -3,7 +3,6 @@ from os.path import join
 from mine_data import load_sequences
 from seq_sim_alg import seq_distance
 from compare_baselines import dtw_distance, lcss_distance
-from tqdm.auto import tqdm
 import pickle
 
 # ── config ────────────────────────────────────────────────────────────────────
@@ -28,13 +27,10 @@ def main():
     # For each anchor, rank all sequences by distance of DTW, LCSS, and our method
     for anchor in range(0, len(seqs)):
         # Calculate distances
-        dists_dtw = [dtw_distance(seqs[anchor], s) for i, s in tqdm(enumerate(seqs), desc="DTW", total=len(seqs) - 1) if
-                     i != anchor]
-        dists_lcss = [lcss_distance(seqs[anchor], s) for i, s in tqdm(enumerate(seqs), desc="LCSS", total=len(seqs) - 1)
-                      if i != anchor]
+        dists_dtw = [dtw_distance(seqs[anchor], s) for i, s in enumerate(seqs) if i != anchor]
+        dists_lcss = [lcss_distance(seqs[anchor], s) for i, s in enumerate(seqs) if i != anchor]
         anchor_seq = high_res_seqs[anchor]
-        dists_ours = [seq_distance(anchor_seq, s)[0] for i, s in
-                      tqdm(enumerate(high_res_seqs), desc="Ours", total=len(high_res_seqs) - 1) if i != anchor]
+        dists_ours = [seq_distance(anchor_seq, s)[0] for i, s in enumerate(high_res_seqs) if i != anchor]
 
         # Rank sequences by distance
         rank_dtw = np.argsort(dists_dtw)
@@ -74,7 +70,7 @@ def main():
         print(f"Class 2: {adversarial_examples_class_2}")
         print(f"Class 3: {adversarial_examples_class_3}")
         print(f"Class 4: {adversarial_examples_class_4}")
-        print("-" * 50)
+        print("-" * 50 + "\n")
 
         # Save results to a file
         with open(join("results", f"adversarial_examples.pkl"), "wb") as f:

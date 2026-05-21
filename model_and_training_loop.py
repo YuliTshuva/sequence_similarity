@@ -56,10 +56,10 @@ class SequenceSimilarity(nn.Module):
         return sigma
 
     def compute_features_distance(self, sigma):
-        return torch.sum(sigma * self.feat_dist_matrix)
+        return torch.sum(sigma * self.feat_dist_matrix) / sigma.shape[0]
 
     def compute_index_proximity_cost(self, sigma):
-        return torch.sum(sigma * self.index_dist)
+        return torch.sum(sigma * self.index_dist) / sigma.shape[0]
 
     def forward(self):
         sigma = self.get_constrained_sigma()

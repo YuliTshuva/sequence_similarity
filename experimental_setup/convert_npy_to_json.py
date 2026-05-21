@@ -34,7 +34,7 @@ def load_sample(folder_path: str) -> dict:
     anchor = np.load(anchor_path).flatten().tolist()
 
     candidates = []
-    for i in range(1, 10):
+    for i in range(1, 9):
         cand_path = os.path.join(folder_path, f"candidate{i}.npy")
         if not os.path.exists(cand_path):
             raise FileNotFoundError(f"candidate{i}.npy not found in {folder_path}")

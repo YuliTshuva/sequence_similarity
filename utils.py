@@ -21,10 +21,11 @@ rcParams['font.family'] = 'Times New Roman'
 # Hyperparameters
 AMPLITUDE_PERCENTAGE, ROBUSTNESS_PERCENTAGE = 3, 3
 MIN_SEGMENT_PERCENTAGE = 5
-SEGMENT_PERCENTAGE = 2
-MIN_DISTANCE_BETWEEN_FEATURE_POINTS = 1
+SEGMENT_PERCENTAGE = 3
+MIN_DISTANCE_BETWEEN_FEATURE_POINTS = 5
 CONVOLVE_KERNEL_SIZE = 10
-CHANGE_THRESHOLD = 5
+CHANGE_THRESHOLD = 10
+SLIDING_WINDOW_SIZE = 3
 
 # Old hyperparameters
 SEGMENT_THRESHOLD = 10  # minimum length (in percentages) of a segment to be considered for similarity
@@ -338,10 +339,31 @@ def change_points_detection(input_sequence, return_signs=False):
         signs = signs + [signs[-1]] * (len(f) - len(signs))
     signs = np.array(signs)
 
+    # Apply most decision to the raw signs
+    window = SLIDING_WINDOW_SIZE * len(f) // 100
+    signs = [return_most_common_sign(signs[i:i + window]) for i in range(len(signs) - window)]
+    signs = ([signs[0]] * (window // 2) + signs + [signs[-1]] * (window // 2))
+    signs = signs + [signs[-1]] * (len(f) - len(signs)) if len(signs) < len(f) else signs[:len(f)]
+    signs = np.array(signs)
+
     # Extract feature points out of signs - in pairs [start1, end1, start2, end2, ...]
     signs_fps = feature_points(signs)
     # Merge adjacent segments with the same trend
     signs_fps = robust_partition(signs, signs_fps)
+
+    signs_fps = merge_nearby_points(signs_fps, f)
+    if len(input_sequence) - 1 not in signs_fps:
+        if len(input_sequence) - 1 - signs_fps[-1] >= len(input_sequence) * SEGMENT_PERCENTAGE / 100:
+            signs_fps.append(len(input_sequence) - 1)
+        else:
+            signs_fps[-1] = len(input_sequence) - 1
+    if 0 not in signs_fps:
+        if signs_fps[0] >= len(input_sequence) * SEGMENT_PERCENTAGE / 100:
+            signs_fps.insert(0, 0)
+        else:
+            signs_fps[0] = 0
+
+    return signs_fps, signs
 
     # ── Add local extrema ─────────────────────────────────────────────────────
     # Minimum prominence: extremum must span at least this fraction of the
@@ -374,19 +396,27 @@ def change_points_detection(input_sequence, return_signs=False):
         # adjacent segments introduced by the new points
         signs_fps = robust_partition(signs, combined)
 
+    return signs_fps, signs
+
     signs_fps = drop_false_extrema(signs_fps, signs)
 
     signs_fps = merge_nearby_points(signs_fps, f)
 
     if len(input_sequence) - 1 not in signs_fps:
-        signs_fps.append(len(input_sequence) - 1)
+        signs_fps[-1] = len(input_sequence) - 1
     if 0 not in signs_fps:
-        signs_fps = [0] + signs_fps
+        signs_fps[0] = 0
 
     if return_signs:
         return signs_fps, signs
     return signs_fps
 
+def return_most_common_sign(segment):
+    if len(segment) == 0:
+        return 0
+    counts = np.bincount(segment + 1)  # Shift to make -1 -> 0, 0 -> 1, 1 -> 2
+    most_common = np.argmax(counts) - 1  # Shift back
+    return most_common
 
 def mark_nodes_limits(f, len_seq, change_points):
     """
