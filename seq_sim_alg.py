@@ -17,7 +17,7 @@ from mine_data import load_sequences
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = True
+PLOT_MODE = False
 
 # Model's parameters
 ALPHA = 5
@@ -115,11 +115,8 @@ def directional_seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WE
                            vlines1=seq_1_change_points, vlines2=seq_2_change_points, vlines_label="Change Points")
 
     # Create nodes based on change points
-    nodes_1 = [(seq_1_change_points[i], seq_1_change_points[i + 1] - 1) for i in range(len(seq_1_change_points) - 1)]
-    nodes_2 = [(seq_2_change_points[i], seq_2_change_points[i + 1] - 1) for i in range(len(seq_2_change_points) - 1)]
-    # Correct the last node to include the end of the sequence
-    nodes_1[-1] = (nodes_1[-1][0], len(seq1) - 1)
-    nodes_2[-1] = (nodes_2[-1][0], len(seq2) - 1)
+    nodes_1 = [(seq_1_change_points[i], seq_1_change_points[i + 1]) for i in range(0, len(seq_1_change_points) - 1, 2)]
+    nodes_2 = [(seq_2_change_points[i], seq_2_change_points[i + 1]) for i in range(0, len(seq_2_change_points) - 1, 2)]
 
     if PLOT_MODE:
         # plot_two_sequences(seq1, seq2, suptitle="Sequences with Nodes Limits",
@@ -183,7 +180,7 @@ def main():
     import random
     a, b = random.randint(0, 1000), random.randint(0, 1000)
     print(a, b)
-    a, b = 397, 311
+    # a, b = 397, 311
     seq1, seq2 = seqs[a], seqs[b]
 
     # Make the sequences f length 1000 by interpolation

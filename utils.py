@@ -21,7 +21,7 @@ rcParams['font.family'] = 'Times New Roman'
 # Hyperparameters
 AMPLITUDE_PERCENTAGE, ROBUSTNESS_PERCENTAGE = 3, 3
 MIN_SEGMENT_PERCENTAGE = 4
-SEGMENT_PERCENTAGE = 3
+SEGMENT_PERCENTAGE = 4
 MIN_DISTANCE_BETWEEN_FEATURE_POINTS = 2
 CONVOLVE_KERNEL_SIZE = 10
 CHANGE_THRESHOLD = 10
@@ -116,10 +116,10 @@ def feature_points(f):
                 # Add feature points
                 feature_pts.append(segment_start)  # Start of segment
                 feature_pts.append(i - 2)  # End of segment
+                segment_size = 2
+                segment_start = i - 1
             # Start a new segment
             segment_max, segment_min = max(f[i - 1], f[i]), min(f[i - 1], f[i])
-            segment_size = 2
-            segment_start = i - 1
         else:
             segment_max = max(segment_max, f[i])
             segment_min = min(segment_min, f[i])
@@ -281,7 +281,9 @@ def change_points_detection(input_sequence, return_signs=False):
         else:
             signs_fps[0] = 0
 
-    return signs_fps, signs
+    if return_signs:
+        return signs_fps, signs
+    return signs_fps
 
     # ── Add local extrema ─────────────────────────────────────────────────────
     # Minimum prominence: extremum must span at least this fraction of the
