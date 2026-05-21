@@ -129,20 +129,6 @@ def directional_seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WE
         annotate_change_points_selection(seq1)
         annotate_change_points_selection(seq2)
 
-    return
-
-    # ## Merge intervals of the sequence with the less nodes
-    # if len(nodes_1) < len(nodes_2):
-    #     nodes_2 = merge_intervals(nodes_2, len(nodes_1))
-    # elif len(nodes_2) < len(nodes_1):
-    #     nodes_1 = merge_intervals(nodes_1, len(nodes_2))
-    #
-    # if PLOT_MODE:
-    #     plot_two_sequences(seq1, seq2, suptitle="Sequences with Merged segments",
-    #                        vlines1=[n[0] for n in nodes_1] + [nodes_1[-1][1]],
-    #                        vlines2=[n[0] for n in nodes_2] + [nodes_2[-1][1]],
-    #                        vlines_label="Node Limits")
-
     # Extract features for each node
     len_seq1, len_seq2 = len(seq1), len(seq2)
     features_seq_1 = np.array([extract_node_features(seq1[node[0]:node[1] + 1], len_seq1) for node in nodes_1])
@@ -175,6 +161,7 @@ def directional_seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WE
 
     return distance, sigma
 
+
 def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
     """
     Wrapper for directional_seq_distance to compute a symmetric distance between two sequences.
@@ -194,7 +181,10 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
 def main():
     seqs, _ = load_sequences()
     import random
-    seq1, seq2 = seqs[random.randint(0, 1000)], seqs[random.randint(0, 1000)]
+    a, b = random.randint(0, 1000), random.randint(0, 1000)
+    print(a, b)
+    a, b = 397, 311
+    seq1, seq2 = seqs[a], seqs[b]
 
     # Make the sequences f length 1000 by interpolation
     new_length = 1000

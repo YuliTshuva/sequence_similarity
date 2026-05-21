@@ -20,12 +20,13 @@ rcParams['font.family'] = 'Times New Roman'
 
 # Hyperparameters
 AMPLITUDE_PERCENTAGE, ROBUSTNESS_PERCENTAGE = 3, 3
-MIN_SEGMENT_PERCENTAGE = 5
+MIN_SEGMENT_PERCENTAGE = 4
 SEGMENT_PERCENTAGE = 3
-MIN_DISTANCE_BETWEEN_FEATURE_POINTS = 5
+MIN_DISTANCE_BETWEEN_FEATURE_POINTS = 2
 CONVOLVE_KERNEL_SIZE = 10
 CHANGE_THRESHOLD = 10
 SLIDING_WINDOW_SIZE = 3
+SKIP_PERCENTAGE = 3
 
 # Old hyperparameters
 SEGMENT_THRESHOLD = 10  # minimum length (in percentages) of a segment to be considered for similarity
@@ -151,97 +152,11 @@ def robust_partition(f, feature_pts):
             break
         segment_value = np.round(np.mean(f[result[2 * i]:result[2 * i + 1] + 1]))
         next_segment_value = np.round(np.mean(f[result[2 * i + 2]:result[2 * i + 3] + 1]))
-        if segment_value == next_segment_value:
+        if segment_value == next_segment_value and result[2 * i + 2] - result[2 * i + 1] < len(f) * SKIP_PERCENTAGE / 100:
             result = result[:2 * i + 1] + result[2 * i + 3:]
             continue
         i += 1
 
-    return result
-
-
-def find_local_extrema(der_f, f, min_prominence):
-    """
-    Detect local peaks and valleys directly from the raw derivative,
-    bypassing the noisy sign array entirely.
-
-    Strategy:
-      1. Smooth der_f with a wide moving average to suppress noise.
-      2. Find zero-crossings of the smoothed derivative — these are
-         the true peaks (positive -> negative) and valleys (negative -> positive).
-      3. Filter by prominence: the extremum must stand out by at least
-         min_prominence from the surrounding local range.
-
-    Parameters
-    ----------
-    der_f          : raw first derivative array (output of np.diff)
-    f              : smoothed sequence (same length as der_f)
-    min_prominence : minimum local range around the extremum to keep it
-
-    Returns
-    -------
-    sorted list of extremum indices
-    """
-    # Smooth the derivative with a wide window to suppress noise
-    smooth_win = max(11, len(f) // 30)
-    kernel = np.ones(smooth_win) / smooth_win
-    smooth_der = np.convolve(der_f, kernel, mode='same')
-
-    # Find zero-crossings of the smoothed derivative
-    extrema = []
-    for i in range(1, len(smooth_der)):
-        if smooth_der[i - 1] > 0 and smooth_der[i] <= 0:
-            extrema.append(i)  # peak
-        elif smooth_der[i - 1] < 0 and smooth_der[i] >= 0:
-            extrema.append(i)  # valley
-
-    snapped = []
-    half_snap = max(5, smooth_win // 2)
-    for idx in extrema:
-        lo = max(0, idx - half_snap)
-        hi = min(len(f), idx + half_snap + 1)
-        window = f[lo:hi]
-        mean = np.mean(window)
-        # Pick whichever is further from the mean — max or min
-        if np.max(window) - mean >= mean - np.min(window):
-            snapped.append(lo + np.argmax(window))  # peak
-        else:
-            snapped.append(lo + np.argmin(window))  # valley
-    extrema = snapped
-
-    # Filter by prominence using a tight local window
-    # A smaller window ensures we measure the local stand-out of the extremum
-    # rather than the global amplitude, catching mid-sequence peaks/valleys
-    half_win = max(5, len(f) // 50)
-    filtered = []
-    for idx in extrema:
-        lo = max(0, idx - half_win)
-        hi = min(len(f), idx + half_win)
-        local_range = np.max(f[lo:hi]) - np.min(f[lo:hi])
-        if local_range >= min_prominence:
-            filtered.append(idx)
-
-    return filtered
-
-
-def drop_false_extrema(signs_fps, signs):
-    if len(signs_fps) < 4:
-        return signs_fps
-    result = list(signs_fps)
-    i = 0
-    while i < len(result) - 2:
-        # Dominant sign of segment i and segment i+1
-        seg_a = signs[result[i]:result[i + 1] + 1]
-        seg_b = signs[result[i + 1]:result[i + 2] + 1] if i + 2 < len(result) else []
-        if len(seg_a) == 0 or len(seg_b) == 0:
-            i += 1
-            continue
-        dir_a = np.sign(np.round(np.mean(seg_a)))
-        dir_b = np.sign(np.round(np.mean(seg_b)))
-        if dir_a == dir_b and dir_a != 0:
-            # Same direction on both sides — drop the boundary point between them
-            result = result[:i + 1] + result[i + 2:]
-        else:
-            i += 1
     return result
 
 
@@ -255,7 +170,6 @@ def merge_nearby_points(fps, f, min_distance=None):
     fps          : sorted list of feature point indices
     f            : the smoothed sequence
     min_distance : minimum allowed distance between two feature points.
-                   Defaults to len(f) // 40.
 
     Returns
     -------
@@ -348,10 +262,14 @@ def change_points_detection(input_sequence, return_signs=False):
 
     # Extract feature points out of signs - in pairs [start1, end1, start2, end2, ...]
     signs_fps = feature_points(signs)
+
     # Merge adjacent segments with the same trend
     signs_fps = robust_partition(signs, signs_fps)
 
-    signs_fps = merge_nearby_points(signs_fps, f)
+    # Mark node limits
+    signs_fps = mark_nodes_limits(f, len(input_sequence), signs_fps)
+
+    # signs_fps = merge_nearby_points(signs_fps, f)
     if len(input_sequence) - 1 not in signs_fps:
         if len(input_sequence) - 1 - signs_fps[-1] >= len(input_sequence) * SEGMENT_PERCENTAGE / 100:
             signs_fps.append(len(input_sequence) - 1)
@@ -411,12 +329,14 @@ def change_points_detection(input_sequence, return_signs=False):
         return signs_fps, signs
     return signs_fps
 
+
 def return_most_common_sign(segment):
     if len(segment) == 0:
         return 0
     counts = np.bincount(segment + 1)  # Shift to make -1 -> 0, 0 -> 1, 1 -> 2
     most_common = np.argmax(counts) - 1  # Shift back
     return most_common
+
 
 def mark_nodes_limits(f, len_seq, change_points):
     """
@@ -431,8 +351,6 @@ def mark_nodes_limits(f, len_seq, change_points):
     for i in range(0, len(change_points) - 1, 2):
         # Extract the start and end indices of the current segment
         start = change_points[i]
-        if start == 760:
-            pass
         # Check if we need to attend gap from the previous segment
         if accumulated_gap:
             accumulated_gap = False
@@ -440,21 +358,20 @@ def mark_nodes_limits(f, len_seq, change_points):
         end = change_points[i + 1]
 
         if i + 2 == len(change_points):
-            nodes_limits.append((start, end))
+            nodes_limits += [start, end]
             break
 
         next_start, next_end = change_points[i + 2], change_points[i + 3]
         # Calculate the difference between one segment's end and the next segment's start
         gap = int((next_start - 1) - (end + 1) + 1)
-        next_segment_y_size = f[next_start:next_end + 1].max() - f[next_start:next_end + 1].min()
         # If the gap is 1, we can merge the two segments into one
         if gap <= 1:
-            nodes_limits.append((start, end))
+            nodes_limits += [start, end]
         elif gap > len_seq * MIN_SEGMENT_PERCENTAGE / 100:
-            nodes_limits.append((start, end))
-            nodes_limits.append((end + 1, end + gap))
+            nodes_limits += [start, end]
+            nodes_limits += [end + 1, end + gap]
         else:
-            nodes_limits.append((start, end + gap // 2))
+            nodes_limits += [start, end + gap // 2]
             accumulated_gap = True
 
     return nodes_limits
