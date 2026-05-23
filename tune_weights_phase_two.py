@@ -29,7 +29,7 @@ RESULTS_PATH   = join("results", "human_tuning_results.json")
 TOP_K          = 3      # top-k human ranks treated as positives
 N_TRIALS       = 50
 SEED           = 42
-PLOT_MODE = True
+PLOT_MODE = False
 
 FEATURE_NAMES = [
     "curvature", "mean_diff", "mean_abs_diff", "mean_value",

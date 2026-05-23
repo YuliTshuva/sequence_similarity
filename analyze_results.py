@@ -12,7 +12,7 @@ seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s 
 
 
 def read_results():
-    results_files = [join("results", f) for f in os.listdir("results") if f.startswith("adversarial_examples")]
+    results_files = [join("results", f) for f in os.listdir("results") if f.startswith("baby_adversarial_examples")]
     results = {}
     for file in results_files:
         with open(file, "rb") as f:
@@ -43,11 +43,8 @@ def read_results():
         class_3 = sorted(class_3, key=lambda x: rank_ours.index(x))
         class_4 = sorted(class_4, key=lambda x: rank_ours.index(x))
 
-        if anchor_index == 29:
-            pass
-
         # Check if there's at least 2 examples in each class
-        if len(class_1) >= 2 and len(class_2) >= 2 and len(class_3) >= 2 and len(class_4) >= 2:
+        if len(class_1) >= 2 and len(class_2) >= 4 and len(class_3) >= 2 and len(class_4) >= 4:
             anchors_to_use.append(anchor_index)
 
             os.makedirs(index_to_sample_dir(sample_index), exist_ok=True)
@@ -64,6 +61,7 @@ def read_results():
                 pos = class_2[i]
                 i += 1
                 if pos in class_1[:2]:
+                    class_2.remove(pos)
                     continue
                 seq = seqs[pos]
                 np.save(join(index_to_sample_dir(sample_index), f"candidate{count + 3}.npy"), seq)
@@ -78,16 +76,15 @@ def read_results():
                 pos = class_4[i]
                 i += 1
                 if pos in class_3[:2]:
+                    class_4.remove(pos)
                     continue
                 seq = seqs[pos]
                 np.save(join(index_to_sample_dir(sample_index), f"candidate{count + 7}.npy"), seq)
                 count += 1
 
-            sample_index += 1
-
-            if sample_index == 0:
+            if sample_index == 10:
                 # Plotting
-                plt.subplots(4, 3, figsize=(15, 20))
+                plt.subplots(4, 3, figsize=(30, 20))
 
                 # Plot the anchor
                 plt.subplot(4, 3, 2)
@@ -101,22 +98,23 @@ def read_results():
                     plt.subplot(4, 3, i + 4)
                     plt.title(f"Positive {i + 1}: {pos}")
                     seq = seqs[pos]
-                    plt.plot(range(len(seq)), seq, color="turquoise")
+                    plt.plot(range(len(seq)), seq, color="salmon")
                     plt.ylim(0, 1)
 
                 # Plot negatives
                 for i, neg in enumerate(class_3[:2] + class_4[:2]):
-                    plt.subplot(4, 3, i + 7)
+                    plt.subplot(4, 3, i + 8)
                     plt.title(f"Negative {i + 1}: {neg}")
                     seq = seqs[neg]
-                    plt.plot(range(len(seq)), seq, color="salmon")
+                    plt.plot(range(len(seq)), seq, color="turquoise")
                     plt.ylim(0, 1)
 
                 plt.tight_layout()
                 plt.show()
 
-    print(f'Anchors to use ({len(anchors_to_use)}):', anchors_to_use)
+            sample_index += 1
 
+    print(f'Anchors to use ({len(anchors_to_use)}):', anchors_to_use)
 
 
 if __name__ == "__main__":
