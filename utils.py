@@ -4,14 +4,9 @@ Utility functions for similarity.
 """
 
 # Imports
-import os
-import pandas as pd
 import numpy as np
-from pyts.approximation import SymbolicAggregateApproximation
-from pyts.preprocessing.discretizer import _uniform_bins
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
-from os.path import join
 
 # Constants
 STRATEGY = "uniform"
@@ -19,27 +14,12 @@ TIMEOUT = 10  # seconds
 rcParams['font.family'] = 'Times New Roman'
 
 # Hyperparameters
-AMPLITUDE_PERCENTAGE, ROBUSTNESS_PERCENTAGE = 3, 3
 MIN_SEGMENT_PERCENTAGE = 4
 SEGMENT_PERCENTAGE = 4
 MIN_DISTANCE_BETWEEN_FEATURE_POINTS = 2
-CONVOLVE_KERNEL_SIZE = 10
 CHANGE_THRESHOLD = 10
 SLIDING_WINDOW_SIZE = 3
 SKIP_PERCENTAGE = 3
-
-# Old hyperparameters
-SEGMENT_THRESHOLD = 10  # minimum length (in percentages) of a segment to be considered for similarity
-SAX_N_BINS = 5  # number of bins for SAX transformation
-PL_ALPHA = 0.5  # weight for combining similarity scores
-CHANGE_POINTS_PEN = 10  # penalty for DTW distance
-EPSILON = 0.1  # threshold for extending the best match
-
-
-def sawtooth_k_cycles(n_points=1000, k=5):
-    x = np.linspace(0, 1, n_points)  # normalize domain to [0,1]
-    saw = (k * x) - np.floor(k * x)  # k cycles
-    return saw
 
 
 def sign_func(x, threshold=0):
@@ -49,51 +29,6 @@ def sign_func(x, threshold=0):
         return -1
     else:
         return 0
-
-
-def _compute_bins(X, n_samples, n_bins):
-    "from KBinsDiscretizer "
-    sample_min, sample_max = np.min(X, axis=1), np.max(X, axis=1)
-    bin_edges = _uniform_bins(
-        sample_min, sample_max, n_samples, n_bins).T
-    return bin_edges
-
-
-def sax_transform(data, n_bins=5):
-    # Adjust the shape for calculation
-    original_shape = data.shape
-    data = data.reshape(1, -1)
-
-    # Apply SAX
-    sax = SymbolicAggregateApproximation(n_bins=n_bins, strategy=STRATEGY)
-    bins = _compute_bins(X=data,
-                         n_samples=len(data),
-                         n_bins=n_bins)
-    data_sax = sax.fit_transform(data)
-    # bottom_bool = np.r_[True, data_sax[0, 1:] > data_sax[0, :-1]]
-
-    # Reshape back to original shape
-    data = data.reshape(original_shape)
-    data_sax = data_sax.reshape(original_shape)
-
-    return data_sax, bins, sax
-
-
-def extract_segments(points, change_points, segment_threshold):
-    segments = []
-    for start_idx in range(len(change_points) - 1):
-        start = change_points[start_idx]
-        for i in range(1, len(change_points)):
-            end = change_points[i]
-            segment = points[start:end]
-            if len(segment) > segment_threshold:
-                segments.append((segment, (start, end)))
-    return segments
-
-
-def load_data(file_path):
-    df = pd.read_csv(file_path)
-    return df["y"].to_numpy()
 
 
 def feature_points(f):
@@ -108,7 +43,7 @@ def feature_points(f):
     segment_start = 0
     segment_size = 1
     for i in range(1, len(f)):
-        if segment_max - segment_min > amp * AMPLITUDE_PERCENTAGE / 100:
+        if segment_max - segment_min > 0:
             # Update segment size
             segment_size -= 1
             # Check segment size
@@ -125,7 +60,7 @@ def feature_points(f):
             segment_min = min(segment_min, f[i])
             segment_size += 1
 
-    if (segment_max - segment_min < amp * AMPLITUDE_PERCENTAGE / 100 and
+    if (segment_max - segment_min < 0.01 and
             segment_size > len(f) * SEGMENT_PERCENTAGE / 100):
         feature_pts.append(segment_start)
         feature_pts.append(len(f) - 1)
@@ -152,7 +87,8 @@ def robust_partition(f, feature_pts):
             break
         segment_value = np.round(np.mean(f[result[2 * i]:result[2 * i + 1] + 1]))
         next_segment_value = np.round(np.mean(f[result[2 * i + 2]:result[2 * i + 3] + 1]))
-        if segment_value == next_segment_value and result[2 * i + 2] - result[2 * i + 1] < len(f) * SKIP_PERCENTAGE / 100:
+        if segment_value == next_segment_value and result[2 * i + 2] - result[2 * i + 1] < len(
+                f) * SKIP_PERCENTAGE / 100:
             result = result[:2 * i + 1] + result[2 * i + 3:]
             continue
         i += 1
@@ -161,20 +97,6 @@ def robust_partition(f, feature_pts):
 
 
 def merge_nearby_points(fps, f, min_distance=None):
-    """
-    Merge feature points that are closer than min_distance by keeping
-    the one whose f-value is most extreme (furthest from local mean).
-
-    Parameters
-    ----------
-    fps          : sorted list of feature point indices
-    f            : the smoothed sequence
-    min_distance : minimum allowed distance between two feature points.
-
-    Returns
-    -------
-    filtered sorted list of feature point indices
-    """
     if min_distance is None:
         min_distance = max(5, MIN_DISTANCE_BETWEEN_FEATURE_POINTS * len(f) // 100)
 
@@ -216,23 +138,10 @@ def merge_nearby_points(fps, f, min_distance=None):
     return result
 
 
-def change_points_detection(input_sequence, return_signs=False):
-    # Copy the input sequence to avoid modifying the original data
-    f = input_sequence.copy()
-
-    # Smooth the data
-    kernel = np.array(
-        list(range(1, CONVOLVE_KERNEL_SIZE // 2 + 1)) +
-        list(range(CONVOLVE_KERNEL_SIZE // 2 - 1, 0, -1))
-    )
-    kernel *= kernel
-    kernel = kernel / kernel.sum()
-    convolved_f = np.convolve(f, kernel, mode='same')
-    f[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] = convolved_f[
-        (CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)]
-
+def change_points_detection(f, return_signs=False):
     # Calculate first derivative of f
-    der_f = np.concat([np.array([0]), np.diff(f, n=1)])
+    der_f = np.diff(f, n=1)
+    der_f = np.concat([der_f[0], der_f])
 
     # Calculate the derivative amplitude
     der_amp = np.max(der_f) - np.min(der_f)
@@ -243,12 +152,6 @@ def change_points_detection(input_sequence, return_signs=False):
     # Apply sign_func over der_f
     signs = [sign_func(x, threshold) for x in der_f]
 
-    # Filter the edges
-    signs = (
-            [signs[(CONVOLVE_KERNEL_SIZE - 1) // 2]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2) +
-            signs[(CONVOLVE_KERNEL_SIZE - 1) // 2:(CONVOLVE_KERNEL_SIZE - 1) // 2 * (-1)] +
-            [signs[-(CONVOLVE_KERNEL_SIZE - 1) // 2 - 1]] * ((CONVOLVE_KERNEL_SIZE - 1) // 2)
-    )
     if len(signs) < len(f):
         signs = signs + [signs[-1]] * (len(f) - len(signs))
     signs = np.array(signs)
@@ -267,16 +170,16 @@ def change_points_detection(input_sequence, return_signs=False):
     signs_fps = robust_partition(signs, signs_fps)
 
     # Mark node limits
-    signs_fps = mark_nodes_limits(f, len(input_sequence), signs_fps)
+    signs_fps = mark_nodes_limits(f, len(f), signs_fps)
 
     # signs_fps = merge_nearby_points(signs_fps, f)
-    if len(input_sequence) - 1 not in signs_fps:
-        if len(input_sequence) - 1 - signs_fps[-1] >= len(input_sequence) * SEGMENT_PERCENTAGE / 100:
-            signs_fps.append(len(input_sequence) - 1)
+    if len(f) - 1 not in signs_fps:
+        if len(f) - 1 - signs_fps[-1] >= len(f) * SEGMENT_PERCENTAGE / 100:
+            signs_fps.append(len(f) - 1)
         else:
-            signs_fps[-1] = len(input_sequence) - 1
+            signs_fps[-1] = len(f) - 1
     if 0 not in signs_fps:
-        if signs_fps[0] >= len(input_sequence) * SEGMENT_PERCENTAGE / 100:
+        if signs_fps[0] >= len(f) * SEGMENT_PERCENTAGE / 100:
             signs_fps.insert(0, 0)
         else:
             signs_fps[0] = 0
@@ -334,20 +237,6 @@ def mark_nodes_limits(f, len_seq, change_points):
 
 
 def extract_node_features(segment, len_sequence):
-    """
-    Given a segment, extract features for the node.
-    Specifically, we are interested in:
-    1) The mean curvature of the segment.
-    2) The mean difference between consecutive points in the segment.
-    3) The mean of the segment.
-    4) Segment amplitude (max - min).
-    5) The length of the segment.
-    6) The percentage of the segment that is increasing, decreasing, or constant.
-    :param sequence: The full sequence from which the segment is extracted.
-           Normalized to [0,1]!
-    :param segment: A segment of values representing a segment of the original segment.
-    :return: A feature vector containing the extracted features.
-    """
     curvature = np.mean(np.abs(np.diff(segment, n=2)))
 
     # Find the first derivative of the segment
@@ -394,7 +283,6 @@ def annotate_change_points_selection(input_sequence):
 
     # Robust the partition
     signs_fps, signs = change_points_detection(input_sequence, return_signs=True)
-    f = input_sequence.copy()
 
     # Plot the data
     ax[0].scatter(range(len(signs)), signs, color='royalblue')
@@ -405,8 +293,8 @@ def annotate_change_points_selection(input_sequence):
     ax[0].set_ylabel("Value", fontsize=22)
 
     # Plot the data
-    ax[1].plot(range(len(f)), f, color='royalblue')
-    ax[1].scatter(signs_fps, f[signs_fps], color='hotpink', s=70)
+    ax[1].plot(range(len(input_sequence)), input_sequence, color='royalblue')
+    ax[1].scatter(signs_fps, input_sequence[signs_fps], color='hotpink', s=70)
 
     # Set title
     ax[1].set_title("Input Sequence", fontsize=30)
@@ -421,125 +309,3 @@ def annotate_change_points_selection(input_sequence):
     plt.tight_layout()
     # Save the figure
     plt.show()
-
-
-def sinkhorn(A, max_iter=1000, tol=1e-9):
-    """Normalize a positive matrix so rows and columns all sum to 1."""
-    A = A.astype(float)
-    for _ in range(max_iter):
-        # Normalize rows
-        A /= A.sum(axis=1, keepdims=True)
-        # Normalize columns
-        A /= A.sum(axis=0, keepdims=True)
-
-        # Check convergence
-        if np.allclose(A.sum(axis=1), 1, atol=tol) and \
-                np.allclose(A.sum(axis=0), 1, atol=tol):
-            break
-    return A
-
-
-def merge_intervals(intervals: list[tuple[int, int]], target_size: int) -> list[tuple[int, int]]:
-    """
-    Reduce a list of intervals to target_size by agglomeratively merging
-    the closest adjacent pairs until the desired length is reached.
-
-    Merge criterion: smallest combined span (end - start) of two adjacent intervals.
-    """
-    if target_size >= len(intervals):
-        return intervals
-    if target_size <= 1:
-        return [(intervals[0][0], intervals[-1][1])]
-
-    intervals = [list(i) for i in intervals]  # work with mutable copies
-
-    while len(intervals) > target_size:
-        # Find the adjacent pair with the smallest merged span
-        best_idx = None
-        best_span = float('inf')
-
-        for i in range(len(intervals) - 1):
-            merged_span = intervals[i + 1][1] - intervals[i][0]
-            if merged_span < best_span:
-                best_span = merged_span
-                best_idx = i
-
-        # Merge the best pair into one interval
-        intervals[best_idx] = [intervals[best_idx][0], intervals[best_idx + 1][1]]
-        intervals.pop(best_idx + 1)
-
-    return [tuple(i) for i in intervals]
-
-
-def annotate_mapping(seq1, seq2, mapping, title="Mapping of segments in seq1 to seq2", save_path=None):
-    # Normalize sequences to be in [0, 1]
-    if np.max(seq1) - np.min(seq1) > 0:
-        seq1 = (seq1 - np.min(seq1)) / (np.max(seq1) - np.min(seq1))
-    else:
-        seq1 = np.zeros_like(seq1) + 0.5
-    if np.max(seq2) - np.min(seq2) > 0:
-        seq2 = (seq2 - np.min(seq2)) / (np.max(seq2) - np.min(seq2))
-    else:
-        seq2 = np.zeros_like(seq2) + 0.5
-
-    # Get change points for both sequences
-    seq_1_change_points = change_points_detection(seq1)
-    seq_2_change_points = change_points_detection(seq2)
-
-    # Create nodes based on change points
-    nodes_1 = [(seq_1_change_points[i], seq_1_change_points[i + 1] - 1) for i in
-               range(len(seq_1_change_points) - 1)]
-    nodes_2 = [(seq_2_change_points[i], seq_2_change_points[i + 1] - 1) for i in
-               range(len(seq_2_change_points) - 1)]
-    # Correct the last node to include the end of the sequence
-    nodes_1[-1] = (nodes_1[-1][0], len(seq1) - 1)
-    nodes_2[-1] = (nodes_2[-1][0], len(seq2) - 1)
-
-    # Get the separating lines between the nodes
-    vlines1 = [n[0] for n in nodes_1] + [nodes_1[-1][1]]
-    vlines2 = [n[0] for n in nodes_2] + [nodes_2[-1][1]]
-
-    # Plot the probability map of each node in seq1 to seq2
-    # Get a figure for the current node
-    plt.subplots(len(nodes_1), 2, figsize=(25, 5 * len(nodes_1)))
-    for i in range(len(nodes_1)):
-        # Get the subplot of row i+1 column 1
-        plt.subplot(len(nodes_1), 2, 2 * i + 1)
-        plt.plot(seq1, color='royalblue')
-        plt.vlines(vlines1, ymin=0, ymax=1, color='turquoise', linestyle='--')
-        plt.axvspan(nodes_1[i][0], nodes_1[i][1], color='salmon')
-        plt.title(f"Node {i} in Sequence 1", fontsize=20)
-        if i + 1 == len(nodes_1):
-            plt.xlabel("Time", fontsize=15)
-        plt.ylabel("Value", fontsize=15)
-        # Get the mapping probabilities for the current node
-        mapping_probs = mapping[i]
-        # Plot the second sequence with the mapping probabilities
-        # Get the subplot of row i+1 column 2
-        plt.subplot(len(nodes_1), 2, 2 * i + 1 + 1)
-        plt.plot(seq2, color='dodgerblue')
-        plt.vlines(vlines2, ymin=0, ymax=1, color='turquoise', linestyle='--')
-        for j in range(len(nodes_2)):
-            plt.axvspan(nodes_2[j][0], nodes_2[j][1], color='salmon', alpha=mapping_probs[j].item())
-        plt.title(f"Mapping of Node {i} to Sequence 2", fontsize=20)
-        if i + 1 == len(nodes_1):
-            plt.xlabel("Time", fontsize=15)
-
-    plt.suptitle(title, fontsize=30)
-    plt.tight_layout()
-    if save_path is not None:
-        plt.savefig(save_path)
-    plt.show()
-
-
-def increase_sequence_resolution(seq, new_length):
-    """
-    Increases the resolution of a sequence by linear interpolation.
-    """
-    old_length = len(seq)
-    if old_length == new_length:
-        return seq
-    x_old = np.arange(old_length)
-    x_new = np.linspace(0, old_length - 1, new_length)
-    seq_new = np.interp(x_new, x_old, seq)
-    return seq_new

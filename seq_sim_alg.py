@@ -175,38 +175,24 @@ def seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WEIGHTS):
     return distance, sigma
 
 
+def examine_fp(seq):
+    # Normalize sequences to be in [0, 1]
+    if np.max(seq) - np.min(seq) > 0:
+        seq = (seq - np.min(seq)) / (np.max(seq) - np.min(seq))
+    else:
+        seq = np.zeros_like(seq) + 0.5
+
+    annotate_change_points_selection(seq)
+
+
 def main():
     seqs, _ = load_sequences()
+    seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
     import random
-    a, b = random.randint(0, 1000), random.randint(0, 1000)
-    print(a, b)
-    # a, b = 397, 311
-    seq1, seq2 = seqs[a], seqs[b]
-
-    # Make the sequences f length 1000 by interpolation
-    new_length = 1000
-    seq1 = np.interp(np.linspace(0, len(seq1) - 1, new_length), np.arange(len(seq1)), seq1)
-    seq2 = np.interp(np.linspace(0, len(seq2) - 1, new_length), np.arange(len(seq2)), seq2)
-
-    # Compute distance
-    distance, sigma = directional_seq_distance(seq1, seq2, alpha=ALPHA)
-
-    # Print the distance
-    print("Distance between the two sequences:", distance)
-
-    # Plot sigma as a heatmap
-    plt.figure(figsize=(8, 6))
-    plt.imshow(sigma.detach().numpy(), cmap='viridis', aspect='auto')
-    plt.colorbar(label='Mapping Strength')
-    plt.xlabel('Nodes in Sequence 2', fontsize=15)
-    plt.ylabel('Nodes in Sequence 1', fontsize=15)
-    plt.title(f'Mapping Matrix (Sigma)', fontsize=20)
-    plt.xticks(range(sigma.shape[1]))
-    plt.yticks(range(sigma.shape[0]))
-    plt.tight_layout()
-    plt.show()
-
-    annotate_mapping(seq1, seq2, sigma.detach().numpy())
+    for i in range(5):
+        a = random.randint(0, 1000)
+        print(a)
+        examine_fp(seqs[a])
 
 
 if __name__ == "__main__":

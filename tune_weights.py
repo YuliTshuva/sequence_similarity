@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 import optuna
 from os.path import join
 from seq_sim_alg import seq_distance, ALPHA, FEATURE_WEIGHTS
-from compare_baselines import dtw_distance, lcss_distance
+from compare_baselines import dtw_distance, lcss_d2
 
 # ── config ────────────────────────────────────────────────────────────────────
 
@@ -156,7 +156,7 @@ def evaluate_all_methods(groups, feature_weights=None):
                                         feature_weights=feature_weights)
             scores["ours"].append(dist_ours)
             scores["dtw"].append(dtw_distance(anchor, cseq))
-            scores["lcss"].append(lcss_distance(anchor, cseq))
+            scores["lcss"].append(lcss_d2(anchor, cseq))
 
         if PLOT_MODE:
             plot_methods_ranking(anchor, scores["ours"], cands)
