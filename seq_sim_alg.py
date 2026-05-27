@@ -189,7 +189,7 @@ def main():
     seqs, _ = load_sequences()
     seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
     import random
-    for i in range(5):
+    for i in range(3):
         a = random.randint(0, 1000)
         print(a)
         examine_fp(seqs[a])
