@@ -94,14 +94,7 @@ def directional_seq_distance(seq1, seq2, alpha=ALPHA, feature_weights=FEATURE_WE
     feature_weights = feature_weights / np.sum(feature_weights)
 
     # Normalize sequences to be in [0, 1]
-    if np.max(seq1) - np.min(seq1) > 0:
-        seq1 = (seq1 - np.min(seq1)) / (np.max(seq1) - np.min(seq1))
-    else:
-        seq1 = np.zeros_like(seq1) + 0.5
-    if np.max(seq2) - np.min(seq2) > 0:
-        seq2 = (seq2 - np.min(seq2)) / (np.max(seq2) - np.min(seq2))
-    else:
-        seq2 = np.zeros_like(seq2) + 0.5
+    seq1, seq2 = normalize_sequence(seq1), normalize_sequence(seq2)
 
     # Plot the sequences
     if PLOT_MODE and False:
@@ -189,9 +182,9 @@ def main():
     seqs, _ = load_sequences()
     seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
     import random
-    for i in range(3):
+    for i in range(5):
         a = random.randint(0, 1000)
-        print(a)
+        print(f"{a}, ", end="")
         examine_fp(seqs[a])
 
 

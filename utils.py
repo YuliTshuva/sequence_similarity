@@ -4,14 +4,9 @@ Utility functions for similarity.
 """
 
 # Imports
-import os
-import pandas as pd
 import numpy as np
-from pyts.approximation import SymbolicAggregateApproximation
-from pyts.preprocessing.discretizer import _uniform_bins
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
-from os.path import join
 
 # Constants
 STRATEGY = "uniform"
@@ -19,25 +14,10 @@ TIMEOUT = 10  # seconds
 rcParams['font.family'] = 'Times New Roman'
 
 # Hyperparameters
-AMPLITUDE_PERCENTAGE, ROBUSTNESS_PERCENTAGE = 3, 3
-MIN_SEGMENT_PERCENTAGE = 5
 SEGMENT_PERCENTAGE = 2
 MIN_DISTANCE_BETWEEN_FEATURE_POINTS = 1
-CONVOLVE_KERNEL_SIZE = 10
 CHANGE_THRESHOLD = 10
-
-# Old hyperparameters
-SEGMENT_THRESHOLD = 10  # minimum length (in percentages) of a segment to be considered for similarity
-SAX_N_BINS = 5  # number of bins for SAX transformation
-PL_ALPHA = 0.5  # weight for combining similarity scores
-CHANGE_POINTS_PEN = 10  # penalty for DTW distance
-EPSILON = 0.1  # threshold for extending the best match
-
-
-def sawtooth_k_cycles(n_points=1000, k=5):
-    x = np.linspace(0, 1, n_points)  # normalize domain to [0,1]
-    saw = (k * x) - np.floor(k * x)  # k cycles
-    return saw
+EPSILON = 1e-6
 
 
 def sign_func(x, threshold=0):
@@ -48,50 +28,13 @@ def sign_func(x, threshold=0):
     else:
         return 0
 
+def normalize_sequence(seq):
+    if np.max(seq) - np.min(seq) > 0:
+        seq = (seq - np.min(seq)) / (np.max(seq) - np.min(seq))
+    else:
+        seq = np.zeros_like(seq) + 0.5
+    return seq
 
-def _compute_bins(X, n_samples, n_bins):
-    "from KBinsDiscretizer "
-    sample_min, sample_max = np.min(X, axis=1), np.max(X, axis=1)
-    bin_edges = _uniform_bins(
-        sample_min, sample_max, n_samples, n_bins).T
-    return bin_edges
-
-
-def sax_transform(data, n_bins=5):
-    # Adjust the shape for calculation
-    original_shape = data.shape
-    data = data.reshape(1, -1)
-
-    # Apply SAX
-    sax = SymbolicAggregateApproximation(n_bins=n_bins, strategy=STRATEGY)
-    bins = _compute_bins(X=data,
-                         n_samples=len(data),
-                         n_bins=n_bins)
-    data_sax = sax.fit_transform(data)
-    # bottom_bool = np.r_[True, data_sax[0, 1:] > data_sax[0, :-1]]
-
-    # Reshape back to original shape
-    data = data.reshape(original_shape)
-    data_sax = data_sax.reshape(original_shape)
-
-    return data_sax, bins, sax
-
-
-def extract_segments(points, change_points, segment_threshold):
-    segments = []
-    for start_idx in range(len(change_points) - 1):
-        start = change_points[start_idx]
-        for i in range(1, len(change_points)):
-            end = change_points[i]
-            segment = points[start:end]
-            if len(segment) > segment_threshold:
-                segments.append((segment, (start, end)))
-    return segments
-
-
-def load_data(file_path):
-    df = pd.read_csv(file_path)
-    return df["y"].to_numpy()
 
 
 def feature_points(f):
@@ -106,7 +49,7 @@ def feature_points(f):
     segment_start = 0
     segment_size = 1
     for i in range(1, len(f)):
-        if segment_max - segment_min > amp * AMPLITUDE_PERCENTAGE / 100:
+        if segment_max - segment_min > EPSILON:
             # Update segment size
             segment_size -= 1
             # Check segment size
@@ -123,7 +66,7 @@ def feature_points(f):
             segment_min = min(segment_min, f[i])
             segment_size += 1
 
-    if (segment_max - segment_min < amp * AMPLITUDE_PERCENTAGE / 100 and
+    if (segment_max - segment_min < EPSILON and
             segment_size > len(f) * SEGMENT_PERCENTAGE / 100):
         feature_pts.append(segment_start)
         feature_pts.append(len(f) - 1)
@@ -243,32 +186,28 @@ def merge_nearby_points(fps, f, min_distance=None):
 
 
 def change_points_detection(input_sequence, return_signs=False):
-    # Copy the input sequence to avoid modifying the original data
-    f = input_sequence.copy()
+    f = input_sequence
 
     # Calculate first derivative of f
     der_f = np.diff(f, n=1)
     der_f = np.concat([[der_f[0]], der_f])
 
     # Calculate the derivative amplitude
-    der_amp = np.max(der_f) - np.min(der_f)
+    der_amp = (np.max(der_f) - np.min(der_f)) / 2
 
     # Track change points in the derivative
     threshold = CHANGE_THRESHOLD * der_amp / 100
 
     # Apply sign_func over der_f
     signs = np.array([sign_func(x, threshold) for x in der_f])
-    signs = signs + np.array([sign_func(x, 0) for x in der_f])
+    signs = signs + np.array([sign_func(x, threshold / 3) for x in der_f])
 
     # Extract feature points out of signs - in pairs [start1, end1, start2, end2, ...]
     signs_fps = feature_points(signs)
 
-    # ── Add local extrema ─────────────────────────────────────────────────────
-    # Minimum prominence: extremum must span at least this fraction of the
-    # sequence amplitude to be included. Tune if too many/few are added.
+    # Extract local extrema
     amp = np.max(f) - np.min(f)
-    min_prominence = amp * 0.07  # 7% of total amplitude
-
+    min_prominence = amp * 0.05
     extrema = find_local_extrema(der_f, f, min_prominence)
 
     # Merge extrema into existing feature points and re-sort
@@ -340,7 +279,7 @@ def mark_nodes_limits(f, len_seq, change_points):
         # If the gap is 1, we can merge the two segments into one
         if gap <= 1:
             nodes_limits.append((start, end))
-        elif gap > len_seq * MIN_SEGMENT_PERCENTAGE / 100:
+        elif gap > len_seq * SEGMENT_PERCENTAGE / 100:
             nodes_limits.append((start, end))
             nodes_limits.append((end + 1, end + gap))
         else:
@@ -351,21 +290,8 @@ def mark_nodes_limits(f, len_seq, change_points):
 
 
 def extract_node_features(segment, len_sequence):
-    """
-    Given a segment, extract features for the node.
-    Specifically, we are interested in:
-    1) The mean curvature of the segment.
-    2) The mean difference between consecutive points in the segment.
-    3) The mean of the segment.
-    4) Segment amplitude (max - min).
-    5) The length of the segment.
-    6) The percentage of the segment that is increasing, decreasing, or constant.
-    :param sequence: The full sequence from which the segment is extracted.
-           Normalized to [0,1]!
-    :param segment: A segment of values representing a segment of the original segment.
-    :return: A feature vector containing the extracted features.
-    """
-    curvature = np.mean(np.abs(np.diff(segment, n=2)))
+    # Calculate the curvature of the segment (mean of absolute second derivative)
+    mean_curvature = np.mean(np.abs(np.diff(segment, n=2)))
 
     # Find the first derivative of the segment
     der_f = np.diff(segment)
@@ -373,6 +299,7 @@ def extract_node_features(segment, len_sequence):
     # Calculate the mean difference between consecutive points in the segment
     mean_diff = np.mean(der_f)
     mean_abs_diff = np.mean(np.abs(der_f))
+    sum_abs_diff = np.sum(np.abs(der_f))
 
     # Calculate the segment amplitude (max - min)
     amplitude = np.max(segment) - np.min(segment)
