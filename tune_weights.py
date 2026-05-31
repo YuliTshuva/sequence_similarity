@@ -18,7 +18,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import optuna
 from os.path import join
-from seq_sim_alg import seq_distance, ALPHA, FEATURE_WEIGHTS
+from seq_sim_alg import seq_distance, FEATURE_WEIGHTS
 from compare_baselines import dtw_distance, lcss_d2
 
 # ── config ────────────────────────────────────────────────────────────────────
@@ -32,9 +32,9 @@ SEED           = 42
 PLOT_MODE = False
 
 FEATURE_NAMES = [
-    "curvature", "mean_diff", "mean_abs_diff", "mean_value",
-    "amplitude", "length", "sharp_increasing", "light_increasing",
-    "sharp_decreasing", "light_decreasing", "constant",
+    "mean_curvature", "mean_diff", "mean_abs_diff", 'sum_abs_diff',
+    "mean_value", "amplitude", "length", "sharp_increasing",
+    "light_increasing", "sharp_decreasing", "light_decreasing", "constant"
 ]
 
 # ── data loading ──────────────────────────────────────────────────────────────
@@ -152,8 +152,7 @@ def evaluate_all_methods(groups, feature_weights=None):
         scores = {m: [] for m in methods}
         for c in cands:
             cseq = c["seq"]
-            dist_ours, _ = seq_distance(anchor, cseq, alpha=ALPHA,
-                                        feature_weights=feature_weights)
+            dist_ours, _ = seq_distance(anchor, cseq, feature_weights=feature_weights)
             scores["ours"].append(dist_ours)
             scores["dtw"].append(dtw_distance(anchor, cseq))
             scores["lcss"].append(lcss_d2(anchor, cseq))
@@ -251,7 +250,7 @@ def objective(trial, groups, init_weights):
         cands  = g["candidates"]
         scores = []
         for c in cands:
-            dist, _ = seq_distance(anchor, c["seq"], alpha=ALPHA,
+            dist, _ = seq_distance(anchor, c["seq"],
                                    feature_weights=weights)
             scores.append(dist)
         aps.append(average_precision_vs_human(scores, cands))

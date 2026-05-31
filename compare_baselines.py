@@ -2,6 +2,7 @@ import numpy as np
 from typing import Optional
 from itertools import product
 
+
 def euclidean_distance(a: np.ndarray, b: np.ndarray) -> Optional[float]:
     """
     Euclidean (L2) distance between two equal-length sequences.
@@ -88,11 +89,10 @@ def _candidate_translations_1d(ax, bx, delta, eps, n_quantiles):
 def similarity_s2(a, b, delta, eps, n_quantiles=7):
     a = np.asarray(a, dtype=float)
     b = np.asarray(b, dtype=float)
-    cx_list = _candidate_translations_1d(a[:, 0], b[:, 0], delta, eps, n_quantiles)
-    cy_list = _candidate_translations_1d(a[:, 1], b[:, 1], delta, eps, n_quantiles)
+    c_list = _candidate_translations_1d(a, b, delta, eps, n_quantiles)
     best = 0.0
-    for cx, cy in product(cx_list, cy_list):
-        s = similarity_s1(a, b + np.array([cx, cy]), delta, eps)
+    for c in c_list:
+        s = similarity_s1(a, b + c, delta, eps)
         if s > best:
             best = s
             if best == 1.0:
@@ -100,8 +100,14 @@ def similarity_s2(a, b, delta, eps, n_quantiles=7):
     return best
 
 
-def lcss_d2(a, b, delta, eps, n_quantiles=7):
+def lcss_d2(a, b, delta=250, eps=0.1585, n_quantiles=7):
+    """
+    In the paper they used:
+    * delta = 20-30% of the sequence length
+    * eps = the smallest standard deviation
+    """
     return 1.0 - similarity_s2(a, b, delta, eps, n_quantiles)
+
 
 def pearson_distance(a: np.ndarray, b: np.ndarray) -> Optional[float]:
     """
@@ -116,17 +122,3 @@ def pearson_distance(a: np.ndarray, b: np.ndarray) -> Optional[float]:
         return None
     r = float(np.corrcoef(a, b)[0, 1])
     return 1.0 - r
-
-
-# --- Example usage ---
-def main():
-    a = [0.1, 0.3, 0.6, 0.8, 0.9, 0.7, 0.4, 0.2]
-    b = [0.0, 0.2, 0.5, 0.9, 0.8, 0.6, 0.3, 0.1]
-
-    scores = all_distances(a, b)
-    for method, score in scores.items():
-        print(f"{method:<20} {score:.4f}" if score is not None else f"{method:<20} n/a")
-
-
-if __name__ == "__main__":
-    main()
