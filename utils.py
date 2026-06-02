@@ -489,6 +489,12 @@ def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None,
 
     if matching is not None:
         colors = plt.cm.tab20.colors
+        # Per-axis list of (seg_start, seg_end, y) for each placed label
+        placed = {0: [], 1: []}
+        Y_BASE = 1.02  # above the plot's top edge
+        Y_STEP = 0.11
+        Y_TOL = 0.025  # two labels are "on the same row" if |Δy| < this
+
         for idx, (x_indices, y_indices) in enumerate(matching):
             color = colors[idx % len(colors)]
             x_start, x_end = vlines1[x_indices[0]], vlines1[x_indices[-1] + 1]
@@ -498,16 +504,30 @@ def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None,
             axes[1].axvspan(y_start, y_end, alpha=0.3, color=color)
 
             label = _segment_label(idx)
-            label_style = dict(ha='center', va='top', fontsize=13, fontweight='bold',
-                               color='black',
-                               bbox=dict(boxstyle='round,pad=0.25',
-                                         facecolor='white', edgecolor=color,
-                                         linewidth=1.5, alpha=0.9))
-            # x in data coords, y in axes-fraction coords -> label sits near the top
-            axes[0].text((x_start + x_end) / 2, 0.97 + 0.1, label,
-                         transform=axes[0].get_xaxis_transform(), **label_style)
-            axes[1].text((y_start + y_end) / 2, 0.97 + 0.1, label,
-                         transform=axes[1].get_xaxis_transform(), **label_style)
+
+            for ax_idx, ax, seg_lo, seg_hi in [
+                (0, axes[0], x_start, x_end),
+                (1, axes[1], y_start, y_end),
+            ]:
+                # Find the lowest row whose existing segments don't overlap
+                # the new one. Touching endpoints don't count as overlap.
+                y = Y_BASE
+                while any(
+                    abs(y - pl_y) < Y_TOL
+                    and seg_lo < pl_hi and pl_lo < seg_hi
+                    for pl_lo, pl_hi, pl_y in placed[ax_idx]
+                ):
+                    y += Y_STEP
+                placed[ax_idx].append((seg_lo, seg_hi, y))
+
+                label_style = dict(ha='center', va='bottom', fontsize=13,
+                                   fontweight='bold', color='black',
+                                   bbox=dict(boxstyle='round,pad=0.25',
+                                             facecolor='white', edgecolor=color,
+                                             linewidth=1.5, alpha=0.9),
+                                   clip_on=False)  # allow labels above the plot
+                ax.text((seg_lo + seg_hi) / 2, y, label,
+                        transform=ax.get_xaxis_transform(), **label_style)
 
     plt.suptitle(suptitle, fontsize=30)
     for ax_i in axes:
@@ -516,7 +536,9 @@ def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None,
     if vlines1 and vlines2:
         axes[0].set_xticks(vlines1)
         axes[1].set_xticks(vlines2)
-    axes[0].legend(fontsize=15)
-    axes[1].legend(fontsize=15)
+        axes[0].tick_params(axis='x', rotation=45)
+        axes[1].tick_params(axis='x', rotation=45)
+    # axes[0].legend(fontsize=15)
+    # axes[1].legend(fontsize=15)
     plt.tight_layout()
     plt.show()

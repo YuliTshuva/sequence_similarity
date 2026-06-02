@@ -88,7 +88,8 @@ def seq_distance(seq1, seq2, feature_weights=FEATURE_WEIGHTS):
     path = new_path
 
     if PLOT_MODE:
-        plot_two_sequences(seq1, seq2, suptitle="Sequences with mapped segments",
+        annotate_change_points_selection(seq2)
+        plot_two_sequences(seq1, seq2, suptitle="GDTW Mapping Annotation",
                            vlines1=seq_1_change_points, vlines2=seq_2_change_points,
                            vlines_label="Change Points", matching=path)
 
