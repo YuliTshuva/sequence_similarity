@@ -20,7 +20,7 @@ import numpy as np
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = False
+PLOT_MODE = True
 
 # Model's parameters
 ALPHA = 5
@@ -74,6 +74,19 @@ def seq_distance(seq1, seq2, feature_weights=FEATURE_WEIGHTS):
     # Apply gdtw to the features
     distance, path = dtw_merge(features_seq_1, features_seq_2)
 
+    # Update the path by the mode
+    new_path = []
+    for (x_indices, y_indices, mode) in path:
+        if mode == "merge":
+            new_path.append((x_indices, y_indices))
+        elif mode == "independent":
+            for x in x_indices:
+                for y in y_indices:
+                    new_path.append(([x], [y]))
+        else:
+            raise Exception(f'Unknown mode: {mode}')
+    path = new_path
+
     if PLOT_MODE:
         plot_two_sequences(seq1, seq2, suptitle="Sequences with mapped segments",
                            vlines1=seq_1_change_points, vlines2=seq_2_change_points,
@@ -121,16 +134,16 @@ def test_seq_distance():
 
 
 def main():
-    # seqs, _ = load_sequences()
-    # seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
-    # seq1, seq2 = 57, 56
+    seqs, _ = load_sequences()
+    seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
+    seq1, seq2 = 7, 703
     # debug_change_points(seqs[seq1])
-    #
-    # distance, path = seq_distance(seqs[seq1], seqs[seq2])
-    #
+
+    distance, path = seq_distance(seqs[seq1], seqs[seq2])
+
     # print(f"Distance between sequences {seq1} and {seq2}: {distance:.4f}")
 
-    test_seq_distance()
+    # test_seq_distance()
 
 
 if __name__ == "__main__":

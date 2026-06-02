@@ -229,8 +229,7 @@ def plot_evaluation(results_df, save_path=None):
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         plt.savefig(save_path, dpi=150, bbox_inches="tight")
         print(f"Evaluation plot saved to {save_path}")
-    else:
-        plt.show()
+    plt.show()
     plt.close(fig)
 
 

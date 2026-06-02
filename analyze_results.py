@@ -12,12 +12,8 @@ seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s 
 
 
 def read_results():
-    results_files = [join("results", f) for f in os.listdir("results") if f.startswith("baby_adversarial_examples")]
-    results = {}
-    for file in results_files:
-        with open(file, "rb") as f:
-            file_results = pickle.load(f)
-            results.update(file_results)
+    with open(join("results", "adversarial_examples.pkl"), "rb") as f:
+        results = pickle.load(f)
 
     # Set list to store anchors to use for labeling
     anchors_to_use = []
@@ -82,7 +78,7 @@ def read_results():
                 np.save(join(index_to_sample_dir(sample_index), f"candidate{count + 7}.npy"), seq)
                 count += 1
 
-            if sample_index == 10:
+            if sample_index <= 5:
                 # Plotting
                 plt.subplots(4, 3, figsize=(30, 20))
 

@@ -7,6 +7,7 @@ Utility functions for similarity.
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
+import string
 
 # Constants
 STRATEGY = "uniform"
@@ -370,7 +371,7 @@ def dtw_merge(X, Y, lam=1.0):
 
     D = np.full((n + 1, m + 1), INF)
     D[0, 0] = 0.0
-    back = {}  # (i, j) -> (di, dj) that achieved the best
+    back = {}  # (i, j) -> (di, dj, mode) where mode is 'merge' or 'independent'
 
     for i in range(1, n + 1):
         for j in range(1, m + 1):
@@ -378,25 +379,38 @@ def dtw_merge(X, Y, lam=1.0):
             best = INF
             best_step = None
 
-            # You can only merge up to i
             for di in range(1, min(i, max_merge) + 1):
-                # Precompute merged X[i-di : i]
-                merged_x = merge_sequence(X[i - di:i])
-
                 for dj in range(1, min(j, max_merge) + 1):
                     prev = D[i - di, j - dj]
                     if prev == INF:
                         continue
 
-                    # Merged Y[j-dj : j]
-                    merged_y = merge_sequence(Y[j - dj:j])
-
-                    dist = np.linalg.norm(merged_x - merged_y, 2)
                     penalty = lam * ((di - 1) + (dj - 1))
 
-                    if prev + dist + penalty < best:
-                        best = prev + dist + penalty
-                        best_step = (di, dj)
+                    # --- Mode 1: merge ---
+                    merged_x = merge_sequence(X[i - di:i])
+                    merged_y = merge_sequence(Y[j - dj:j])
+                    dist_merge = np.linalg.norm(merged_x - merged_y, 2)
+                    cost_merge = prev + dist_merge + penalty  # penalty applies - merging happened
+
+                    if cost_merge < best:
+                        best = cost_merge
+                        best_step = (di, dj, 'merge')
+
+                    # --- Mode 2: independent (only meaningful if asymmetric) ---
+                    if di == 1 and dj > 1:
+                        dist_indep = sum(np.linalg.norm(X[i - 1] - Y[j - dj + k], 2) for k in range(dj))
+                        cost_indep = prev + dist_indep  # no penalty - no merging happened
+                        if cost_indep < best:
+                            best = cost_indep
+                            best_step = (di, dj, 'independent')
+
+                    elif dj == 1 and di > 1:
+                        dist_indep = sum(np.linalg.norm(X[i - di + k] - Y[j - 1], 2) for k in range(di))
+                        cost_indep = prev + dist_indep  # no penalty - no merging happened
+                        if cost_indep < best:
+                            best = cost_indep
+                            best_step = (di, dj, 'independent')
 
             D[i, j] = best
             if best_step is not None:
@@ -406,8 +420,8 @@ def dtw_merge(X, Y, lam=1.0):
     matching = []
     i, j = n, m
     while i > 0 or j > 0:
-        di, dj = back[i, j]
-        matching.append((list(range(i - di, i)), list(range(j - dj, j))))
+        di, dj, mode = back[i, j]
+        matching.append((list(range(i - di, i)), list(range(j - dj, j)), mode))
         i -= di
         j -= dj
 
@@ -450,7 +464,19 @@ def annotate_change_points_selection(input_sequence):
     plt.show()
 
 
-def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None, vlines_label="", matching=None):
+def _segment_label(idx):
+    """Excel-style labels: A, B, ..., Z, AA, AB, ..."""
+    label = ''
+    n = idx
+    while True:
+        label = string.ascii_uppercase[n % 26] + label
+        n = n // 26 - 1
+        if n < 0:
+            return label
+
+
+def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None,
+                       vlines_label="", matching=None):
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
     axes[0].plot(seq1, color='royalblue', label='Sequence 1')
     axes[1].plot(seq2, color='hotpink', label='Sequence 2')
@@ -465,8 +491,23 @@ def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None, vlin
         colors = plt.cm.tab20.colors
         for idx, (x_indices, y_indices) in enumerate(matching):
             color = colors[idx % len(colors)]
-            axes[0].axvspan(vlines1[x_indices[0]], vlines1[x_indices[-1] + 1], alpha=0.3, color=color)
-            axes[1].axvspan(vlines2[y_indices[0]], vlines2[y_indices[-1] + 1], alpha=0.3, color=color)
+            x_start, x_end = vlines1[x_indices[0]], vlines1[x_indices[-1] + 1]
+            y_start, y_end = vlines2[y_indices[0]], vlines2[y_indices[-1] + 1]
+
+            axes[0].axvspan(x_start, x_end, alpha=0.3, color=color)
+            axes[1].axvspan(y_start, y_end, alpha=0.3, color=color)
+
+            label = _segment_label(idx)
+            label_style = dict(ha='center', va='top', fontsize=13, fontweight='bold',
+                               color='black',
+                               bbox=dict(boxstyle='round,pad=0.25',
+                                         facecolor='white', edgecolor=color,
+                                         linewidth=1.5, alpha=0.9))
+            # x in data coords, y in axes-fraction coords -> label sits near the top
+            axes[0].text((x_start + x_end) / 2, 0.97 + 0.1, label,
+                         transform=axes[0].get_xaxis_transform(), **label_style)
+            axes[1].text((y_start + y_end) / 2, 0.97 + 0.1, label,
+                         transform=axes[1].get_xaxis_transform(), **label_style)
 
     plt.suptitle(suptitle, fontsize=30)
     for ax_i in axes:

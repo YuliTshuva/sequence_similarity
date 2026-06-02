@@ -1,14 +1,9 @@
-import numpy as np
-from os.path import join
 from mine_data import load_sequences
 from seq_sim_alg import seq_distance
-from compare_baselines import dtw_distance, lcss_distance
-import pickle
 import numpy as np
 import os
 from os.path import join
-from old_seq_sim_alg import seq_distance
-from compare_baselines import dtw_distance, lcss_distance
+from compare_baselines import dtw_distance, lcss_d2
 import pickle
 from tune_weights import load_sequence, SEQ_DIR
 
@@ -36,7 +31,7 @@ def adversial_stocks():
     for anchor in range(0, len(seqs)):
         # Calculate distances
         dists_dtw = [dtw_distance(seqs[anchor], s) for i, s in enumerate(seqs) if i != anchor]
-        dists_lcss = [lcss_distance(seqs[anchor], s) for i, s in enumerate(seqs) if i != anchor]
+        dists_lcss = [lcss_d2(seqs[anchor], s) for i, s in enumerate(seqs) if i != anchor]
         anchor_seq = high_res_seqs[anchor]
         dists_ours = [seq_distance(anchor_seq, s)[0] for i, s in enumerate(high_res_seqs) if i != anchor]
 
@@ -101,7 +96,7 @@ def adversial_babynames():
     for anchor in range(0, len(seqs)):
         # Calculate distances
         dists_dtw = [dtw_distance(seqs[anchor], s) for i, s in enumerate(seqs) if i != anchor]
-        dists_lcss = [lcss_distance(seqs[anchor], s) for i, s in enumerate(seqs) if i != anchor]
+        dists_lcss = [lcss_d2(seqs[anchor], s) for i, s in enumerate(seqs) if i != anchor]
         anchor_seq = high_res_seqs[anchor]
         dists_ours = [seq_distance(anchor_seq, s)[0] for i, s in enumerate(high_res_seqs) if i != anchor]
 
@@ -151,4 +146,4 @@ def adversial_babynames():
 
 
 if __name__ == "__main__":
-    pass
+    adversial_stocks()
