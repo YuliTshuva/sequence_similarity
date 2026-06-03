@@ -11,7 +11,6 @@ Implementing the graph distance algorithm for sequence similarity.
 
 # Imports
 from utils import *
-import numpy as np
 from mine_data import load_sequences
 import os
 from os.path import join
@@ -88,7 +87,6 @@ def seq_distance(seq1, seq2, feature_weights=FEATURE_WEIGHTS):
     path = new_path
 
     if PLOT_MODE:
-        annotate_change_points_selection(seq2)
         plot_two_sequences(seq1, seq2, suptitle="GDTW Mapping Annotation",
                            vlines1=seq_1_change_points, vlines2=seq_2_change_points,
                            vlines_label="Change Points", matching=path)
@@ -115,37 +113,37 @@ def test_seq_distance():
 
         # Test distance function on pairs of sequences
         anchor = lst[0]
-        # Make the sequence of length 1000
-        anchor = np.interp(np.linspace(0, len(anchor) - 1, 1000), np.arange(len(anchor)), anchor)
-        dists = []
-        for i in range(1, len(lst)):
-            dists.append(
-                seq_distance(anchor, np.interp(np.linspace(0, len(lst[i]) - 1, 1000), np.arange(len(lst[i])), lst[i]))[
-                    0])
+        dists1, dists2 = [], []
+        for i in range(1, 4 + 1):
+            dists1.append(seq_distance(anchor, lst[i])[0])
+        for i in range(5, 8 + 1):
+            dists2.append(seq_distance(anchor, lst[i])[0])
 
         # Check that distances are in expected order (closest to farthest)
-        dists_sorted = np.argsort(dists)
-        if not (np.array_equal(dists_sorted, np.arange(len(dists)))):
-            print(f"Test failed for {path}: distances are not in expected order.")
-            print("Oder of distances:", dists_sorted)
+        dists1_sorted = np.argsort(dists1)
+        dists2_sorted = np.argsort(dists2)
+
+        if not (np.array_equal(dists1_sorted, np.arange(len(dists1)))):
+            print(f"Test 1 failed for {path}: distances are not in expected order.")
+            print("Oder of distances:", dists1_sorted)
         else:
-            print(f"Test passed for {path}.")
+            print(f"Test 1 passed for {path}.")
+        if not (np.array_equal(dists2_sorted, np.arange(len(dists2)))):
+            print(f"Test 2 failed for {path}: distances are not in expected order.")
+            print("Oder of distances:", dists2_sorted)
+        else:
+            print(f"Test 2 passed for {path}.")
 
         print("\n", "*" * 50, "\n")
 
 
 def main():
-    seqs, _ = load_sequences()
-    seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
-    seq1, seq2 = 7, 703
-    # debug_change_points(seqs[seq1])
+    # seqs, _ = load_sequences()
+    # seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
+    # seq1, seq2 = 7, 703
 
-    distance, path = seq_distance(seqs[seq1], seqs[seq2])
-
-    # print(f"Distance between sequences {seq1} and {seq2}: {distance:.4f}")
-
-    # test_seq_distance()
-
+    # distance, path = seq_distance(seqs[seq1], seqs[seq2])
+    test_seq_distance()
 
 if __name__ == "__main__":
     main()
