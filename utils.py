@@ -365,6 +365,25 @@ def merge_sequence(vecs):
     return result
 
 
+def features_correlation(features):
+    # Edge case: if there's only one feature vector, return 1.0
+    if features.shape[0] == 1:
+        return 1.0
+
+    # Filter irrelevant features
+    relevant_features = [0, 1, 2, 7, 8, 9, 10, 11]
+    # Filter features to only the relevant ones
+    filtered = features[:, relevant_features]
+    # Calculate the minimal pairwise correlation between the features
+    corr_matrix = np.corrcoef(filtered)  # shape: (n_rows, n_rows)
+
+    # Mask the diagonal (self-correlations = 1.0) to ignore them
+    np.fill_diagonal(corr_matrix, np.nan)
+
+    # Return the minimum correlation across all pairs
+    return np.nanmin(corr_matrix)
+
+
 def dtw_merge(X, Y, lam=1.0):
     n, m = len(X), len(Y)
     max_merge = max(n, m)
@@ -385,13 +404,18 @@ def dtw_merge(X, Y, lam=1.0):
                     if prev == INF:
                         continue
 
-                    penalty = lam * ((di - 1) + (dj - 1))
+                    # Calculate the correlation between the features in the current segments
+                    seg_x, seg_y = X[i - di:i], Y[j - dj:j]
+                    corr_x, corr_y = features_correlation(seg_x), features_correlation(seg_y)
+                    penalty = lam * ((1 - corr_x) * (di - 1) + (1 - corr_y) * (dj - 1))
 
                     # --- Mode 1: merge ---
                     merged_x = merge_sequence(X[i - di:i])
                     merged_y = merge_sequence(Y[j - dj:j])
                     dist_merge = np.linalg.norm(merged_x - merged_y, 2)
-                    cost_merge = prev + dist_merge + penalty  # penalty applies - merging happened
+
+                    # Evaluate the cost of merging these segments
+                    cost_merge = prev + dist_merge + penalty
 
                     if cost_merge < best:
                         best = cost_merge
@@ -513,9 +537,9 @@ def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None,
                 # the new one. Touching endpoints don't count as overlap.
                 y = Y_BASE
                 while any(
-                    abs(y - pl_y) < Y_TOL
-                    and seg_lo < pl_hi and pl_lo < seg_hi
-                    for pl_lo, pl_hi, pl_y in placed[ax_idx]
+                        abs(y - pl_y) < Y_TOL
+                        and seg_lo < pl_hi and pl_lo < seg_hi
+                        for pl_lo, pl_hi, pl_y in placed[ax_idx]
                 ):
                     y += Y_STEP
                 placed[ax_idx].append((seg_lo, seg_hi, y))

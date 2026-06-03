@@ -16,6 +16,7 @@ import os
 from os.path import join
 import pickle
 import numpy as np
+from scipy.spatial.distance import cdist
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
@@ -70,8 +71,16 @@ def seq_distance(seq1, seq2, feature_weights=FEATURE_WEIGHTS):
     features_seq_1 *= feature_weights
     features_seq_2 *= feature_weights
 
+    # Compute pairwise L2 distances between all rows: shape (n_rows_a, n_rows_b)
+    dist_matrix = cdist(features_seq_1, features_seq_2, metric='euclidean')
+    # Find the mean and std of the distance matrix
+    mean, std = dist_matrix.mean(), dist_matrix.std()
+
+    # Define lambda
+    lam = mean + std
+
     # Apply gdtw to the features
-    distance, path = dtw_merge(features_seq_1, features_seq_2)
+    distance, path = dtw_merge(features_seq_1, features_seq_2, lam=lam)
 
     # Update the path by the mode
     new_path = []
