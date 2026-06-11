@@ -1,73 +1,106 @@
 import numpy as np
 from typing import Optional
-from itertools import product
+
+from scipy.spatial.distance import (
+    euclidean as _scipy_euclidean,
+    correlation as _scipy_correlation,
+)
+from tslearn.metrics import dtw as _tslearn_dtw, lcss as _tslearn_lcss
 
 
 def euclidean_distance(a: np.ndarray, b: np.ndarray) -> Optional[float]:
     """
     Euclidean (L2) distance between two equal-length sequences.
     Returns None if sequences have different lengths.
+
+    Implementation: scipy.spatial.distance.euclidean.
     """
     if len(a) != len(b):
         return None
-    return float(np.sqrt(np.sum((a - b) ** 2)))
+    return float(_scipy_euclidean(a, b))
 
 
 def dtw_distance(a: np.ndarray, b: np.ndarray) -> float:
     """
     Unconstrained Dynamic Time Warping (DTW) distance.
     Works with sequences of different lengths.
+
+    Implementation: tslearn.metrics.dtw (Tavenard et al., 2020),
+    following Sakoe & Chiba (1978).
     """
-    n, m = len(a), len(b)
-    D = np.full((n + 1, m + 1), np.inf)
-    D[0, 0] = 0.0
-
-    for i in range(1, n + 1):
-        for j in range(1, m + 1):
-            cost = abs(a[i - 1] - b[j - 1])
-            D[i, j] = cost + min(D[i - 1, j], D[i, j - 1], D[i - 1, j - 1])
-
-    return float(D[n, m])
+    return float(_tslearn_dtw(a, b))
 
 
 def dtw_sakoe_chiba(a: np.ndarray, b: np.ndarray, band: float = 0.1) -> float:
     """
     DTW with Sakoe-Chiba band constraint.
     band: fraction of max(len(a), len(b)) to use as window width (default 10%).
+
+    Implementation: tslearn.metrics.dtw with sakoe_chiba global constraint
+    (Tavenard et al., 2020), following Sakoe & Chiba (1978). Note that
+    tslearn's sakoe_chiba_radius is an integer radius in index units, so we
+    convert from the fractional `band` here.
     """
     n, m = len(a), len(b)
-    w = max(int(band * max(n, m)), abs(n - m))
-    D = np.full((n + 1, m + 1), np.inf)
-    D[0, 0] = 0.0
-
-    for i in range(1, n + 1):
-        for j in range(max(1, i - w), min(m, i + w) + 1):
-            cost = abs(a[i - 1] - b[j - 1])
-            D[i, j] = cost + min(D[i - 1, j], D[i, j - 1], D[i - 1, j - 1])
-
-    return float(D[n, m])
+    radius = max(int(band * max(n, m)), abs(n - m))
+    return float(_tslearn_dtw(
+        a, b,
+        global_constraint="sakoe_chiba",
+        sakoe_chiba_radius=radius,
+    ))
 
 
 def lcss_delta_eps(a, b, delta, eps):
-    n, m = len(a), len(b)
-    dp = np.zeros((n + 1, m + 1), dtype=np.int32)
-    for i in range(1, n + 1):
-        j_lo = max(1, i - delta)
-        j_hi = min(m, i + delta)
-        for j in range(j_lo, j_hi + 1):
-            if np.all(np.abs(a[i - 1] - b[j - 1]) <= eps):
-                dp[i, j] = dp[i - 1, j - 1] + 1
-            else:
-                dp[i, j] = max(dp[i - 1, j], dp[i, j - 1])
-    return int(dp[n, m])
+    """
+    Raw LCSS count of Vlachos, Kollios & Gunopulos (2002): the length of the
+    longest common subsequence within delta time tolerance and eps value
+    tolerance.
+
+    Implementation: tslearn.metrics.lcss returns the ratio normalized by
+    min(len(a), len(b)); we multiply back to recover the integer count.
+    Per tslearn's documentation, sakoe_chiba_radius corresponds to the
+    parameter delta in Vlachos et al.
+    """
+    ratio = _tslearn_lcss(
+        a, b,
+        eps=eps,
+        global_constraint="sakoe_chiba",
+        sakoe_chiba_radius=delta,
+    )
+    return int(round(ratio * min(len(a), len(b))))
 
 
 def similarity_s1(a, b, delta, eps):
-    return lcss_delta_eps(a, b, delta, eps) / min(len(a), len(b))
+    """
+    LCSS similarity S1 of Vlachos, Kollios & Gunopulos (2002):
+    LCSS(a, b) / min(len(a), len(b)).
+
+    Implementation: tslearn.metrics.lcss with sakoe_chiba global constraint
+    (delta corresponds to sakoe_chiba_radius per tslearn's documentation).
+    """
+    return float(_tslearn_lcss(
+        a, b,
+        eps=eps,
+        global_constraint="sakoe_chiba",
+        sakoe_chiba_radius=delta,
+    ))
 
 
 def distance_d1(a, b, delta, eps):
+    """
+    LCSS-based distance D1 = 1 - S1 of Vlachos, Kollios & Gunopulos (2002).
+    """
     return 1.0 - similarity_s1(a, b, delta, eps)
+
+
+# ---------------------------------------------------------------------------
+# Translation-invariant LCSS (S2 / D2) of Vlachos, Kollios & Gunopulos (2002).
+# No Python library exposes this variant. The closest author-maintained
+# reference implementation is the R package `SimilarityMeasures` by
+# K. Toohey (CRAN, 2015). The code below is a re-implementation that follows
+# the paper, with candidate translations discretized via n_quantiles
+# quantiles for tractability.
+# ---------------------------------------------------------------------------
 
 
 def _candidate_translations_1d(ax, bx, delta, eps, n_quantiles):
@@ -114,11 +147,11 @@ def pearson_distance(a: np.ndarray, b: np.ndarray) -> Optional[float]:
     Pearson correlation distance: 1 - r.
     Requires equal-length sequences. Returns None if a sequence has zero variance.
     Range: 0 (identical) to 2 (perfectly anti-correlated).
+
+    Implementation: scipy.spatial.distance.correlation, which returns 1 - r.
     """
     if len(a) != len(b):
         return None
-    std_a, std_b = np.std(a), np.std(b)
-    if std_a == 0 or std_b == 0:
+    if np.std(a) == 0 or np.std(b) == 0:
         return None
-    r = float(np.corrcoef(a, b)[0, 1])
-    return 1.0 - r
+    return float(_scipy_correlation(a, b))

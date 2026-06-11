@@ -76,11 +76,8 @@ def seq_distance(seq1, seq2, feature_weights=FEATURE_WEIGHTS):
     # Find the mean and std of the distance matrix
     mean, std = dist_matrix.mean(), dist_matrix.std()
 
-    # Define lambda
-    lam = mean + std
-
     # Apply gdtw to the features
-    distance, path = dtw_merge(features_seq_1, features_seq_2, lam=lam)
+    distance, path = dtw_merge(features_seq_1, features_seq_2, lam1=mean, lam2=std)
 
     # Update the path by the mode
     new_path = []
@@ -111,48 +108,12 @@ def debug_change_points(seq):
     annotate_change_points_selection(seq1)
 
 
-def test_seq_distance():
-    print("Testing distance function...")
-
-    # Load sequences
-    paths = os.listdir(join("data", "tests"))
-    for path in paths:
-        with open(join("data", "tests", path), "rb") as f:
-            lst = pickle.load(f)
-
-        # Test distance function on pairs of sequences
-        anchor = lst[0]
-        dists1, dists2 = [], []
-        for i in range(1, 4 + 1):
-            dists1.append(seq_distance(anchor, lst[i])[0])
-        for i in range(5, 8 + 1):
-            dists2.append(seq_distance(anchor, lst[i])[0])
-
-        # Check that distances are in expected order (closest to farthest)
-        dists1_sorted = np.argsort(dists1)
-        dists2_sorted = np.argsort(dists2)
-
-        if not (np.array_equal(dists1_sorted, np.arange(len(dists1)))):
-            print(f"Test 1 failed for {path}: distances are not in expected order.")
-            print("Oder of distances:", dists1_sorted)
-        else:
-            print(f"Test 1 passed for {path}.")
-        if not (np.array_equal(dists2_sorted, np.arange(len(dists2)))):
-            print(f"Test 2 failed for {path}: distances are not in expected order.")
-            print("Oder of distances:", dists2_sorted)
-        else:
-            print(f"Test 2 passed for {path}.")
-
-        print("\n", "*" * 50, "\n")
-
-
 def main():
-    # seqs, _ = load_sequences()
+    seqs, _ = load_sequences()
     # seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
     # seq1, seq2 = 7, 703
 
     # distance, path = seq_distance(seqs[seq1], seqs[seq2])
-    test_seq_distance()
 
 if __name__ == "__main__":
     main()

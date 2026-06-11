@@ -4,7 +4,7 @@ import random
 import json
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from os.path import join
+from utils import change_points_detection
 
 # ── Sector universe ────────────────────────────────────────────────────────────
 SECTORS = {
@@ -22,10 +22,10 @@ SECTORS = {
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _random_window(
-        min_months: int = 4,
-        max_months: int = 18,
-        earliest: str = "2018-01-01",
-        latest: str = "2026-01-01",
+        min_months: int,
+        max_months: int,
+        earliest: str,
+        latest: str,
 ) -> tuple[str, str]:
     """Return a (start, end) date-string pair for a random window."""
     earliest_dt = datetime.strptime(earliest, "%Y-%m-%d")
@@ -72,17 +72,19 @@ def _fetch_and_smooth(
 # ── Main generator ─────────────────────────────────────────────────────────────
 
 def generate_stock_sequences(
-        n_sequences: int = 1000,
-        tickers_per_sector: int = 2,  # companies sampled per sector per batch
-        min_window_months: int = 3,
-        max_window_months: int = 18,
-        min_smooth_window: int = 5,
-        max_smooth_window: int = 20,
-        earliest_date: str = "2018-01-01",
-        latest_date: str = "2026-01-01",
-        save_path: str = "stock_sequences.npz",
-        metadata_path: str = "stock_sequences_meta.json",
-        seed: int = 42,
+        n_sequences: int,
+        tickers_per_sector: int,  # companies sampled per sector per batch
+        min_window_months: int,
+        max_window_months: int,
+        min_smooth_window: int,
+        max_smooth_window: int,
+        min_change_points: int,
+        max_change_points: int,
+        earliest_date: str,
+        latest_date: str,
+        save_path: str,
+        metadata_path: str,
+        seed: int,
 ) -> list[np.ndarray]:
     """
     Generate `n_sequences` smoothed stock trend sequences sampled across sectors.
@@ -128,6 +130,13 @@ def generate_stock_sequences(
             lo, hi = arr.min(), arr.max()
             arr_norm = (arr - lo) / (hi - lo + 1e-8)
 
+            # Find the amount of change points in the sequence and skip if too few
+            n_change_points = len(change_points_detection(arr_norm))
+            if not min_change_points <= n_change_points <= max_change_points:
+                print(f"Skipping {ticker} ({sector}) from {start} to {end} — "
+                      f"too few change points ({n_change_points})")
+                continue
+
             sequences.append(arr_norm)
             metadata.append({
                 "index": len(sequences) - 1,
@@ -140,7 +149,7 @@ def generate_stock_sequences(
             })
 
             print(f"[{len(sequences):>4}/{n_sequences}]  {ticker:6s}  {sector:12s}  "
-                  f"{start} → {end}  smooth={smooth_window}  len={len(arr_norm)}")
+                  f"{start} → {end} len={len(arr_norm)}")
 
     # ── Persist ────────────────────────────────────────────────────────────────
     np.savez(save_path, **{f"seq_{i}": s for i, s in enumerate(sequences)})
@@ -155,8 +164,8 @@ def generate_stock_sequences(
 # ── Loading utility ────────────────────────────────────────────────────────────
 
 def load_sequences(
-        save_path: str = join("data", "stock_sequences.npz"),
-        metadata_path: str = join("data", "stock_sequences_meta.json"),
+        save_path: str,
+        metadata_path: str,
 ) -> tuple[list[np.ndarray], list[dict]]:
     """Reload sequences and metadata saved by generate_stock_sequences."""
     data = np.load(save_path, allow_pickle=False)
@@ -167,16 +176,21 @@ def load_sequences(
 
 
 def main():
-    # seqs = generate_stock_sequences(
-    #     n_sequences=1000,
-    #     save_path="data/stock_sequences.npz",
-    #     metadata_path="data/stock_sequences_meta.json",
-    #     min_window_months=5, max_window_months=9,
-    #     min_smooth_window=10, max_smooth_window=15
-    # )
+    generate_stock_sequences(
+        n_sequences=10000,
+        save_path="data/stock_sequences.npz",
+        metadata_path="data/stock_sequences_meta.json",
+        min_window_months=6, max_window_months=6,
+        min_smooth_window=5, max_smooth_window=5,
+        min_change_points=6, max_change_points=6,
+        tickers_per_sector=1,
+        earliest_date="2010-01-01",
+        latest_date="2023-01-01",
+        seed=42
+    )
 
-    # Later, reload without re-downloading:
-    seqs, meta = load_sequences("data/stock_sequences.npz", "data/stock_sequences_meta.json")
+    # # Later, reload without re-downloading:
+    # seqs, meta = load_sequences("data/stock_sequences.npz", "data/stock_sequences_meta.json")
 
 
 if __name__ == "__main__":

@@ -371,7 +371,7 @@ def features_correlation(features):
         return 1.0
 
     # Filter irrelevant features
-    relevant_features = [0, 1, 2, 7, 8, 9, 10, 11]
+    relevant_features = [7, 8, 9, 10, 11]
     # Filter features to only the relevant ones
     filtered = features[:, relevant_features]
     # Calculate the minimal pairwise correlation between the features
@@ -384,7 +384,7 @@ def features_correlation(features):
     return np.nanmin(corr_matrix)
 
 
-def dtw_merge(X, Y, lam=1.0):
+def dtw_merge(X, Y, lam1, lam2):
     n, m = len(X), len(Y)
     max_merge = max(n, m)
 
@@ -407,7 +407,7 @@ def dtw_merge(X, Y, lam=1.0):
                     # Calculate the correlation between the features in the current segments
                     seg_x, seg_y = X[i - di:i], Y[j - dj:j]
                     corr_x, corr_y = features_correlation(seg_x), features_correlation(seg_y)
-                    penalty = lam * ((1 - corr_x) * (di - 1) + (1 - corr_y) * (dj - 1))
+                    penalty = lam1 * ((1 - 2 * lam2 * corr_x) * (di - 1) + (1 - 2* lam2 * corr_y) * (dj - 1))
 
                     # --- Mode 1: merge ---
                     merged_x = merge_sequence(X[i - di:i])
