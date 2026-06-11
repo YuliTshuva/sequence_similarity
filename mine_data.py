@@ -206,14 +206,14 @@ def load_sequences(
 def main():
     generate_stock_sequences(
         n_sequences=10000,
-        save_path="data/stock_sequences.npz",
-        metadata_path="data/stock_sequences_meta.json",
+        save_path="data/ten_plus_cps_sequences.npz",
+        metadata_path="data/ten_plus_cps_sequences_meta.json",
         min_window_months=6, max_window_months=6,
         min_smooth_window=5, max_smooth_window=5,
-        min_change_points=6, max_change_points=6,
+        min_change_points=10, max_change_points=600,
         tickers_per_sector=1,
         earliest_date="2010-01-01",
-        latest_date="2023-01-01",
+        latest_date="2026-01-01",
         seed=42
     )
 

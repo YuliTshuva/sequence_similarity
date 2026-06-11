@@ -33,11 +33,11 @@ FEATURE_WEIGHTS = np.array([
     0.169176,  # mean_value
     0.077483,  # amplitude
     0.034343,  # length
-    0.166131,  # sharp_increasing
-    0.031467,  # light_increasing
-    0.009812,  # sharp_decreasing
-    0.078329,  # light_decreasing
-    0.031298,  # constant
+    0.063408,  # sharp_increasing
+    0.063408,  # light_increasing
+    0.063408,  # sharp_decreasing
+    0.063408,  # light_decreasing
+    0.063408,  # constant
 ])
 
 # Make sure the feature weights sum to 1

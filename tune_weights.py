@@ -26,8 +26,8 @@ from mine_data import load_sequences
 # ── config ────────────────────────────────────────────────────────────────────
 
 TEST_PATH      = join("data", "tests", "tests.pkl")
-SEQ_PATH       = join("data", "stock_sequences.npz")
-SEQ_META_PATH  = join("data", "stock_sequences_meta.json")
+SEQ_PATH       = join("data", "six_cps_sequences.npz")
+SEQ_META_PATH  = join("data", "six_cps_sequences_meta.json")
 RESULTS_PATH   = join("results", "human_tuning_results.json")
 TOP_K          = 3      # number of positives per test
 N_TRIALS       = 500
@@ -270,6 +270,50 @@ def tune_weights(groups, init_weights, n_trials=N_TRIALS):
     return best_w, study
 
 
+# ── example plot ──────────────────────────────────────────────────────────────
+
+def plot_anchor_example(group):
+    """Plot one anchor with its positives (green) and negatives (red)."""
+    anchor_seq = group["anchor_seq"]
+    anchor_idx = group["anchor"]
+    positives  = [c for c in group["candidates"] if c["label"] == 1]
+    negatives  = [c for c in group["candidates"] if c["label"] == 0]
+    n_pos, n_neg = len(positives), len(negatives)
+    n_cands = n_pos + n_neg
+
+    n_cols = 3
+    n_rows = 1 + int(np.ceil(n_cands / n_cols))
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows))
+    axes = axes.flatten()
+
+    # Hide all axes first, then selectively enable
+    for ax in axes:
+        ax.set_visible(False)
+
+    # Anchor in the middle cell of the first row
+    anchor_ax = axes[n_cols // 2]
+    anchor_ax.set_visible(True)
+    anchor_ax.plot(anchor_seq, color='royalblue', linewidth=1.5)
+    anchor_ax.set_title(f"Anchor  (idx={anchor_idx})", fontsize=13, fontweight='bold')
+    anchor_ax.set_xlabel("Timestep", fontsize=10)
+    anchor_ax.set_ylabel("Value", fontsize=10)
+
+    # Positives then negatives in subsequent cells
+    for plot_i, c in enumerate(positives + negatives):
+        ax = axes[n_cols + plot_i]
+        ax.set_visible(True)
+        color = '#2ca02c' if c["label"] == 1 else '#d62728'
+        tag   = "Positive" if c["label"] == 1 else "Negative"
+        ax.plot(c["seq"], color=color, linewidth=1.2)
+        ax.set_title(f"{tag}  (idx={c['name']})", fontsize=11)
+        ax.set_xlabel("Timestep", fontsize=9)
+
+    fig.suptitle(f"Anchor idx={anchor_idx}: {n_pos} positives, {n_neg} negatives",
+                 fontsize=15, fontweight='bold')
+    plt.tight_layout()
+    plt.show()
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -277,6 +321,7 @@ def main():
     print("=" * 55)
     print("Loading dataset...")
     groups = load_dataset()
+    plot_anchor_example(groups[1])
 
     # ── 2. Evaluate current weights ───────────────────────────────────────────
     print("Evaluating current weights vs baselines...")
