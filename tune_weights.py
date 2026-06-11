@@ -13,6 +13,7 @@ Usage:
 
 import os
 import json
+import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -20,16 +21,18 @@ import optuna
 from os.path import join
 from seq_sim_alg import seq_distance, FEATURE_WEIGHTS
 from compare_baselines import dtw_distance, lcss_d2
+from mine_data import load_sequences
 
 # ── config ────────────────────────────────────────────────────────────────────
 
-DATASET_PATH   = join("data", "dataset.json")
-SEQ_DIR        = join("data", "name_data")
+TEST_PATH      = join("data", "tests", "tests.pkl")
+SEQ_PATH       = join("data", "stock_sequences.npz")
+SEQ_META_PATH  = join("data", "stock_sequences_meta.json")
 RESULTS_PATH   = join("results", "human_tuning_results.json")
-TOP_K          = 3      # top-k human ranks treated as positives
-N_TRIALS       = 50
+TOP_K          = 3      # number of positives per test
+N_TRIALS       = 500
 SEED           = 42
-PLOT_MODE = False
+PLOT_MODE      = False
 
 FEATURE_NAMES = [
     "mean_curvature", "mean_diff", "mean_abs_diff", 'sum_abs_diff',
@@ -39,55 +42,22 @@ FEATURE_NAMES = [
 
 # ── data loading ──────────────────────────────────────────────────────────────
 
-def load_sequence(name):
-    """Load a single sequence from data/name_data/<name>.csv."""
-    path = join(SEQ_DIR, f"{name}.csv")
-    seq = pd.read_csv(path, header=None).values.flatten()
-    # skip header if present
-    if str(seq[0]).isalpha():
-        seq = seq[1:].astype(float)
-    # Normalize to [0, 1]
-    mn, mx = seq.min(), seq.max()
-    if mx - mn > 1e-6:
-        seq = (seq - mn) / (mx - mn)
-    return seq
-
-
 def load_dataset():
-    """
-    Load dataset.json and return a list of anchor groups:
-    [
-      {
-        "anchor": anchor_name,
-        "anchor_seq": array,
-        "candidates": [
-          {"name": name, "label": 1 or 0, "seq": array},
-          ...
-        ]
-      },
-      ...
-    ]
-    label: 1 = positive (human top-k), 0 = negative.
-    """
-    with open(DATASET_PATH) as f:
-        data = json.load(f)
+    sequences, _ = load_sequences(SEQ_PATH, SEQ_META_PATH)
 
-    seq_cache = {}
-    def get_seq(name):
-        if name not in seq_cache:
-            seq_cache[name] = load_sequence(name)
-        return seq_cache[name]
+    with open(TEST_PATH, "rb") as f:
+        tests = pickle.load(f)
 
     groups = []
-    for anchor_name, splits in data.items():
+    for anchor_idx, positives, negatives in tests:
         candidates = []
-        for name in splits["positives"]:
-            candidates.append({"name": name, "label": 1, "seq": get_seq(name)})
-        for name in splits["negatives"]:
-            candidates.append({"name": name, "label": 0, "seq": get_seq(name)})
+        for idx in positives:
+            candidates.append({"name": idx, "label": 1, "seq": sequences[idx]})
+        for idx in negatives:
+            candidates.append({"name": idx, "label": 0, "seq": sequences[idx]})
         groups.append({
-            "anchor":     anchor_name,
-            "anchor_seq": get_seq(anchor_name),
+            "anchor":     anchor_idx,
+            "anchor_seq": sequences[anchor_idx],
             "candidates": candidates,
         })
 
@@ -260,6 +230,13 @@ def objective(trial, groups, init_weights):
     return mean_ap
 
 
+def _weight_entropy(trial):
+    raw = np.array([trial.params[f"w_{n}"] for n in FEATURE_NAMES], dtype=float)
+    raw = np.clip(raw, 1e-6, None)
+    w = raw / raw.sum()
+    return -np.sum(w * np.log(w))
+
+
 def tune_weights(groups, init_weights, n_trials=N_TRIALS):
     optuna.logging.set_verbosity(optuna.logging.WARNING)
     study = optuna.create_study(
@@ -273,16 +250,17 @@ def tune_weights(groups, init_weights, n_trials=N_TRIALS):
         show_progress_bar=False,
     )
 
-    best    = study.best_trial
-    raw     = np.array([
-        best.params[f"w_{n}"]
-        for i, n in enumerate(FEATURE_NAMES)
-    ])
-    raw     = np.clip(raw, 1e-6, None)
-    best_w  = raw / raw.sum()
+    best_value  = study.best_value
+    top_trials  = [t for t in study.trials if t.value == best_value]
+    best_trial  = max(top_trials, key=_weight_entropy)
+
+    raw    = np.array([best_trial.params[f"w_{n}"] for n in FEATURE_NAMES], dtype=float)
+    raw    = np.clip(raw, 1e-6, None)
+    best_w = raw / raw.sum()
 
     print("\n" + "=" * 55)
-    print(f"Best mean AP@{TOP_K}: {best.value:.4f}")
+    print(f"Best mean AP@{TOP_K}: {best_value:.4f}  "
+          f"({len(top_trials)} tied trial(s), selected by max entropy)")
     print("\nBest FEATURE_WEIGHTS (copy into seq_sim_alg.py):")
     print("FEATURE_WEIGHTS = np.array([")
     for name, w in zip(FEATURE_NAMES, best_w):

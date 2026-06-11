@@ -20,24 +20,24 @@ from scipy.spatial.distance import cdist
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = True
+PLOT_MODE = False
 
 # Model's parameters
 ALPHA = 5
 
 FEATURE_WEIGHTS = np.array([
-    0.1,  # mean_curvature
-    0.1,  # mean_diff
-    0.1,  # mean_abs_diff
-    0.1,  # sum_abs_diff
-    0.1,  # mean_value
-    0.1,  # amplitude
-    0.1,  # length
-    0.1,  # sharp_increasing
-    0.1,  # light_increasing
-    0.1,  # sharp_decreasing
-    0.1,  # light_decreasing
-    0.1,  # constant
+    0.136694,  # mean_curvature
+    0.140247,  # mean_diff
+    0.067332,  # mean_abs_diff
+    0.057689,  # sum_abs_diff
+    0.169176,  # mean_value
+    0.077483,  # amplitude
+    0.034343,  # length
+    0.166131,  # sharp_increasing
+    0.031467,  # light_increasing
+    0.009812,  # sharp_decreasing
+    0.078329,  # light_decreasing
+    0.031298,  # constant
 ])
 
 # Make sure the feature weights sum to 1

@@ -1,3 +1,4 @@
+import os
 import yfinance as yf
 import numpy as np
 import random
@@ -101,11 +102,19 @@ def generate_stock_sequences(
 
     Returns a list of numpy arrays.
     """
-    random.seed(seed)
-    np.random.seed(seed)
-
     sequences: list[np.ndarray] = []
     metadata: list[dict] = []
+
+    if os.path.exists(save_path) and os.path.exists(metadata_path):
+        sequences, metadata = load_sequences(save_path, metadata_path)
+        print(f"Resuming from checkpoint: {len(sequences)} sequences already saved.")
+        random.seed(seed + len(sequences))
+        np.random.seed(seed + len(sequences))
+    else:
+        random.seed(seed)
+        np.random.seed(seed)
+
+    sequences, metadata = sequences[:7400], metadata[:7400]
 
     sector_names = list(SECTORS.keys())
 
@@ -130,12 +139,29 @@ def generate_stock_sequences(
             lo, hi = arr.min(), arr.max()
             arr_norm = (arr - lo) / (hi - lo + 1e-8)
 
-            # Find the amount of change points in the sequence and skip if too few
-            n_change_points = len(change_points_detection(arr_norm))
-            if not min_change_points <= n_change_points <= max_change_points:
-                print(f"Skipping {ticker} ({sector}) from {start} to {end} — "
-                      f"too few change points ({n_change_points})")
+            # Interpolate to length 1000 for uniformity
+            arr_norm = np.interp(np.linspace(0, len(arr_norm) - 1, 1000), np.arange(len(arr_norm)), arr_norm)
+
+            # Find the change points in the sequence and skip if there are too few
+            cps = change_points_detection(arr_norm)
+
+            # If the sequence is too simple, skip it
+            if len(cps) < min_change_points:
                 continue
+
+            # If the sequence is too complicated
+            while len(cps) > max_change_points:
+                # Find the last change point to keep
+                last_change_point = cps[max_change_points - 1]
+                # Trim to max change points
+                arr_norm = arr_norm[:last_change_point]
+                # Normalize again after trimming
+                lo, hi = arr_norm.min(), arr_norm.max()
+                arr_norm = (arr_norm - lo) / (hi - lo + 1e-8)
+                # Interpolate to length 1000 for uniformity
+                arr_norm = np.interp(np.linspace(0, len(arr_norm) - 1, 1000), np.arange(len(arr_norm)), arr_norm)
+                # Recompute change points
+                cps = change_points_detection(arr_norm)
 
             sequences.append(arr_norm)
             metadata.append({
@@ -151,10 +177,12 @@ def generate_stock_sequences(
             print(f"[{len(sequences):>4}/{n_sequences}]  {ticker:6s}  {sector:12s}  "
                   f"{start} → {end} len={len(arr_norm)}")
 
-    # ── Persist ────────────────────────────────────────────────────────────────
-    np.savez(save_path, **{f"seq_{i}": s for i, s in enumerate(sequences)})
-    with open(metadata_path, "w") as f:
-        json.dump(metadata, f, indent=2)
+        # ── Persist ────────────────────────────────────────────────────────────────
+        # Save every 100 sequences to avoid losing progress on long runs
+        if len(sequences) % 100 == 0:
+            np.savez(save_path, **{f"seq_{i}": s for i, s in enumerate(sequences)})
+            with open(metadata_path, "w") as f:
+                json.dump(metadata, f, indent=2)
 
     print(f"\nSaved {len(sequences)} sequences → {save_path}")
     print(f"Metadata                        → {metadata_path}")
