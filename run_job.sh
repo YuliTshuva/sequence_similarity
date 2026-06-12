@@ -8,6 +8,7 @@
 #SBATCH --error=error.log
 
 # Activate virtual environment
+cd /cs/labs/dshahaf/yuli.tshuva/projects/sequence_similarity
 source ../polynomial_decomposition/venv/bin/activate
 
 # Run your Python script

@@ -5,12 +5,13 @@ import pickle
 from mine_data import load_sequences
 import numpy as np
 from matplotlib import rcParams
+from adversarial_examples_extraction import DATA_PATH, META_PATH
 
 rcParams["font.family"] = "Times New Roman"
 
 index_to_sample_dir = lambda index: join("experimental_setup", "labeling_data", f"sample_{index}")
 
-seqs, _ = load_sequences()
+seqs, _ = load_sequences(DATA_PATH, META_PATH)
 seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
 
 
@@ -105,9 +106,11 @@ def read_results():
                 for i, pos in enumerate(class_1[:2] + class_2[:2]):
                     plt.subplot(3, 3, i + 2)
                     if i < 2:
-                        plt.title(f"Seq {pos} | GDTW Rank {rank_ours.index(pos)} | DTW Rank {rank_dtw.index(pos)}", fontsize=title_size)
+                        plt.title(f"Seq {pos} | GDTW Rank {rank_ours.index(pos)} | DTW Rank {rank_dtw.index(pos)}",
+                                  fontsize=title_size)
                     else:
-                        plt.title(f"Seq {pos} | GDTW Rank {rank_ours.index(pos)} | LCSS Rank {rank_lcss.index(pos)}", fontsize=title_size)
+                        plt.title(f"Seq {pos} | GDTW Rank {rank_ours.index(pos)} | LCSS Rank {rank_lcss.index(pos)}",
+                                  fontsize=title_size)
 
                     seq = seqs[pos]
                     plt.plot(range(len(seq)), seq, color="salmon")
@@ -119,9 +122,11 @@ def read_results():
                 for i, neg in enumerate(class_3[:2] + class_4[:2]):
                     plt.subplot(3, 3, i + 6)
                     if i < 2:
-                        plt.title(f"Seq {neg} | GDTW Rank {rank_ours.index(neg)} | DTW Rank {rank_dtw.index(neg)}", fontsize=title_size)
+                        plt.title(f"Seq {neg} | GDTW Rank {rank_ours.index(neg)} | DTW Rank {rank_dtw.index(neg)}",
+                                  fontsize=title_size)
                     else:
-                        plt.title(f"Seq {neg} | GDTW Rank {rank_ours.index(neg)} | LCSS Rank {rank_lcss.index(neg)}", fontsize=title_size)
+                        plt.title(f"Seq {neg} | GDTW Rank {rank_ours.index(neg)} | LCSS Rank {rank_lcss.index(neg)}",
+                                  fontsize=title_size)
                     seq = seqs[neg]
                     plt.plot(range(len(seq)), seq, color="turquoise")
                     plt.ylim(0, 1)

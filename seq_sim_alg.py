@@ -20,7 +20,7 @@ from scipy.spatial.distance import cdist
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = False
+PLOT_MODE = True
 
 # Model's parameters
 ALPHA = 5
@@ -109,11 +109,16 @@ def debug_change_points(seq):
 
 
 def main():
-    seqs, _ = load_sequences()
-    # seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
-    # seq1, seq2 = 7, 703
+    # Load the sequences
+    seqs, _ = load_sequences(join("data", "ten_plus_cps_sequences.npz"),
+                             join("data", "ten_plus_cps_sequences_meta.json"))
+    seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
 
-    # distance, path = seq_distance(seqs[seq1], seqs[seq2])
+    # Pick two sequences to compare
+    seq1, seq2 = 0, 9176
+
+    # Compute the distance and path between two sequences
+    distance, path = seq_distance(seqs[seq1], seqs[seq2])
 
 if __name__ == "__main__":
     main()
