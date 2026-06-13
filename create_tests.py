@@ -14,7 +14,6 @@ from seq_sim_alg import seq_distance
 # Set test directory
 TEST_DIR = join("data", "tests")
 TAGS = {
-    47: [6614, 1312, 3697],
     54: [4047, 6315, 5052],
     69: [4560, 2927, 4670],
     76: [7437, 1603, 1888],
@@ -23,7 +22,15 @@ TAGS = {
     87: [5749, 1192, 2144],
     92: [4815, 1071, 6861],
     115: [60, 5165, 3238],
-    138: [6589, 9492, 4954]
+    138: [6589, 9492, 4954],
+    158: [2947, 1033, 8126],
+    160: [6994, 7602, 6544],
+    161: [6527, 909, 8822],
+    162: [241, 8682, 3692],
+    163: [43, 9337, 9319],
+    165: [8630, 8232, 6660],
+    166: [6794, 935, 869],
+    167: [4674, 3730, 6970]
 }
 TOP_N = 8
 N_NEGS = 6
@@ -47,17 +54,17 @@ def plot_closest_sequences(sequences, query_idx, closest):
     fig, axes = plt.subplots(3, 3, figsize=(12, 10), sharey=True)
 
     axes[0, 0].plot(query, color='royalblue')
-    axes[0, 0].set_title(f"Query (idx={query_idx})", fontsize=13)
-    axes[0, 0].set_xlabel("Timestep", fontsize=11)
-    axes[0, 0].set_ylabel("Value", fontsize=11)
+    axes[0, 0].set_title(f"Query (idx={query_idx})", fontsize=20)
+    axes[0, 0].set_xlabel("Timestep", fontsize=15)
+    axes[0, 0].set_ylabel("Value", fontsize=15)
 
     for plot_i, (dist, seq_idx) in enumerate(closest):
         ax = axes[(plot_i + 1) // 3, (plot_i + 1) % 3]
         ax.plot(sequences[seq_idx], color='hotpink')
-        ax.set_title(f"#{plot_i + 1}  idx={seq_idx}\nd={dist:.4f}", fontsize=13)
-        ax.set_xlabel("Timestep", fontsize=11)
+        ax.set_title(f"#{plot_i + 1}  idx={seq_idx}\nd={dist:.4f}", fontsize=20)
+        ax.set_xlabel("Timestep", fontsize=15)
 
-    plt.suptitle(f"Top-{len(closest)} closest sequences to query idx={query_idx} (Euclidean)", fontsize=15)
+    plt.suptitle(f"Top-{len(closest)} closest sequences to query idx={query_idx} (Euclidean)", fontsize=30)
     plt.tight_layout()
     plt.show()
 
@@ -72,9 +79,6 @@ def find_anchor_positives_matches(sequences):
 
 
 def create_tests(sequences):
-    # Find the amount of sequences
-    n = len(sequences)
-
     tests = []
     for anchor in TAGS:
         positives = TAGS[anchor]
@@ -145,7 +149,10 @@ def generate_relation_example():
 
 
 def main():
-    generate_relation_example()
+    seqs, _ = load_sequences(join("data", "six_cps_sequences.npz"),
+                             join("data", "six_cps_sequences_meta.json"))
+
+    create_tests(seqs)
 
 
 if __name__ == '__main__':

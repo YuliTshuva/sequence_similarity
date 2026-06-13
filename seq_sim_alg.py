@@ -20,7 +20,7 @@ from scipy.spatial.distance import cdist
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = True
+PLOT_MODE = False
 
 # Model's parameters
 ALPHA = 5
@@ -76,8 +76,14 @@ def seq_distance(seq1, seq2, feature_weights=FEATURE_WEIGHTS):
     # Find the mean and std of the distance matrix
     mean, std = dist_matrix.mean(), dist_matrix.std()
 
+    # Find the length of each segment
+    lens_seq_1 = [seq_1_change_points[i + 1] - seq_1_change_points[i] for i in range(len(seq_1_change_points) - 1)]
+    lens_seq_2 = [seq_2_change_points[i + 1] - seq_2_change_points[i] for i in range(len(seq_2_change_points) - 1)]
+
     # Apply gdtw to the features
-    distance, path = dtw_merge(features_seq_1, features_seq_2, lam1=mean, lam2=std)
+    distance, path = dtw_merge(features_seq_1, features_seq_2,
+                               lens1=lens_seq_1, lens2=lens_seq_2,
+                               lam1=mean, lam2=std)
 
     # Update the path by the mode
     new_path = []

@@ -386,13 +386,16 @@ def features_correlation(features):
     return np.nanmin(corr_matrix)
 
 
-def dtw_merge(X, Y, lam1, lam2):
+def dtw_merge(X, Y, lens1, lens2, lam1, lam2):
     n, m = len(X), len(Y)
     max_merge = max(n, m)
 
     D = np.full((n + 1, m + 1), INF)
     D[0, 0] = 0.0
     back = {}  # (i, j) -> (di, dj, mode) where mode is 'merge' or 'independent'
+
+    # Extract total length for both sequences
+    len_x, len_y = np.sum(lens1), np.sum(lens2)
 
     for i in range(1, n + 1):
         for j in range(1, m + 1):
@@ -416,8 +419,14 @@ def dtw_merge(X, Y, lam1, lam2):
                     merged_y = merge_sequence(Y[j - dj:j])
                     dist_merge = np.linalg.norm(merged_x - merged_y, 2)
 
+                    # Calculate the length of the segments
+                    len_seg_x, len_seg_y = np.sum(lens1[i - di:i]), np.sum(lens2[j - dj:j])
+                    # Calculate the relative length of the segments compared to the total sequence length
+                    rel_len_x, rel_len_y = len_seg_x / len_x, len_seg_y / len_y
+
                     # Evaluate the cost of merging these segments
-                    cost_merge = prev + dist_merge + penalty
+                    # cost_merge = prev + (dist_merge + penalty)
+                    cost_merge = prev + ((rel_len_x + rel_len_y) / 2) * (dist_merge + penalty)
 
                     if cost_merge < best:
                         best = cost_merge
@@ -426,14 +435,16 @@ def dtw_merge(X, Y, lam1, lam2):
                     # --- Mode 2: independent (only meaningful if asymmetric) ---
                     if di == 1 and dj > 1:
                         dist_indep = sum(np.linalg.norm(X[i - 1] - Y[j - dj + k], 2) for k in range(dj))
-                        cost_indep = prev + dist_indep  # no penalty - no merging happened
+                        # cost_indep = prev + dist_indep
+                        cost_indep = prev + ((rel_len_x * dj + rel_len_y) / 2) * dist_indep
                         if cost_indep < best:
                             best = cost_indep
                             best_step = (di, dj, 'independent')
 
                     elif dj == 1 and di > 1:
                         dist_indep = sum(np.linalg.norm(X[i - di + k] - Y[j - 1], 2) for k in range(di))
-                        cost_indep = prev + dist_indep  # no penalty - no merging happened
+                        # cost_indep = prev + dist_indep
+                        cost_indep = prev + ((rel_len_x + rel_len_y * di) / 2) * dist_indep
                         if cost_indep < best:
                             best = cost_indep
                             best_step = (di, dj, 'independent')

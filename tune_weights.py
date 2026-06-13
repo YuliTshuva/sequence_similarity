@@ -98,7 +98,7 @@ def plot_methods_ranking(anchor, our_scores, candidates):
         color = 'green' if label == "Positive" else 'red'
         plt.subplot(4, 3, 4 + i)
         plt.plot(cseq, color=color)
-        plt.title(f"Rank {i+1}: {label}", fontsize=15)
+        plt.title(f"Rank {i+1}: {label}", fontsize=20)
 
     plt.tight_layout()
     plt.show()
@@ -153,7 +153,7 @@ def plot_evaluation(results_df, save_path=None):
     anchors       = results_df["anchor"].unique()
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    fig.suptitle("Evaluation vs Human Rankings", fontsize=13, fontweight="bold")
+    fig.suptitle("Evaluation vs Human Rankings", fontsize=30, fontweight="bold")
 
     # ── Left: Precision@TOP_K per anchor ────────────────────────────────────────
     ax = axes[0]
@@ -168,9 +168,9 @@ def plot_evaluation(results_df, save_path=None):
 
     ax.axhline(0, color="black", linewidth=0.8, linestyle="--")
     ax.set_xticks(x)
-    ax.set_xticklabels(anchors, rotation=35, ha="right", fontsize=8)
-    ax.set_ylabel(f"Precision@{TOP_K}  (higher = more human-like)")
-    ax.set_title(f"Per-Anchor Precision@{TOP_K} vs Human Ranking")
+    ax.set_xticklabels(anchors, rotation=35, ha="right", fontsize=15)
+    ax.set_ylabel(f"Precision@{TOP_K}  (higher = more human-like)", fontsize=15)
+    ax.set_title(f"Per-Anchor Precision@{TOP_K} vs Human Ranking", fontsize=20)
     ax.legend()
     ax.grid(axis="y", alpha=0.3)
 
@@ -188,9 +188,9 @@ def plot_evaluation(results_df, save_path=None):
                      f"{v:.2f}", ha="center", va="bottom", fontsize=8)
 
     ax2.set_xticks(x2)
-    ax2.set_xticklabels([f"Mean Precision@{TOP_K}"], fontsize=10)
+    ax2.set_xticklabels([f"Mean Precision@{TOP_K}"], fontsize=15)
     ax2.set_ylim(0, 1.15)
-    ax2.set_title(f"Mean Precision@{TOP_K} Across All Anchors")
+    ax2.set_title(f"Mean Precision@{TOP_K} Across All Anchors", fontsize=20)
     ax2.legend()
     ax2.grid(axis="y", alpha=0.3)
 
@@ -294,9 +294,9 @@ def plot_anchor_example(group):
     anchor_ax = axes[n_cols // 2]
     anchor_ax.set_visible(True)
     anchor_ax.plot(anchor_seq, color='royalblue', linewidth=1.5)
-    anchor_ax.set_title(f"Anchor  (idx={anchor_idx})", fontsize=13, fontweight='bold')
-    anchor_ax.set_xlabel("Timestep", fontsize=10)
-    anchor_ax.set_ylabel("Value", fontsize=10)
+    anchor_ax.set_title(f"Anchor  (idx={anchor_idx})", fontsize=20, fontweight='bold')
+    anchor_ax.set_xlabel("Timestep", fontsize=15)
+    anchor_ax.set_ylabel("Value", fontsize=15)
 
     # Positives then negatives in subsequent cells
     for plot_i, c in enumerate(positives + negatives):
@@ -305,11 +305,11 @@ def plot_anchor_example(group):
         color = '#2ca02c' if c["label"] == 1 else '#d62728'
         tag   = "Positive" if c["label"] == 1 else "Negative"
         ax.plot(c["seq"], color=color, linewidth=1.2)
-        ax.set_title(f"{tag}  (idx={c['name']})", fontsize=11)
-        ax.set_xlabel("Timestep", fontsize=9)
+        ax.set_title(f"{tag}  (idx={c['name']})", fontsize=20)
+        ax.set_xlabel("Timestep", fontsize=15)
 
     fig.suptitle(f"Anchor idx={anchor_idx}: {n_pos} positives, {n_neg} negatives",
-                 fontsize=15, fontweight='bold')
+                 fontsize=30, fontweight='bold')
     plt.tight_layout()
     plt.show()
 
