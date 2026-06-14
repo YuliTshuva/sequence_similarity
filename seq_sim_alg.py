@@ -25,14 +25,9 @@ PLOT_MODE = False
 # Model's parameters
 ALPHA = 5
 
-FEATURE_WEIGHTS = np.array([
+SHAPES_FEATURE_WEIGHTS = np.array([
     0.089638,  # mean_curvature
     0.155970,  # mean_diff
-    0.149875,  # mean_abs_diff
-    0.081570,  # sum_abs_diff
-    0.166547,  # mean_value
-    0.060416,  # amplitude
-    0.010039,  # length
     0.084600,  # sharp_increasing
     0.011294,  # light_increasing
     0.083740,  # sharp_decreasing
@@ -40,11 +35,20 @@ FEATURE_WEIGHTS = np.array([
     0.083542,  # constant
 ])
 
+SPECTRAL_FEATURE_WEIGHTS = np.array([
+    0.149875,  # mean_abs_diff
+    0.081570,  # sum_abs_diff
+    0.166547,  # mean_value
+    0.060416,  # amplitude
+    0.010039,  # length
+])
+
 # Make sure the feature weights sum to 1
-FEATURE_WEIGHTS = FEATURE_WEIGHTS / np.sum(FEATURE_WEIGHTS)
+SHAPES_FEATURE_WEIGHTS = SHAPES_FEATURE_WEIGHTS / np.sum(SHAPES_FEATURE_WEIGHTS)
+SPECTRAL_FEATURE_WEIGHTS = SPECTRAL_FEATURE_WEIGHTS / np.sum(SPECTRAL_FEATURE_WEIGHTS)
 
 
-def seq_distance(seq1, seq2, feature_weights=FEATURE_WEIGHTS):
+def shapes_based_seq_distance(seq1, seq2, feature_weights=SHAPES_FEATURE_WEIGHTS):
     # Make sure feature weights sum to 1
     feature_weights = feature_weights / np.sum(feature_weights)
 
@@ -106,6 +110,10 @@ def seq_distance(seq1, seq2, feature_weights=FEATURE_WEIGHTS):
     return distance, path
 
 
+def spectral_based_seq_distance(seq1, seq2, feature_weights=SPECTRAL_FEATURE_WEIGHTS):
+
+
+
 def debug_change_points(seq):
     # Normalize sequences to be in [0, 1]
     seq1 = normalize_sequence(seq)
@@ -125,6 +133,7 @@ def main():
 
     # Compute the distance and path between two sequences
     distance, path = seq_distance(seqs[seq1], seqs[seq2])
+
 
 if __name__ == "__main__":
     main()
