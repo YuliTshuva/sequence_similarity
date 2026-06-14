@@ -24,10 +24,6 @@ def read_results():
     # Set a counter for storage
     sample_index = 0
     for anchor_index, res in results.items():
-        # Stop after 50 samples
-        if sample_index == 50:
-            break
-
         # Extract ranks for each method
         rank_ours = list(res["rank_ours"])
         rank_dtw = list(res["rank_dtw"])

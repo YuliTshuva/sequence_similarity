@@ -30,7 +30,7 @@ SEQ_PATH       = join("data", "six_cps_sequences.npz")
 SEQ_META_PATH  = join("data", "six_cps_sequences_meta.json")
 RESULTS_PATH   = join("results", "human_tuning_results.json")
 TOP_K          = 3      # number of positives per test
-N_TRIALS       = 500
+N_TRIALS       = 100
 SEED           = 42
 PLOT_MODE      = False
 

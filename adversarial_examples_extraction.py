@@ -6,13 +6,15 @@ from os.path import join
 from compare_baselines import dtw_distance, lcss_d2
 import pickle
 
+DATASET_PREFIX = "six"
 # ── config ────────────────────────────────────────────────────────────────────
-DATA_PATH = join("data", "ten_plus_cps_sequences.npz")
-META_PATH = join("data", "ten_plus_cps_sequences_meta.json")
+DATA_PATH = join("data", f"{DATASET_PREFIX}_cps_sequences.npz")
+META_PATH = join("data", f"{DATASET_PREFIX}_cps_sequences_meta.json")
 INTERP_LEN = 1000
 TOP_K = 10
 SEED = 42
 BUFFER = 90
+
 
 def adversarial_stocks():
     # Load 1000 sequences
@@ -64,7 +66,7 @@ def adversarial_stocks():
         }
 
         # Save results to a file
-        with open(join("results", f"adversarial_examples.pkl"), "wb") as f:
+        with open(join("results", f"{DATASET_PREFIX}_cps_adversarial_examples.pkl"), "wb") as f:
             pickle.dump(results, f)
 
 
