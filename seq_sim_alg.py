@@ -33,9 +33,9 @@ FEATURE_WEIGHTS = np.array([
     0.166547,  # mean_value
     0.060416,  # amplitude
     0.010039,  # length
-    0.034600,  # sharp_increasing
+    0.084600,  # sharp_increasing
     0.011294,  # light_increasing
-    0.133740,  # sharp_decreasing
+    0.083740,  # sharp_decreasing
     0.022768,  # light_decreasing
     0.083542,  # constant
 ])
