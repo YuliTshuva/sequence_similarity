@@ -25,9 +25,16 @@ PLOT_MODE = False
 # Model's parameters
 ALPHA = 5
 
-SHAPES_FEATURE_WEIGHTS = np.array([
+# Full 12-feature weights (original combined metric).
+# Order matches the full feature vector in extract_segment_features.
+FEATURE_WEIGHTS = np.array([
     0.089638,  # mean_curvature
     0.155970,  # mean_diff
+    0.149875,  # mean_abs_diff
+    0.081570,  # sum_abs_diff
+    0.166547,  # mean_value
+    0.060416,  # amplitude
+    0.010039,  # length
     0.084600,  # sharp_increasing
     0.011294,  # light_increasing
     0.083740,  # sharp_decreasing
@@ -35,20 +42,56 @@ SHAPES_FEATURE_WEIGHTS = np.array([
     0.083542,  # constant
 ])
 
+# Shape-based metric: only the shape features carry weight. The zero-weighted
+# spectral features are still carried through the DTW for an accurate merge.
+SHAPES_FEATURE_WEIGHTS = np.array([
+    0.089638,  # mean_curvature
+    0.155970,  # mean_diff
+    0.0,       # mean_abs_diff   (spectral)
+    0.0,       # sum_abs_diff    (spectral)
+    0.0,       # mean_value      (spectral)
+    0.0,       # amplitude       (spectral)
+    0.0,       # length          (spectral)
+    0.084600,  # sharp_increasing
+    0.011294,  # light_increasing
+    0.083740,  # sharp_decreasing
+    0.022768,  # light_decreasing
+    0.083542,  # constant
+])
+
+# Spectral-based metric: only the spectral features carry weight. mean_diff and
+# the trend ratios remain in the vector (weight 0) so the amplitude-direction
+# merge and the correlation penalty stay accurate.
 SPECTRAL_FEATURE_WEIGHTS = np.array([
+    0.0,       # mean_curvature    (shape)
+    0.0,       # mean_diff         (aux: drives amplitude-direction merge)
     0.149875,  # mean_abs_diff
     0.081570,  # sum_abs_diff
     0.166547,  # mean_value
     0.060416,  # amplitude
     0.010039,  # length
+    0.0,       # sharp_increasing  (aux: correlation)
+    0.0,       # light_increasing  (aux: correlation)
+    0.0,       # sharp_decreasing  (aux: correlation)
+    0.0,       # light_decreasing  (aux: correlation)
+    0.0,       # constant          (aux: correlation)
 ])
 
 # Make sure the feature weights sum to 1
+FEATURE_WEIGHTS = FEATURE_WEIGHTS / np.sum(FEATURE_WEIGHTS)
 SHAPES_FEATURE_WEIGHTS = SHAPES_FEATURE_WEIGHTS / np.sum(SHAPES_FEATURE_WEIGHTS)
 SPECTRAL_FEATURE_WEIGHTS = SPECTRAL_FEATURE_WEIGHTS / np.sum(SPECTRAL_FEATURE_WEIGHTS)
 
 
-def shapes_based_seq_distance(seq1, seq2, feature_weights=SHAPES_FEATURE_WEIGHTS):
+def _seq_distance(seq1, seq2, feature_weights):
+    """Shared core for all three metrics.
+
+    Every metric extracts the full 12-feature vector; `feature_weights` (a
+    full-length vector, zero on the features that should not count) selects
+    what enters the distance. The weights are applied only inside the distance
+    norm, so the zero-weighted features still inform the merge (mean_diff) and
+    the correlation penalty (trend ratios).
+    """
     # Make sure feature weights sum to 1
     feature_weights = feature_weights / np.sum(feature_weights)
 
@@ -62,21 +105,22 @@ def shapes_based_seq_distance(seq1, seq2, feature_weights=SHAPES_FEATURE_WEIGHTS
     # Extract features for each node
     len_seq1, len_seq2 = len(seq1), len(seq2)
     der_f1, der_f2 = np.diff(seq1), np.diff(seq2)
-    der_f1_amp, der_f2_amp = np.max(np.abs(der_f1)) - np.min(np.abs(der_f1)), np.max(np.abs(der_f2)) - np.min(
-        np.abs(der_f2))
+    # Derivative amplitude: half the signed peak-to-peak slope range,
+    # matching the convention in change_points_detection.
+    der_f1_amp = (np.max(der_f1) - np.min(der_f1)) / 2
+    der_f2_amp = (np.max(der_f2) - np.min(der_f2)) / 2
     features_seq_1 = np.array(
-        [extract_segment_features(seq1[seq_1_change_points[i]:seq_1_change_points[i + 1]], len_seq1, der_f1_amp) for i
-         in range(len(seq_1_change_points) - 1)])
+        [extract_segment_features(seq1[seq_1_change_points[i]:seq_1_change_points[i + 1]],
+                                  len_seq1, der_f1_amp)
+         for i in range(len(seq_1_change_points) - 1)])
     features_seq_2 = np.array(
-        [extract_segment_features(seq2[seq_2_change_points[i]:seq_2_change_points[i + 1]], len_seq2, der_f2_amp) for i
-         in range(len(seq_2_change_points) - 1)])
+        [extract_segment_features(seq2[seq_2_change_points[i]:seq_2_change_points[i + 1]], len_seq2, der_f2_amp)
+         for i in range(len(seq_2_change_points) - 1)])
 
-    # Apply feature weights
-    features_seq_1 *= feature_weights
-    features_seq_2 *= feature_weights
-
-    # Compute pairwise L2 distances between all rows: shape (n_rows_a, n_rows_b)
-    dist_matrix = cdist(features_seq_1, features_seq_2, metric='euclidean')
+    # Compute pairwise L2 distances between all rows: shape (n_rows_a, n_rows_b).
+    # Weights are applied here (and inside dtw_merge) rather than baked into the
+    # feature arrays, so the merge / correlation steps keep the full features.
+    dist_matrix = cdist(features_seq_1 * feature_weights, features_seq_2 * feature_weights, metric='euclidean')
     # Find the mean and std of the distance matrix
     mean, std = dist_matrix.mean(), dist_matrix.std()
 
@@ -87,7 +131,7 @@ def shapes_based_seq_distance(seq1, seq2, feature_weights=SHAPES_FEATURE_WEIGHTS
     # Apply gdtw to the features
     distance, path = dtw_merge(features_seq_1, features_seq_2,
                                lens1=lens_seq_1, lens2=lens_seq_2,
-                               lam1=mean, lam2=std)
+                               lam1=mean, lam2=std, weights=feature_weights)
 
     # Update the path by the mode
     new_path = []
@@ -103,6 +147,7 @@ def shapes_based_seq_distance(seq1, seq2, feature_weights=SHAPES_FEATURE_WEIGHTS
     path = new_path
 
     if PLOT_MODE:
+        # Plot the mapping
         plot_two_sequences(seq1, seq2, suptitle="GDTW Mapping Annotation",
                            vlines1=seq_1_change_points, vlines2=seq_2_change_points,
                            vlines_label="Change Points", matching=path)
@@ -110,16 +155,19 @@ def shapes_based_seq_distance(seq1, seq2, feature_weights=SHAPES_FEATURE_WEIGHTS
     return distance, path
 
 
+def seq_distance(seq1, seq2, feature_weights=FEATURE_WEIGHTS):
+    """Original combined metric over the full 12-feature set."""
+    return _seq_distance(seq1, seq2, feature_weights)
+
+
+def shapes_based_seq_distance(seq1, seq2, feature_weights=SHAPES_FEATURE_WEIGHTS):
+    """Shape-based metric (only the 7 shape features carry weight)."""
+    return _seq_distance(seq1, seq2, feature_weights)
+
+
 def spectral_based_seq_distance(seq1, seq2, feature_weights=SPECTRAL_FEATURE_WEIGHTS):
-
-
-
-def debug_change_points(seq):
-    # Normalize sequences to be in [0, 1]
-    seq1 = normalize_sequence(seq)
-
-    # Detect change points
-    annotate_change_points_selection(seq1)
+    """Spectral-based metric (only the 5 spectral features carry weight)."""
+    return _seq_distance(seq1, seq2, feature_weights)
 
 
 def main():
@@ -131,8 +179,14 @@ def main():
     # Pick two sequences to compare
     seq1, seq2 = 0, 9176
 
-    # Compute the distance and path between two sequences
-    distance, path = seq_distance(seqs[seq1], seqs[seq2])
+    # Compute the distance and path under each of the three metrics
+    full_distance, _ = seq_distance(seqs[seq1], seqs[seq2])
+    shape_distance, _ = shapes_based_seq_distance(seqs[seq1], seqs[seq2])
+    spectral_distance, _ = spectral_based_seq_distance(seqs[seq1], seqs[seq2])
+
+    print(f"Full distance:\t\t{full_distance:.6f}")
+    print(f"Shape distance:\t\t{shape_distance:.6f}")
+    print(f"Spectral distance:\t\t{spectral_distance:.6f}")
 
 
 if __name__ == "__main__":

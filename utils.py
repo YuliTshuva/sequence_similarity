@@ -291,6 +291,28 @@ def mark_nodes_limits(f, len_seq, change_points):
     return nodes_limits
 
 
+# ── feature layout ──────────────────────────────────────────────────────────
+# Every metric carries the full 12-feature vector through the DTW; the metrics
+# differ only by their weight vector (zero weight on the features that should
+# not contribute to the distance). Keeping the full vector means the merge and
+# correlation steps always have access to mean_diff (for the direction-aware
+# amplitude merge) and the trend ratios (for the redundancy penalty), even
+# when those features carry zero weight in the distance.
+#   index: 0 mean_curvature, 1 mean_diff, 2 mean_abs_diff, 3 sum_abs_diff,
+#          4 mean_value, 5 amplitude, 6 length, 7 sharp_increasing,
+#          8 light_increasing, 9 sharp_decreasing, 10 light_decreasing, 11 constant
+SHAPE_INDICES = [0, 1, 7, 8, 9, 10, 11]
+SPECTRAL_INDICES = [2, 3, 4, 5, 6]
+
+# Pre-computed means and standard deviations for the full 12-feature vector.
+_FULL_MEANS = np.array([1.29917091e-04, 6.88773468e-05, 2.15043790e-03, 2.47959340e-01,
+                        4.91384676e-01, 2.41590926e-01, 1.07280928e-01, 3.82233768e-01,
+                        8.75325723e-02, 3.36648956e-01, 8.52701912e-02, 1.08314512e-01])
+_FULL_STDS = np.array([8.64548709e-05, 2.54086189e-03, 1.45989651e-03, 2.42832550e-01,
+                       2.83370148e-01, 2.43137777e-01, 7.82924368e-02, 3.93206966e-01,
+                       1.25110193e-01, 3.85479883e-01, 1.28169222e-01, 1.30012737e-01])
+
+
 def extract_segment_features(segment, len_sequence, der_amp):
     # Calculate the curvature of the segment (mean of absolute second derivative)
     mean_curvature = np.mean(np.abs(np.diff(segment, n=2)))
@@ -300,6 +322,17 @@ def extract_segment_features(segment, len_sequence, der_amp):
 
     # Calculate the mean difference between consecutive points in the segment
     mean_diff = np.mean(der_f)
+    mean_abs_diff = np.mean(np.abs(der_f))
+    sum_abs_diff = np.sum(np.abs(der_f))
+
+    # Calculate the segment amplitude (max - min)
+    amplitude = np.max(segment) - np.min(segment)
+
+    # Calculate the mean of the segment
+    mean_value = np.mean(segment)
+
+    # Calculate the length of the segment
+    length = len(segment) / len_sequence
 
     # Track change points in the derivative
     threshold = CHANGE_THRESHOLD * der_amp / 100
@@ -312,30 +345,36 @@ def extract_segment_features(segment, len_sequence, der_amp):
     constant = 1 - sharp_increasing - light_increasing - sharp_decreasing - light_decreasing
 
     # Summarize the features in a vector
-    features_vector = np.array([mean_curvature, mean_diff,
-                                sharp_increasing, light_increasing, sharp_decreasing,
+    features_vector = np.array([mean_curvature, mean_diff, mean_abs_diff, sum_abs_diff,
+                                mean_value, amplitude,
+                                length, sharp_increasing, light_increasing, sharp_decreasing,
                                 light_decreasing, constant])
 
-    # Pre-computed means and standard deviations
-    means = np.array([1.29917091e-04, 6.88773468e-05, 3.82233768e-01,
-                      8.75325723e-02, 3.36648956e-01, 8.52701912e-02, 1.08314512e-01])
-    stds = np.array([8.64548709e-05, 2.54086189e-03, 3.93206966e-01,
-                     1.25110193e-01, 3.85479883e-01, 1.28169222e-01, 1.30012737e-01])
-
     # Normalize features by subtracting the mean and dividing by the standard deviation
-    features_vector = (features_vector - means) / stds
+    features_vector = (features_vector - _FULL_MEANS) / _FULL_STDS
 
     return features_vector
 
 
 def merge_segments_features(features_1, features_2):
-    # All remaining features (curvature, mean_diff, and the trend ratios) are
-    # intensive quantities, so a plain average is the correct merge.
-    return (features_1 + features_2) / 2
+    # Operates on the full 12-feature vector, so every metric merges with the
+    # same (accurate) semantics regardless of which features it later weights.
+    # Averaging by default (intensive quantities)
+    merged_features = (features_1 + features_2) / 2
+    # sum_abs_diff should be summed
+    merged_features[3] = features_1[3] + features_2[3]
+    # Amplitude: add on same trend, subtract on opposite trend (sign of mean_diff)
+    if features_1[1] * features_2[1] > 0:
+        merged_features[5] = features_1[5] + features_2[5]
+    if features_1[1] * features_2[1] < 0:
+        merged_features[5] = abs(features_1[5] - features_2[5])
+    # length should be summed
+    merged_features[6] = features_1[6] + features_2[6]
+    return merged_features
 
 
 def merge_sequence(vecs):
-    """Merge a list of vectors iteratively using merge_fn."""
+    """Merge a list of vectors iteratively using merge_segments_features."""
     result = vecs[0]
     for v in vecs[1:]:
         result = merge_segments_features(result, v)
@@ -347,8 +386,9 @@ def features_correlation(features):
     if features.shape[0] == 1:
         return 1.0
 
-    # Filter irrelevant features
-    relevant_features = [2, 3, 4, 5, 6]
+    # Redundancy is measured over the trend ratios, which are always present in
+    # the full vector (cols 7-11) even for the spectral metric.
+    relevant_features = [7, 8, 9, 10, 11]
     # Filter features to only the relevant ones
     filtered = features[:, relevant_features]
     # Calculate the minimal pairwise correlation between the features
@@ -361,7 +401,10 @@ def features_correlation(features):
     return np.nanmin(corr_matrix)
 
 
-def dtw_merge(X, Y, lens1, lens2, lam1, lam2):
+def dtw_merge(X, Y, lens1, lens2, lam1, lam2, weights):
+    # X, Y are the full (unweighted) feature vectors. `weights` selects which
+    # features count toward the distance; the merge and correlation steps still
+    # see every feature, so they stay accurate even where the weight is zero.
     n, m = len(X), len(Y)
     max_merge = max(n, m)
 
@@ -395,7 +438,7 @@ def dtw_merge(X, Y, lens1, lens2, lam1, lam2):
                     # --- Mode 1: merge ---
                     merged_x = merge_sequence(X[i - di:i])
                     merged_y = merge_sequence(Y[j - dj:j])
-                    dist_merge = np.linalg.norm(merged_x - merged_y, 2)
+                    dist_merge = np.linalg.norm((merged_x - merged_y) * weights, 2)
 
                     # Calculate the length of the segments
                     len_seg_x, len_seg_y = np.sum(lens1[i - di:i]), np.sum(lens2[j - dj:j])
@@ -410,7 +453,7 @@ def dtw_merge(X, Y, lens1, lens2, lam1, lam2):
 
                     # --- Mode 2: independent (only meaningful if asymmetric) ---
                     if di == 1 and dj > 1:
-                        dist_indep = sum(np.linalg.norm(X[i - 1] - Y[j - dj + k], 2) *
+                        dist_indep = sum(np.linalg.norm((X[i - 1] - Y[j - dj + k]) * weights, 2) *
                                          (lens1[i - 1] + lens2[j - dj + k]) / 2 for k in range(dj))
                         cost_indep = prev + dist_indep
                         if cost_indep < best:
@@ -418,7 +461,7 @@ def dtw_merge(X, Y, lens1, lens2, lam1, lam2):
                             best_step = (di, dj, 'independent')
 
                     elif dj == 1 and di > 1:
-                        dist_indep = sum(np.linalg.norm(X[i - di + k] - Y[j - 1], 2) *
+                        dist_indep = sum(np.linalg.norm((X[i - di + k] - Y[j - 1]) * weights, 2) *
                                          (lens1[i - di + k] + lens2[j - 1]) / 2 for k in range(di))
                         cost_indep = prev + dist_indep
                         if cost_indep < best:

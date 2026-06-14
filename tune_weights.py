@@ -35,7 +35,8 @@ SEED           = 42
 PLOT_MODE      = False
 
 FEATURE_NAMES = [
-    "mean_curvature", "mean_diff", "sharp_increasing",
+    "mean_curvature", "mean_diff", "mean_abs_diff", 'sum_abs_diff',
+    "mean_value", "amplitude", "length", "sharp_increasing",
     "light_increasing", "sharp_decreasing", "light_decreasing", "constant"
 ]
 
