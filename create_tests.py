@@ -149,10 +149,7 @@ def generate_relation_example():
 
 
 def main():
-    seqs, _ = load_sequences(join("data", "six_cps_sequences.npz"),
-                             join("data", "six_cps_sequences_meta.json"))
-
-    create_tests(seqs)
+    generate_relation_example()
 
 
 if __name__ == '__main__':

@@ -5,33 +5,54 @@ import os
 from os.path import join
 from compare_baselines import dtw_distance, lcss_d2
 import pickle
+import argparse
 
-DATASET_PREFIX = "six"
 # ── config ────────────────────────────────────────────────────────────────────
-DATA_PATH = join("data", f"{DATASET_PREFIX}_cps_sequences.npz")
-META_PATH = join("data", f"{DATASET_PREFIX}_cps_sequences_meta.json")
 INTERP_LEN = 1000
-TOP_K = 10
+TOP_K = 11
 SEED = 42
-BUFFER = 90
+BUFFER = 100
 
 
-def adversarial_stocks():
+def adversarial_stocks(dataset_prefix):
+    data_path = join("data", f"{dataset_prefix}_cps_sequences.npz")
+    meta_path = join("data", f"{dataset_prefix}_cps_sequences_meta.json")
+
     # Load 1000 sequences
-    seqs, _ = load_sequences(save_path=DATA_PATH, metadata_path=META_PATH)
+    seqs, _ = load_sequences(save_path=data_path, metadata_path=meta_path)
 
     # Increase sequences to INTERP_LEN using linear interpolation
     seqs = [np.interp(np.linspace(0, len(s) - 1, INTERP_LEN), np.arange(len(s)), s) for s in seqs]
 
-    # Set a dict for storing results
-    results = {}
+    # Calculate the epsilon value for lcss
+    epsilon = np.min([np.std(s) for s in seqs])
+    delta = np.mean([len(s) for s in seqs]) * 0.2
+
+    # Set a dict for storing results, resuming from a previous run if available
+    results_path = join("results", f"{dataset_prefix}_cps_adversarial_examples.pkl")
+    if os.path.exists(results_path):
+        with open(results_path, "rb") as f:
+            results = pickle.load(f)
+        start_anchor = max(results.keys()) + 1 if results else 0
+    else:
+        results = {}
+        start_anchor = 0
 
     # For each anchor, rank all sequences by distance of DTW, LCSS, and our method
-    for anchor in range(0, len(seqs)):
+    for anchor in range(start_anchor, len(seqs)):
         # Calculate distances
-        dists_dtw = [dtw_distance(seqs[anchor], s) for i, s in enumerate(seqs) if i != anchor]
-        dists_lcss = [lcss_d2(seqs[anchor], s) for i, s in enumerate(seqs) if i != anchor]
-        dists_ours = [seq_distance(seqs[anchor], s)[0] for i, s in enumerate(seqs) if i != anchor]
+        dists_dtw = []
+        dists_lcss = []
+        dists_ours = []
+
+        for i, s in enumerate(seqs):
+            dists_dtw.append(dtw_distance(seqs[anchor], s))
+            dists_lcss.append(lcss_d2(seqs[anchor], s, eps=epsilon, delta=delta))
+            dists_ours.append(seq_distance(seqs[anchor], s)[0])
+
+            if i % 100 == 0:
+                with open("output.log", "w") as f:
+                    f.write(f"Anchor {anchor}, sequence {i} processed.")
 
         # Rank sequences by distance
         rank_dtw = np.argsort(dists_dtw)
@@ -66,9 +87,12 @@ def adversarial_stocks():
         }
 
         # Save results to a file
-        with open(join("results", f"{DATASET_PREFIX}_cps_adversarial_examples.pkl"), "wb") as f:
+        with open(results_path, "wb") as f:
             pickle.dump(results, f)
 
 
 if __name__ == "__main__":
-    adversarial_stocks()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset_prefix", default="ten_plus", help="Dataset prefix (e.g. six / ten_plus)")
+    args = parser.parse_args()
+    adversarial_stocks(args.dataset_prefix)

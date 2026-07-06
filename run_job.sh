@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH -p short
+#SBATCH -p medium
 #SBATCH --cpu-freq=High
-#SBATCH -c 75
+#SBATCH -c 20
 #SBATCH --mem=2G
-#SBATCH -t 24:00:00
+#SBATCH -t 100:00:00
 #SBATCH --output=output.log
 #SBATCH --error=error.log
 
@@ -11,4 +11,4 @@
 source ../polynomial_decomposition/venv/bin/activate
 
 # Run your Python script
-python adversarial_examples_extraction.py
+python adversarial_examples_extraction.py --dataset_prefix "six"

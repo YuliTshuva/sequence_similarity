@@ -9,8 +9,6 @@ import matplotlib.pyplot as plt
 from matplotlib import rcParams
 import string
 
-from referencing.exceptions import NoSuchAnchor
-
 # Constants
 STRATEGY = "uniform"
 TIMEOUT = 10  # seconds
@@ -580,3 +578,179 @@ def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None,
     # axes[1].legend(fontsize=15)
     plt.tight_layout()
     plt.show()
+
+
+def _stack_offset(seq1, seq2, gap_frac=0.3):
+    """Vertical offset that lifts seq2 clear above seq1 for an alignment plot.
+
+    Returns the amount to add to seq2 so its lowest point sits a `gap_frac`
+    fraction of the larger amplitude above seq1's highest point.
+    """
+    span1 = np.max(seq1) - np.min(seq1)
+    span2 = np.max(seq2) - np.min(seq2)
+    span = max(span1, span2, EPSILON)
+    return (np.max(seq1) - np.min(seq2)) + gap_frac * span
+
+
+def plot_dtw_alignment(seq1, seq2, suptitle="DTW Alignment", path=None,
+                       gap_frac=0.3, cmap="viridis"):
+    """Explain the DTW distance by drawing the warping path between two
+    sequences.
+
+    The two curves are stacked (seq2 shifted vertically clear of seq1) and a
+    thin line is drawn for every matched pair (i, j) on the optimal warping
+    path. Each link is coloured by its local cost |seq1[i] - seq2[j]|, so the
+    one-to-many fan-outs reveal *where time was warped* and the colours reveal
+    *where the distance accumulates*.
+
+    The reported distance comes from `compare_baselines.dtw_distance`, so it is
+    consistent with the value used everywhere else in the project; the path
+    (which `dtw_distance` does not expose) is recovered via tslearn's
+    `dtw_path`, the same DTW underneath.
+
+    :param path: optional precomputed list of (i, j) pairs. If None, it is
+        recovered with tslearn.metrics.dtw_path.
+    :return: (distance, path)
+    """
+    from tslearn.metrics import dtw_path
+    from compare_baselines import dtw_distance
+
+    seq1 = np.asarray(seq1, dtype=float)
+    seq2 = np.asarray(seq2, dtype=float)
+
+    if path is None:
+        path, _ = dtw_path(seq1, seq2)
+        distance = dtw_distance(seq1, seq2)
+    else:
+        distance = float(sum(abs(seq1[i] - seq2[j]) for i, j in path))
+
+    offset = _stack_offset(seq1, seq2, gap_frac)
+    y2 = seq2 + offset
+
+    # Per-link cost drives the colour, so the build-up of the distance is visible.
+    link_costs = np.array([abs(seq1[i] - seq2[j]) for i, j in path])
+    lo, hi = float(link_costs.min()), float(link_costs.max())
+    if hi - lo < EPSILON:
+        hi = lo + EPSILON
+    norm = plt.Normalize(lo, hi)
+    cmap_obj = plt.get_cmap(cmap)
+
+    fig, ax = plt.subplots(figsize=(16, 7))
+    for (i, j), c in zip(path, link_costs):
+        ax.plot([i, j], [seq1[i], y2[j]], color=cmap_obj(norm(c)),
+                linewidth=1, alpha=0.6, zorder=1)
+
+    ax.plot(range(len(seq1)), seq1, color='royalblue', linewidth=5,
+            label='Sequence 1', zorder=3)
+    ax.plot(range(len(seq2)), y2, color='hotpink', linewidth=5,
+            label='Sequence 2 (offset)', zorder=3)
+
+    sm = plt.cm.ScalarMappable(cmap=cmap_obj, norm=norm)
+    sm.set_array([])
+    cbar = fig.colorbar(sm, ax=ax, pad=0.01)
+    cbar.set_label("Per-link cost  |seq1[i] - seq2[j]|", fontsize=25)
+
+    ax.set_title(f"{suptitle} | Distance: {distance:.3f}", fontsize=30)
+    ax.set_xlabel("Timestep", fontsize=25)
+    ax.set_ylabel("Value", fontsize=25)
+    ax.set_yticks([])  # the vertical offset is cosmetic, hide absolute values
+    ax.legend(fontsize=18, loc='upper right')
+    plt.tight_layout()
+    plt.show()
+
+    return distance, path
+
+
+def plot_lcss_alignment(seq1, seq2, eps=0.1585, delta=250, n_quantiles=7,
+                        translate=True, suptitle="LCSS Alignment", gap_frac=0.3):
+    """Explain the LCSS distance by drawing the matched subsequence and the
+    points it skips.
+
+    The two curves are stacked and a green line is drawn for every matched pair
+    in the longest common subsequence (points within `eps` in value and `delta`
+    in time). Matched points are filled green; unmatched points are marked with
+    red crosses. Those skipped points are the whole story: they are why LCSS is
+    robust to noise where DTW is not.
+
+    By default this reproduces the translation-invariant D2 (`lcss_d2`) that the
+    project actually uses: seq2 is shifted by the best translation found with
+    the *same* search as `compare_baselines.similarity_s2`
+    (`_candidate_translations_1d` + `similarity_s1`), so the drawn matching is
+    exactly the one `lcss_d2` scores. The reported distance comes from your
+    `lcss_d2` (or `distance_d1` when `translate=False`).
+
+    :param eps: value tolerance (matches compare_baselines).
+    :param delta: time tolerance, passed as sakoe_chiba_radius.
+    :param n_quantiles: number of candidate translations (as in similarity_s2).
+    :param translate: if False, use the plain S1 matching / `distance_d1`.
+    :return: (distance, path).
+    """
+    from tslearn.metrics import lcss_path
+    from compare_baselines import (lcss_d2, distance_d1, similarity_s1,
+                                   _candidate_translations_1d)
+
+    seq1 = np.asarray(seq1, dtype=float)
+    seq2 = np.asarray(seq2, dtype=float)
+
+    # Find the best translation exactly as similarity_s2 does, so the drawn
+    # matching corresponds to the lcss_d2 number reported below.
+    best_c = 0.0
+    if translate:
+        best_sim = -1.0
+        for cc in _candidate_translations_1d(seq1, seq2, delta, eps, n_quantiles):
+            s = similarity_s1(seq1, seq2 + cc, delta, eps)
+            if s > best_sim:
+                best_sim, best_c = s, cc
+                if best_sim == 1.0:
+                    break
+
+    seq2_shift = seq2 + best_c
+    path, sim = lcss_path(seq1, seq2_shift, eps=eps,
+                          global_constraint="sakoe_chiba",
+                          sakoe_chiba_radius=delta)
+
+    if translate:
+        distance = lcss_d2(seq1, seq2, delta=delta, eps=eps, n_quantiles=n_quantiles)
+    else:
+        distance = distance_d1(seq1, seq2, delta, eps)
+
+    matched_i = sorted({i for i, j in path})
+    matched_j = sorted({j for i, j in path})
+    unmatched_i = [k for k in range(len(seq1)) if k not in set(matched_i)]
+    unmatched_j = [k for k in range(len(seq2)) if k not in set(matched_j)]
+
+    offset = _stack_offset(seq1, seq2_shift, gap_frac)
+    y2 = seq2_shift + offset
+
+    fig, ax = plt.subplots(figsize=(16, 7))
+
+    # Matched links — the longest common subsequence within (eps, delta).
+    for i, j in path:
+        ax.plot([i, j], [seq1[i], y2[j]], color='mediumseagreen',
+                linewidth=1, alpha=0.6, zorder=1)
+
+    ax.plot(range(len(seq1)), seq1, color='royalblue', linewidth=5,
+            label='Sequence 1', zorder=2)
+    ax.plot(range(len(seq2)), y2, color='hotpink', linewidth=5,
+            label='Sequence 2 (offset)', zorder=2)
+
+    # Matched points filled; unmatched points are the ones LCSS skips.
+    ax.scatter(matched_i, [seq1[k] for k in matched_i],
+               color='mediumseagreen', s=15, zorder=4, label='Matched')
+    ax.scatter(matched_j, [y2[k] for k in matched_j],
+               color='mediumseagreen', s=15, zorder=4)
+    ax.scatter(unmatched_i, [seq1[k] for k in unmatched_i],
+               color='red', marker='x', s=15, zorder=4, label='Skipped')
+    ax.scatter(unmatched_j, [y2[k] for k in unmatched_j],
+               color='red', marker='x', s=15, zorder=4)
+
+    ax.set_title(f"{suptitle} | Similarity: {1.0 - distance:.3f} | Distance: {distance:.3f}",
+                 fontsize=30)
+    ax.set_xlabel("Timestep", fontsize=25)
+    ax.set_ylabel("Value", fontsize=25)
+    ax.set_yticks([])  # the vertical offset is cosmetic, hide absolute values
+    ax.legend(fontsize=18, loc='upper right')
+    plt.tight_layout()
+    plt.show()
+
+    return distance, path

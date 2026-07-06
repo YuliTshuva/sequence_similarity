@@ -8,7 +8,9 @@ Implementing the graph distance algorithm for sequence similarity.
 5) Refine the mapping using the optimization expression.
 6) Compute the similarity score based on the final mapping.
 """
+import random
 
+from compare_baselines import lcss_d2
 # Imports
 from utils import *
 from mine_data import load_sequences
@@ -20,7 +22,11 @@ from scipy.spatial.distance import cdist
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = False
+PLOT_MODE = True
+
+# Check if the OS is linux
+if os.name == 'posix':
+    PLOT_MODE = False
 
 # Model's parameters
 ALPHA = 5
@@ -99,7 +105,7 @@ def seq_distance(seq1, seq2, feature_weights=FEATURE_WEIGHTS):
     path = new_path
 
     if PLOT_MODE:
-        plot_two_sequences(seq1, seq2, suptitle="GDTW Mapping Annotation",
+        plot_two_sequences(seq1, seq2, suptitle=f"GDTW Mapping Annotation | Distance: {distance:.3f}",
                            vlines1=seq_1_change_points, vlines2=seq_2_change_points,
                            vlines_label="Change Points", matching=path)
 
@@ -116,15 +122,24 @@ def debug_change_points(seq):
 
 def main():
     # Load the sequences
-    seqs, _ = load_sequences(join("data", "ten_plus_cps_sequences.npz"),
-                             join("data", "ten_plus_cps_sequences_meta.json"))
-    seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
+    seqs, _ = load_sequences(join("data", "six_cps_sequences.npz"),
+                             join("data", "six_cps_sequences_meta.json"))
+
+    # Calc eps and delta
+    # epsilon = np.min([np.std(s) for s in seqs])
+    # delta = np.mean([len(s) for s in seqs]) * 0.2
 
     # Pick two sequences to compare
-    seq1, seq2 = 0, 9176
+    # seq1, seq2 = 0, 1871
+    # plot_dtw_alignment(seqs[seq1], seqs[seq2], suptitle="DTW(0, 1871) Alignment")
+    # seq1, seq2 = 0, 4147
+    # plot_lcss_alignment(seqs[seq1], seqs[seq2], eps=epsilon, delta=int(delta), suptitle="LCSS(0, 4147) Alignment")
 
     # Compute the distance and path between two sequences
-    distance, path = seq_distance(seqs[seq1], seqs[seq2])
+    seq1, seq2 = 35, 8857
+    # debug_change_points(seqs[seq1])
+    seq1, seq2 = s
+    plot_dtw_alignment(seqs[seq1], seqs[seq2], suptitle="DTW(35, 8857) Alignment")
 
 if __name__ == "__main__":
     main()

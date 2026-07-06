@@ -5,19 +5,24 @@ import pickle
 from mine_data import load_sequences
 import numpy as np
 from matplotlib import rcParams
-from adversarial_examples_extraction import DATA_PATH, META_PATH
+import argparse
 
 rcParams["font.family"] = "Times New Roman"
 
 index_to_sample_dir = lambda index: join("experimental_setup", "labeling_data", f"sample_{index}")
 
-seqs, _ = load_sequences(DATA_PATH, META_PATH)
-seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
 
+def read_results(dataset_prefix):
+    data_path = join("data", f"{dataset_prefix}_cps_sequences.npz")
+    meta_path = join("data", f"{dataset_prefix}_cps_sequences_meta.json")
 
-def read_results():
-    with open(join("results", "adversarial_examples.pkl"), "rb") as f:
+    seqs, _ = load_sequences(data_path, meta_path)
+    seqs = [np.interp(np.linspace(0, len(s) - 1, 1000), np.arange(len(s)), s) for s in seqs]
+
+    with open(join("results", f"{dataset_prefix}_cps_adversarial_examples.pkl"), "rb") as f:
         results = pickle.load(f)
+
+    print(f"Loaded {len(results)} anchors.")
 
     # Set list to store anchors to use for labeling
     anchors_to_use = []
@@ -69,9 +74,6 @@ def read_results():
                 seq = seqs[neg]
                 np.save(join(index_to_sample_dir(sample_index), f"candidate{i + 5}.npy"), seq)
 
-            if anchor_index == 5:
-                pass
-
             i, count = 0, 0
             while count < 2:
                 pos = class_4[i]
@@ -83,54 +85,55 @@ def read_results():
                 np.save(join(index_to_sample_dir(sample_index), f"candidate{count + 7}.npy"), seq)
                 count += 1
 
-            if sample_index <= 5:
-                # Set title size
-                title_size = 32
-                # Plotting
-                plt.subplots(3, 3, figsize=(25, 17))
+            # Set title size
+            title_size = 32
+            # Plotting
+            plt.subplots(3, 3, figsize=(25, 17))
 
-                # Plot the anchor
-                plt.subplot(3, 3, 1)
-                plt.title(f"Anchor: {anchor_index}", fontsize=title_size)
-                seq = seqs[anchor_index]
-                plt.plot(range(len(seq)), seq, color="blue")
+            # Plot the anchor
+            plt.subplot(3, 3, 1)
+            plt.title(f"Anchor: {anchor_index}", fontsize=title_size)
+            seq = seqs[anchor_index]
+            plt.plot(range(len(seq)), seq, color="blue")
+            plt.ylim(0, 1)
+            plt.xticks([])
+            plt.yticks([])
+
+            # Plot positives
+            for i, pos in enumerate(class_1[:2] + class_2[:2]):
+                plt.subplot(3, 3, i + 2)
+                if i < 2:
+                    plt.title(f"Seq {pos} | GDTW Rank {rank_ours.index(pos)} | DTW Rank {rank_dtw.index(pos)}",
+                              fontsize=title_size)
+                else:
+                    plt.title(f"Seq {pos} | GDTW Rank {rank_ours.index(pos)} | LCSS Rank {rank_lcss.index(pos)}",
+                              fontsize=title_size)
+
+                seq = seqs[pos]
+                plt.plot(range(len(seq)), seq, color="salmon")
                 plt.ylim(0, 1)
                 plt.xticks([])
                 plt.yticks([])
 
-                # Plot positives
-                for i, pos in enumerate(class_1[:2] + class_2[:2]):
-                    plt.subplot(3, 3, i + 2)
-                    if i < 2:
-                        plt.title(f"Seq {pos} | GDTW Rank {rank_ours.index(pos)} | DTW Rank {rank_dtw.index(pos)}",
-                                  fontsize=title_size)
-                    else:
-                        plt.title(f"Seq {pos} | GDTW Rank {rank_ours.index(pos)} | LCSS Rank {rank_lcss.index(pos)}",
-                                  fontsize=title_size)
+            # Plot negatives
+            for i, neg in enumerate(class_3[:2] + class_4[:2]):
+                plt.subplot(3, 3, i + 6)
+                if i < 2:
+                    plt.title(f"Seq {neg} | GDTW Rank {rank_ours.index(neg)} | DTW Rank {rank_dtw.index(neg)}",
+                              fontsize=title_size)
+                else:
+                    plt.title(f"Seq {neg} | GDTW Rank {rank_ours.index(neg)} | LCSS Rank {rank_lcss.index(neg)}",
+                              fontsize=title_size)
+                seq = seqs[neg]
+                plt.plot(range(len(seq)), seq, color="turquoise")
+                plt.ylim(0, 1)
+                plt.xticks([])
+                plt.yticks([])
 
-                    seq = seqs[pos]
-                    plt.plot(range(len(seq)), seq, color="salmon")
-                    plt.ylim(0, 1)
-                    plt.xticks([])
-                    plt.yticks([])
-
-                # Plot negatives
-                for i, neg in enumerate(class_3[:2] + class_4[:2]):
-                    plt.subplot(3, 3, i + 6)
-                    if i < 2:
-                        plt.title(f"Seq {neg} | GDTW Rank {rank_ours.index(neg)} | DTW Rank {rank_dtw.index(neg)}",
-                                  fontsize=title_size)
-                    else:
-                        plt.title(f"Seq {neg} | GDTW Rank {rank_ours.index(neg)} | LCSS Rank {rank_lcss.index(neg)}",
-                                  fontsize=title_size)
-                    seq = seqs[neg]
-                    plt.plot(range(len(seq)), seq, color="turquoise")
-                    plt.ylim(0, 1)
-                    plt.xticks([])
-                    plt.yticks([])
-
-                plt.tight_layout()
-                plt.show()
+            plt.tight_layout()
+            os.makedirs(join("results", f"{dataset_prefix}_adversarial_examples"), exist_ok=True)
+            plt.savefig(join("results", f"{dataset_prefix}_adversarial_examples", f"sample_{anchor_index}.pdf"))
+            plt.close()
 
             sample_index += 1
 
@@ -138,4 +141,7 @@ def read_results():
 
 
 if __name__ == "__main__":
-    read_results()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dataset_prefix", default="ten_plus", help="Dataset prefix (e.g. six / ten_plus)")
+    args = parser.parse_args()
+    read_results(args.dataset_prefix)
