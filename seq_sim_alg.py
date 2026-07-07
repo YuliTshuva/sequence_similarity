@@ -8,21 +8,18 @@ Implementing the graph distance algorithm for sequence similarity.
 5) Refine the mapping using the optimization expression.
 6) Compute the similarity score based on the final mapping.
 """
-import random
 
-from compare_baselines import lcss_d2
 # Imports
 from utils import *
 from mine_data import load_sequences
 import os
 from os.path import join
-import pickle
 import numpy as np
 from scipy.spatial.distance import cdist
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = True
+PLOT_MODE = False
 
 # Check if the OS is linux
 if os.name == 'posix':
@@ -136,10 +133,8 @@ def main():
     # plot_lcss_alignment(seqs[seq1], seqs[seq2], eps=epsilon, delta=int(delta), suptitle="LCSS(0, 4147) Alignment")
 
     # Compute the distance and path between two sequences
-    seq1, seq2 = 35, 8857
-    # debug_change_points(seqs[seq1])
-    seq1, seq2 = s
-    plot_dtw_alignment(seqs[seq1], seqs[seq2], suptitle="DTW(35, 8857) Alignment")
+    seq1, seq2 = 3050, 885
+    seq_distance(seqs[seq1], seqs[seq2])
 
 if __name__ == "__main__":
     main()

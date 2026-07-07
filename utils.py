@@ -410,10 +410,13 @@ def dtw_merge(X, Y, lens1, lens2, lam1, lam2):
                     if prev == INF:
                         continue
 
+                    if i == 4 and j == 4 and di == 2 and dj == 2:
+                        pass
+
                     # Calculate the correlation between the features in the current segments
                     seg_x, seg_y = X[i - di:i], Y[j - dj:j]
                     corr_x, corr_y = features_correlation(seg_x), features_correlation(seg_y)
-                    penalty = lam1 * ((1 - 2 * lam2 * corr_x) * (di - 1) + (1 - 2 * lam2 * corr_y) * (dj - 1))
+                    penalty = (lam1 - 3 * lam2 * corr_x) * (di - 1) + (lam1 - 3 * lam2 * corr_y) * (dj - 1)
 
                     # --- Mode 1: merge ---
                     merged_x = merge_sequence(X[i - di:i])

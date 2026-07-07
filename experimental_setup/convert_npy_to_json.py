@@ -1,8 +1,8 @@
 """
 convert_npy_to_json.py
 ----------------------
-Converts a directory of sample folders (each containing anchor.npy +
-candidate1.npy ... candidate9.npy) into a single data.json file that
+Converts a directory of triplet sample folders (each containing anchor.npy +
+candidate1.npy + candidate2.npy) into a single data.json file that
 the labeling tool can load directly.
 
 Expected folder structure:
@@ -11,8 +11,6 @@ Expected folder structure:
             anchor.npy
             candidate1.npy
             candidate2.npy
-            ...
-            candidate9.npy
         sample_1/
             anchor.npy
             ...
@@ -34,7 +32,7 @@ def load_sample(folder_path: str) -> dict:
     anchor = np.load(anchor_path).flatten().tolist()
 
     candidates = []
-    for i in range(1, 9):
+    for i in range(1, 3):
         cand_path = os.path.join(folder_path, f"candidate{i}.npy")
         if not os.path.exists(cand_path):
             raise FileNotFoundError(f"candidate{i}.npy not found in {folder_path}")
