@@ -8,6 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 import string
+import numpy as np
+from scipy import stats
 
 # Constants
 STRATEGY = "uniform"
@@ -20,6 +22,58 @@ MIN_DISTANCE_BETWEEN_FEATURE_POINTS = 1
 CHANGE_THRESHOLD = 10
 EPSILON = 1e-6
 INF = float('inf')
+
+
+def extract_features(y, alpha=0.05):
+    y = np.asarray(y, dtype=float).ravel()
+    n = y.size
+    x = np.arange(n, dtype=float)
+    d = np.diff(y)
+    sum_abs_diff = np.sum(np.abs(d))
+
+    lr = stats.linregress(x, y)
+    resid = y - (lr.intercept + lr.slope * x)
+    sse1 = np.sum(resid ** 2)
+    var_y = np.sum((y - y.mean()) ** 2)
+    ts_slope = stats.theilslopes(y, x, alpha=1 - alpha)[0]
+
+    has_bp, bp_pos, slope_delta = 0.0, 0.0, 0.0
+    best = None
+    for i in range(3, n - 3):
+        A = np.column_stack([np.ones(n), x, np.maximum(0.0, x - x[i])])
+        coef, _, rank, _ = np.linalg.lstsq(A, y, rcond=None)
+        if rank == 3:
+            sse = np.sum((y - A @ coef) ** 2)
+            if best is None or sse < best[0]:
+                best = (sse, x[i], coef[1], coef[1] + coef[2])
+    if best is not None and best[0] > 0 and best[0] < sse1:
+        F = ((sse1 - best[0]) / 2) / (best[0] / (n - 4))
+        if stats.f.sf(F, 2, n - 4) < alpha:
+            has_bp = 1.0
+            bp_pos = best[1] / (n - 1)
+            slope_delta = best[2] - best[3]
+
+    return {
+        "mean_value": y.mean(),
+        "amplitude": np.ptp(y),
+        "length": float(n),
+        "mean_abs_diff": np.mean(np.abs(d)),
+        "lin_slope": lr.slope,
+        "lin_slope_ci_width": 2 * stats.t.ppf(1 - alpha / 2, n - 2) * lr.stderr,
+        "resid_std": np.sqrt(sse1 / (n - 2)),
+        "r_squared": 1.0 - sse1 / var_y if var_y > 0 else 1.0,
+        "quad_coef": np.polyfit(x, y, 2)[0],
+        "theilsen_slope": ts_slope,
+        "theilsen_lin_gap": ts_slope - lr.slope,
+        "spearman_rho": stats.spearmanr(x, y).statistic if var_y > 0 else 0.0,
+        "diff_q10": np.quantile(d, 0.10),
+        "diff_q50": np.quantile(d, 0.50),
+        "diff_q90": np.quantile(d, 0.90),
+        "has_breakpoint": has_bp,
+        "breakpoint_pos": bp_pos,
+        "slope_delta": slope_delta,
+        "efficiency_ratio": abs(y[-1] - y[0]) / sum_abs_diff if sum_abs_diff > 0 else 1.0,
+    }
 
 
 def sign_func(x, threshold=0):
@@ -515,7 +569,7 @@ def _segment_label(idx):
 
 
 def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None,
-                       vlines_label="", matching=None):
+                       vlines_label="", matching=None, save_path=None):
     fig, axes = plt.subplots(1, 2, figsize=(16, 6))
     axes[0].plot(seq1, color='royalblue', label='Sequence 1')
     axes[1].plot(seq2, color='hotpink', label='Sequence 2')
@@ -580,7 +634,11 @@ def plot_two_sequences(seq1, seq2, suptitle="", vlines1=None, vlines2=None,
     # axes[0].legend(fontsize=15)
     # axes[1].legend(fontsize=15)
     plt.tight_layout()
-    plt.show()
+    if save_path is not None:
+        plt.savefig(save_path)
+        plt.close(fig)
+    else:
+        plt.show()
 
 
 def _stack_offset(seq1, seq2, gap_frac=0.3):

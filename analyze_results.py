@@ -6,10 +6,30 @@ from mine_data import load_sequences
 import numpy as np
 from matplotlib import rcParams
 import argparse
+import shutil
+import seq_sim_alg
+from utils import plot_two_sequences, normalize_sequence, change_points_detection
+
+# Prevent seq_distance from opening its own interactive plot
+seq_sim_alg.PLOT_MODE = False
 
 rcParams["font.family"] = "Times New Roman"
 
 index_to_sample_dir = lambda index: join("experimental_setup", "labeling_data", f"sample_{index}")
+
+
+def plot_gdtw_mapping(anchor_seq, cand_seq, suptitle, save_path):
+    """Compute the GDTW mapping between two sequences and save an annotated plot of it."""
+    distance, path = seq_sim_alg.seq_distance(anchor_seq, cand_seq)
+
+    # Recreate the change points seq_distance segmented by (it normalizes internally)
+    seq1, seq2 = normalize_sequence(anchor_seq), normalize_sequence(cand_seq)
+    cps1, cps2 = change_points_detection(seq1), change_points_detection(seq2)
+
+    plot_two_sequences(seq1, seq2,
+                       suptitle=f"{suptitle} | GDTW Distance: {distance:.3f}",
+                       vlines1=cps1, vlines2=cps2, vlines_label="Change Points",
+                       matching=path, save_path=save_path)
 
 
 def read_results(dataset_prefix, top_k):
@@ -49,6 +69,14 @@ def read_results(dataset_prefix, top_k):
     scored = scored[:top_k]
     print(f"Keeping {len(scored)} anchors with the highest disagreement.")
 
+    # Set the directory to save the triplet plots
+    plots_dir = join("results", f"{dataset_prefix}_triplets")
+    if os.path.exists(plots_dir):
+        shutil.rmtree(plots_dir)
+        os.makedirs(join(plots_dir))
+    else:
+        os.makedirs(join(plots_dir))
+
     # Second pass: save and plot the selected triplets
     sample_index = 0
     for disagreement, anchor_index, rank_ours, rank_dtw, dtw_worst, ours_worst in scored:
@@ -68,7 +96,7 @@ def read_results(dataset_prefix, top_k):
         plt.title(f"Anchor: {anchor_index}", fontsize=title_size)
         seq = seqs[anchor_index]
         plt.plot(range(len(seq)), seq, color="blue")
-        plt.ylim(0, 1)
+        plt.ylim(-0.05, 1.05)
         plt.xticks([])
         plt.yticks([])
 
@@ -78,7 +106,7 @@ def read_results(dataset_prefix, top_k):
                   fontsize=title_size)
         seq = seqs[dtw_worst]
         plt.plot(range(len(seq)), seq, color="salmon")
-        plt.ylim(0, 1)
+        plt.ylim(-0.05, 1.05)
         plt.xticks([])
         plt.yticks([])
 
@@ -88,14 +116,22 @@ def read_results(dataset_prefix, top_k):
                   fontsize=title_size)
         seq = seqs[ours_worst]
         plt.plot(range(len(seq)), seq, color="turquoise")
-        plt.ylim(0, 1)
+        plt.ylim(-0.05, 1.05)
         plt.xticks([])
         plt.yticks([])
 
         plt.tight_layout()
-        os.makedirs(join("results", f"{dataset_prefix}_triplets"), exist_ok=True)
-        plt.savefig(join("results", f"{dataset_prefix}_triplets", f"sample_{anchor_index}.pdf"))
+        plt.savefig(join(plots_dir, f"sample_{anchor_index}.pdf"))
         plt.close()
+
+        # Plot the GDTW mapping between the anchor and each candidate, explaining
+        # both why GDTW favors its pick and why it rejects DTW's pick
+        plot_gdtw_mapping(seqs[anchor_index], seqs[dtw_worst],
+                          suptitle=f"GDTW Mapping: Anchor {anchor_index} vs Seq {dtw_worst} (GDTW's Pick)",
+                          save_path=join(plots_dir, f"sample_{anchor_index}_mapping_gdtw_pick.pdf"))
+        plot_gdtw_mapping(seqs[anchor_index], seqs[ours_worst],
+                          suptitle=f"GDTW Mapping: Anchor {anchor_index} vs Seq {ours_worst} (DTW's Pick)",
+                          save_path=join(plots_dir, f"sample_{anchor_index}_mapping_dtw_pick.pdf"))
 
         sample_index += 1
 

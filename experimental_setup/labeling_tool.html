@@ -51,9 +51,6 @@
   #loader { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70vh; gap: 1.5rem; text-align: center; }
   #loader h1 { font-size: 22px; font-weight: 500; }
   #loader p { font-size: 14px; color: var(--text-secondary); max-width: 400px; line-height: 1.6; }
-  .login-row { display: flex; gap: 8px; }
-  #userIdInput { font-size: 15px; padding: 9px 14px; border: 1px solid var(--border-mid); border-radius: var(--radius-md); background: var(--bg-primary); color: var(--text-primary); width: 240px; }
-  #userIdInput:focus { outline: none; border-color: var(--blue); }
   .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 20px; border-radius: var(--radius-md); font-size: 14px; cursor: pointer; border: 0.5px solid var(--border-mid); background: var(--bg-primary); color: var(--text-primary); transition: background 0.12s; }
   .btn:hover { background: var(--bg-secondary); }
   .btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -115,14 +112,7 @@
   <!-- ── Loader ── -->
   <div id="loader">
     <h1>Signal similarity labeling</h1>
-    <p>Enter your participant ID to connect. Your answers are saved on the server after
-      every page — if you stop and come back later, use the <strong>same ID</strong> to
-      continue where you left off.</p>
-
-    <div class="login-row">
-      <input type="text" id="userIdInput" placeholder="Participant ID" maxlength="64" autocomplete="off">
-      <button class="btn btn-primary" id="connectBtn" onclick="connect()">Connect</button>
-    </div>
+    <p id="loaderMsg">Loading…</p>
     <div class="err-msg" id="errMsg"></div>
   </div>
 
@@ -181,7 +171,7 @@
       <br>
       <p>Click "Submit &amp; next" to record your answer and move to the next page.
         Every answer is saved automatically on the server — you can stop at any page and
-        continue later by connecting again with the same participant ID.</p>
+        continue later by opening this page again in the same browser.</p>
     </div>
     <br><br>
 
@@ -206,7 +196,14 @@
 
 </div>
 <script>
-const CAND_COLORS = ['#1D9E75', '#D4537E'];
+/* colors matched to the matplotlib triplet PDFs (blue / salmon / turquoise) */
+const IS_DARK = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+const ANCHOR_COLOR = IS_DARK ? '#7C9AFF' : '#0000FF';
+const CAND_COLORS = ['#FA8072', '#40E0D0'];
+const FRAME_COLOR = IS_DARK ? 'rgba(255,255,255,0.45)' : '#000000';
+/* y-scale of the real data plots — same as plt.ylim(-0.05, 1.05) in analyze_results.py */
+const DATA_YMIN = -0.05, DATA_YMAX = 1.05;
+const QUAL_YMIN = -1.05, QUAL_YMAX = 1.05;   // qualification signals live in [-1, 1]
 
 let sampleData = [];
 let currentSample = 0;
@@ -214,18 +211,24 @@ let allLabels = [];
 let currentChoice = null;   // 0 = left card, 1 = right card, 'tie'
 let sideOrder = [0, 1];     // display position -> original candidate index
 
-/* ── Login / connect ── */
+/* ── Auto-connect ── */
 let userId = null;
 let unsavedQueue = [];   // answers not yet accepted by the server
 
+function getOrCreateUserId() {
+  let uid = null;
+  try { uid = localStorage.getItem('labeling_user_id'); } catch (e) {}
+  if (!uid || !/^[A-Za-z0-9_-]{1,64}$/.test(uid)) {
+    uid = 'user_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    try { localStorage.setItem('labeling_user_id', uid); } catch (e) {}
+  }
+  return uid;
+}
+
 async function connect() {
   const err = document.getElementById('errMsg');
-  const btn = document.getElementById('connectBtn');
-  const uid = document.getElementById('userIdInput').value.trim();
+  const uid = getOrCreateUserId();
   err.textContent = '';
-  if (!uid) { err.textContent = 'Please enter your participant ID.'; return; }
-  if (!/^[A-Za-z0-9_-]{1,64}$/.test(uid)) { err.textContent = 'The ID may only contain letters, digits, "-" and "_".'; return; }
-  btn.disabled = true; btn.textContent = 'Connecting…';
   try {
     const [dataRes, statusRes] = await Promise.all([
       fetch('auto-data'),
@@ -241,45 +244,38 @@ async function connect() {
     userId = uid;
     if (remaining.length === 0) {
       document.getElementById('loader').innerHTML =
-        '<h1>Nothing left to label</h1><p>This participant ID has already answered all samples. Thank you!</p>';
+        '<h1>Nothing left to label</h1><p>You have already answered all samples. Thank you!</p>';
       return;
     }
     window._pendingSampleData = remaining;
     showQual();
   } catch (e) {
-    err.textContent = 'Error: ' + e.message;
-    btn.disabled = false; btn.textContent = 'Connect';
+    err.textContent = 'Error: ' + e.message + ' Refresh the page to try again.';
+    document.getElementById('loaderMsg').textContent = '';
   }
 }
 
-const userIdInput = document.getElementById('userIdInput');
-userIdInput.addEventListener('keydown', e => { if (e.key === 'Enter') connect(); });
-userIdInput.focus();
-
-/* ── PRNG (used by the qualification test) ── */
-function mulberry32(a) {
-  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a>>>15, 1|a); t = t + Math.imul(t^t>>>7, 61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
-}
+connect();
 
 /* ── Qualification test ── */
-// Candidates: 0 = cropped sine (similar), 1 = random noise (not similar)
+// Candidates: 0 = lightly cropped sine (similar), 1 = sawtooth (not similar)
 // Correct answer: candidate 0 is more similar
 const QUAL_N = 120;
 function makeSine() {
   return Array.from({length: QUAL_N}, (_, i) => Math.sin(2 * Math.PI * i / 30));
 }
 function makeCropped() {
-  // Same sine but the last third is flat zero
-  return Array.from({length: QUAL_N}, (_, i) => i < QUAL_N / 1.5 ? Math.sin(2 * Math.PI * i / 30) : 0);
+  // Same sine but the last sixth is flat zero
+  return Array.from({length: QUAL_N}, (_, i) => i < QUAL_N * 5 / 6 ? Math.sin(2 * Math.PI * i / 30) : 0);
 }
-function makeNoise() {
-  const rng = mulberry32(42);
-  return Array.from({length: QUAL_N}, () => (rng() - 0.5) * 4);
+function makeSawtooth() {
+  // Cropped the same way as the sine candidate, so the ending is not a cue
+  return Array.from({length: QUAL_N}, (_, i) => i < QUAL_N * 5 / 6 ? ((i % 30) / 30) * 2 - 1 : 0);
 }
 
 const qualData = {
   anchor: makeSine(),
-  candidates: [makeCropped(), makeNoise()],
+  candidates: [makeCropped(), makeSawtooth()],
   correctChoice: 0
 };
 
@@ -298,7 +294,7 @@ function showQual() {
   document.getElementById('qualSubmitBtn').disabled = true;
   document.getElementById('qualStatusMsg').textContent = 'Click the candidate more similar to the anchor, then submit.';
   setTimeout(() => {
-    drawSignal(document.getElementById('qualAnchorCanvas'), qualData.anchor, '#378ADD', 110);
+    drawSignal(document.getElementById('qualAnchorCanvas'), qualData.anchor, ANCHOR_COLOR, QUAL_YMIN, QUAL_YMAX);
     qualRenderChoices();
   }, 20);
 }
@@ -309,7 +305,8 @@ function qualRenderChoices() {
     tieBtn: document.getElementById('qualTieBtn'),
     candidates: qualSideOrder.map(ci => qualData.candidates[ci]),
     choice: qualChoice,
-    onSelect: qualSelect
+    onSelect: qualSelect,
+    yMin: QUAL_YMIN, yMax: QUAL_YMAX
   });
 }
 
@@ -329,7 +326,7 @@ function submitQual() {
     fb.className = 'qual-feedback pass';
     fb.innerHTML = `<div class="fb-title">✓ Correct — well done!</div>
       You correctly identified the cropped sine wave as more similar to the anchor than
-      the random noise. You're ready to label.`;
+      the sawtooth wave. You're ready to label.`;
     document.getElementById('qualSubmitBtn').textContent = 'Start labeling →';
     document.getElementById('qualSubmitBtn').onclick = () => {
       document.getElementById('qual').style.display = 'none';
@@ -341,7 +338,7 @@ function submitQual() {
     fb.className = 'qual-feedback fail';
     const hint = chosenOriginal === 'tie'
       ? 'Hint: the two candidates are very different — one of them clearly resembles the anchor. '
-      : 'Hint: one candidate is completely unrelated random noise. ';
+      : 'Hint: one candidate has a completely different shape than the anchor. ';
     fb.innerHTML = `<div class="fb-title">✗ Not quite right</div>
       ${hint}Please adjust your answer and try again.`;
     document.getElementById('qualStatusMsg').textContent = 'Review the hint above and adjust your choice.';
@@ -349,7 +346,7 @@ function submitQual() {
 }
 
 /* ── Shared choice-pair renderer ── */
-function renderChoicePair({grid, tieBtn, candidates, choice, onSelect}) {
+function renderChoicePair({grid, tieBtn, candidates, choice, onSelect, yMin, yMax}) {
   grid.innerHTML = '';
   const sideNames = ['Candidate A', 'Candidate B'];
   candidates.forEach((pts, pos) => {
@@ -362,7 +359,7 @@ function renderChoicePair({grid, tieBtn, candidates, choice, onSelect}) {
     <canvas height="110"></canvas>`;
     card.onclick = () => onSelect(pos);
     grid.appendChild(card);
-    setTimeout(() => drawSignal(card.querySelector('canvas'), pts, CAND_COLORS[pos], 110), 10);
+    setTimeout(() => drawSignal(card.querySelector('canvas'), pts, CAND_COLORS[pos], yMin, yMax), 10);
   });
   tieBtn.classList.toggle('selected', choice === 'tie');
 }
@@ -400,27 +397,34 @@ function initSample() {
     : 'Pick the more similar candidate, then submit.';
   document.getElementById('submitBtn').disabled = true;
   setTimeout(() => {
-    drawSignal(document.getElementById('anchorCanvas'), sampleData[currentSample].anchor, '#378ADD', 110);
+    drawSignal(document.getElementById('anchorCanvas'), sampleData[currentSample].anchor, ANCHOR_COLOR, DATA_YMIN, DATA_YMAX);
     renderChoices();
   }, 20);
 }
 
 /* ── Drawing ── */
-function drawSignal(canvas, pts, color, h) {
+/* Mimics the matplotlib triplet PDFs: near-square framed panel, fixed y-limits
+   shared by all panels, 5% x-margins, no ticks. */
+function drawSignal(canvas, pts, color, yMin, yMax) {
   const dpr = window.devicePixelRatio || 1;
   const W = canvas.parentElement.clientWidth - 32 || 300;
-  const H = h || 60;
+  const H = Math.round(W * 0.88);
   canvas.style.height = H + 'px';
   canvas.width = W * dpr; canvas.height = H * dpr;
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, W, H);
-  const min = Math.min(...pts), max = Math.max(...pts), range = (max - min) || 1;
-  const pad = 5;
-  const fy = v => pad + ((max - v) / range) * (H - pad * 2);
+  const min = yMin !== undefined ? yMin : Math.min(...pts);
+  const max = yMax !== undefined ? yMax : Math.max(...pts);
+  const range = (max - min) || 1;
+  const padX = W * 0.05;
+  const fy = v => ((max - v) / range) * H;
+  const fx = i => padX + (i / (pts.length - 1)) * (W - padX * 2);
   ctx.beginPath();
-  pts.forEach((v, i) => { const x = (i/(pts.length-1))*W; i===0 ? ctx.moveTo(x,fy(v)) : ctx.lineTo(x,fy(v)); });
+  pts.forEach((v, i) => { i === 0 ? ctx.moveTo(fx(i), fy(v)) : ctx.lineTo(fx(i), fy(v)); });
   ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
+  ctx.strokeStyle = FRAME_COLOR; ctx.lineWidth = 1;
+  ctx.strokeRect(0.5, 0.5, W - 1, H - 1);
 }
 
 /* ── Choice handling ── */
@@ -431,7 +435,8 @@ function renderChoices() {
     tieBtn: document.getElementById('tieBtn'),
     candidates: sideOrder.map(ci => data.candidates[ci]),
     choice: currentChoice,
-    onSelect: selectChoice
+    onSelect: selectChoice,
+    yMin: DATA_YMIN, yMax: DATA_YMAX
   });
 }
 

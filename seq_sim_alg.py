@@ -19,7 +19,7 @@ from scipy.spatial.distance import cdist
 
 # Constants
 rcParams['font.family'] = 'Times New Roman'
-PLOT_MODE = False
+PLOT_MODE = True
 
 # Check if the OS is linux
 if os.name == 'posix':
@@ -122,15 +122,9 @@ def main():
     seqs, _ = load_sequences(join("data", "six_cps_sequences.npz"),
                              join("data", "six_cps_sequences_meta.json"))
 
-    # Calc eps and delta
-    # epsilon = np.min([np.std(s) for s in seqs])
-    # delta = np.mean([len(s) for s in seqs]) * 0.2
-
     # Pick two sequences to compare
     # seq1, seq2 = 0, 1871
     # plot_dtw_alignment(seqs[seq1], seqs[seq2], suptitle="DTW(0, 1871) Alignment")
-    # seq1, seq2 = 0, 4147
-    # plot_lcss_alignment(seqs[seq1], seqs[seq2], eps=epsilon, delta=int(delta), suptitle="LCSS(0, 4147) Alignment")
 
     # Compute the distance and path between two sequences
     seq1, seq2 = 3050, 885
