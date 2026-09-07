@@ -1,0 +1,56 @@
+# Byte-compiled / optimized / cached files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter / IPython
+.ipynb_checkpoints/
+
+# Testing / coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDEs
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Archives
+*.zip
+
+# --- Project-generated data / outputs ---
+# Uncomment any of these if you do NOT want to track generated artifacts:
+# data/
+# results/
+# plots/
+# experimental_setup/experiment/
+# experimental_setup/labeling_data/
+# *.npz
+# *.pkl
+
+# Large generated binaries (exceed / approach GitHub file limits)
+data/six_cps_sequences.npz
+data/ten_plus_cps_sequences.npz
+results/six_cps_adversarial_examples.pkl
+results/six_cps_adversarial_examples_prev_back.pkl
+
+# Office temp lock files
+~$*

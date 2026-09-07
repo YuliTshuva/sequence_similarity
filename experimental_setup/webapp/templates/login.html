@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Sign in — Sequence Similarity Study{% endblock %}
+
+{% block body %}
+<div class="auth-shell">
+  <div class="card auth-card">
+    <h1>Welcome</h1>
+    <p class="sub">Create an account or sign in to continue where you left off.</p>
+
+    {% with messages = get_flashed_messages(category_filter=["error"]) %}
+      {% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}
+    {% endwith %}
+
+    <div class="tabs">
+      <button id="tab-signin" class="active" onclick="showTab('signin')">Sign in</button>
+      <button id="tab-register" onclick="showTab('register')">Create account</button>
+    </div>
+
+    <form id="form-signin" method="post" action="{{ url_for('signin') }}">
+      <label class="field">
+        <span>Username</span>
+        <input type="text" name="username" autocomplete="username" required>
+      </label>
+      <label class="field">
+        <span>Password</span>
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit" class="btn-primary">Sign in</button>
+    </form>
+
+    <form id="form-register" method="post" action="{{ url_for('register') }}" hidden>
+      <label class="field">
+        <span>Choose a username</span>
+        <input type="text" name="username" autocomplete="username" minlength="3" required>
+      </label>
+      <label class="field">
+        <span>Choose a password</span>
+        <input type="password" name="password" autocomplete="new-password" minlength="6" required>
+      </label>
+      <button type="submit" class="btn-primary">Create account &amp; start</button>
+    </form>
+
+    <div class="notice">
+      Your answers are stored under your username only. We record which curve you
+      picked and how long you took — nothing else.
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function showTab(which) {
+    const isSignin = which === 'signin';
+    document.getElementById('form-signin').hidden = !isSignin;
+    document.getElementById('form-register').hidden = isSignin;
+    document.getElementById('tab-signin').classList.toggle('active', isSignin);
+    document.getElementById('tab-register').classList.toggle('active', !isSignin);
+  }
+</script>
+{% endblock %}

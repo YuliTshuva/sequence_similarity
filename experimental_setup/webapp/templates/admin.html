@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Admin — Sequence Similarity Study{% endblock %}
+
+{% block topbar %}
+  <span class="pill">admin</span>
+  <a href="{{ url_for('admin_logout') }}">Sign out</a>
+{% endblock %}
+
+{% block body %}
+<div class="wrap">
+  <div class="stat-row">
+    <div class="card stat violet">
+      <div class="n">{{ participants | length }}</div>
+      <div class="k">Participants</div>
+    </div>
+    <div class="card stat teal">
+      <div class="n">{{ total_responses }}</div>
+      <div class="k">Responses</div>
+    </div>
+    <div class="card stat pink">
+      <div class="n">{{ covered }}<span style="font-size:17px;color:#b9b4d0">/{{ total_trials }}</span></div>
+      <div class="k">Trials seen</div>
+    </div>
+    <div class="card stat amber">
+      <div class="n">{{ (total_responses / participants | length) | round(1) if participants else 0 }}</div>
+      <div class="k">Mean per person</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <a class="btn btn-primary" href="{{ url_for('export_json') }}">Export JSON</a>
+    <a class="btn btn-ghost" href="{{ url_for('export_csv') }}">Export CSV</a>
+  </div>
+
+  <div class="card" style="padding:6px 8px 2px; overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>Participant</th><th>Joined</th><th>Done</th>
+          <th style="min-width:140px">Progress</th><th>Ties</th><th>Mean time</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for p in participants %}
+        <tr>
+          <td><b>{{ p.username }}</b></td>
+          <td>{{ p.joined }}</td>
+          <td>{{ p.n }} / {{ total_trials }}</td>
+          <td>
+            <div class="bar"><i style="width: {{ p.pct }}%"></i></div>
+          </td>
+          <td>{{ p.ties }}</td>
+          <td>{{ p.mean_s }}s</td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" style="color:#6f6b8a; padding:26px 14px">No participants yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

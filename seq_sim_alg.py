@@ -59,15 +59,11 @@ def seq_distance(seq1, seq2, feature_weights=FEATURE_WEIGHTS):
     seq_2_change_points = change_points_detection(seq2)
 
     # Extract features for each node
-    len_seq1, len_seq2 = len(seq1), len(seq2)
-    der_f1, der_f2 = np.diff(seq1), np.diff(seq2)
-    der_f1_amp, der_f2_amp = np.max(np.abs(der_f1)) - np.min(np.abs(der_f1)), np.max(np.abs(der_f2)) - np.min(
-        np.abs(der_f2))
     features_seq_1 = np.array(
-        [extract_segment_features(seq1[seq_1_change_points[i]:seq_1_change_points[i + 1]], len_seq1, der_f1_amp) for i
+        [extract_features(seq1[seq_1_change_points[i]:seq_1_change_points[i + 1]]) for i
          in range(len(seq_1_change_points) - 1)])
     features_seq_2 = np.array(
-        [extract_segment_features(seq2[seq_2_change_points[i]:seq_2_change_points[i + 1]], len_seq2, der_f2_amp) for i
+        [extract_features(seq2[seq_2_change_points[i]:seq_2_change_points[i + 1]]) for i
          in range(len(seq_2_change_points) - 1)])
 
     # Apply feature weights

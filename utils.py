@@ -53,27 +53,12 @@ def extract_features(y, alpha=0.05):
             bp_pos = best[1] / (n - 1)
             slope_delta = best[2] - best[3]
 
-    return {
-        "mean_value": y.mean(),
-        "amplitude": np.ptp(y),
-        "length": float(n),
-        "mean_abs_diff": np.mean(np.abs(d)),
-        "lin_slope": lr.slope,
-        "lin_slope_ci_width": 2 * stats.t.ppf(1 - alpha / 2, n - 2) * lr.stderr,
-        "resid_std": np.sqrt(sse1 / (n - 2)),
-        "r_squared": 1.0 - sse1 / var_y if var_y > 0 else 1.0,
-        "quad_coef": np.polyfit(x, y, 2)[0],
-        "theilsen_slope": ts_slope,
-        "theilsen_lin_gap": ts_slope - lr.slope,
-        "spearman_rho": stats.spearmanr(x, y).statistic if var_y > 0 else 0.0,
-        "diff_q10": np.quantile(d, 0.10),
-        "diff_q50": np.quantile(d, 0.50),
-        "diff_q90": np.quantile(d, 0.90),
-        "has_breakpoint": has_bp,
-        "breakpoint_pos": bp_pos,
-        "slope_delta": slope_delta,
-        "efficiency_ratio": abs(y[-1] - y[0]) / sum_abs_diff if sum_abs_diff > 0 else 1.0,
-    }
+    return np.array(
+        [y.mean(), np.ptp(y), float(n), np.mean(np.abs(d)), lr.slope, 2 * stats.t.ppf(1 - alpha / 2, n - 2) * lr.stderr,
+         np.sqrt(sse1 / (n - 2)), 1.0 - sse1 / var_y if var_y > 0 else 1.0, np.polyfit(x, y, 2)[0], ts_slope,
+         ts_slope - lr.slope, stats.spearmanr(x, y).statistic if var_y > 0 else 0.0, np.quantile(d, 0.10),
+         np.quantile(d, 0.50), np.quantile(d, 0.90), has_bp, bp_pos, slope_delta,
+         abs(y[-1] - y[0]) / sum_abs_diff if sum_abs_diff > 0 else 1.0])
 
 
 def sign_func(x, threshold=0):

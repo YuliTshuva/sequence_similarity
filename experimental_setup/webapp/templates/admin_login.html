@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Admin — Sequence Similarity Study{% endblock %}
+
+{% block body %}
+<div class="auth-shell">
+  <div class="card auth-card">
+    <h1>Admin</h1>
+    <p class="sub">Enter the admin password to view study progress.</p>
+
+    {% with messages = get_flashed_messages(category_filter=["error"]) %}
+      {% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}
+    {% endwith %}
+
+    <form method="post" action="{{ url_for('admin_signin') }}">
+      <label class="field">
+        <span>Password</span>
+        <input type="password" name="password" autocomplete="current-password" required autofocus>
+      </label>
+      <button type="submit" class="btn-primary">Unlock</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}All done — Sequence Similarity Study{% endblock %}
+
+{% block topbar %}
+  <span class="pill">{{ session['username'] }}</span>
+  <a href="{{ url_for('logout') }}">Sign out</a>
+{% endblock %}
+
+{% block body %}
+<div class="wrap">
+  <div class="card done">
+    <div class="mark">&#10003;</div>
+    <h1>That&rsquo;s all of them</h1>
+    <p>
+      You finished all {{ total }} trials. Thank you &mdash; your answers are saved.
+      You can close this tab now.
+    </p>
+  </div>
+</div>
+{% endblock %}

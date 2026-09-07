@@ -1,0 +1,377 @@
+{
+    "Rebecca": {
+        "positives": [
+            "Brenda",
+            "Paula",
+            "Robin"
+        ],
+        "negatives": [
+            "Linda",
+            "Sydney",
+            "Judith",
+            "Lillian",
+            "Helen",
+            "Alice"
+        ]
+    },
+    "Mary": {
+        "positives": [
+            "Beverly",
+            "Martha",
+            "Marilyn"
+        ],
+        "negatives": [
+            "Debra",
+            "Lisa",
+            "Michelle",
+            "Natalie",
+            "Emily",
+            "Sophia"
+        ]
+    },
+    "Jacqueline": {
+        "positives": [
+            "Theresa",
+            "Carolyn",
+            "Shirley"
+        ],
+        "negatives": [
+            "Erin",
+            "Crystal",
+            "Dorothy",
+            "Sydney",
+            "Mildred",
+            "Martha"
+        ]
+    },
+    "Natalie": {
+        "positives": [
+            "Emily",
+            "Chloe",
+            "Sarah"
+        ],
+        "negatives": [
+            "Irene",
+            "Theresa",
+            "Catherine",
+            "Margaret",
+            "Mary",
+            "Marie"
+        ]
+    },
+    "Jennifer": {
+        "positives": [
+            "Julie",
+            "Rachel",
+            "Christina"
+        ],
+        "negatives": [
+            "Betty",
+            "Linda",
+            "Dorothy",
+            "Mary",
+            "Grace",
+            "Elizabeth"
+        ]
+    },
+    "Amy": {
+        "positives": [
+            "Crystal",
+            "April",
+            "Lisa"
+        ],
+        "negatives": [
+            "Janet",
+            "Sharon",
+            "Brenda",
+            "Lillian",
+            "Margaret",
+            "Alice"
+        ]
+    },
+    "Florence": {
+        "positives": [
+            "Helen",
+            "Cindy",
+            "Betty"
+        ],
+        "negatives": [
+            "Christine",
+            "Laura",
+            "Ava",
+            "Natalie",
+            "Victoria",
+            "Emma"
+        ]
+    },
+    "Elizabeth": {
+        "positives": [
+            "Catherine",
+            "Maria",
+            "Beverly"
+        ],
+        "negatives": [
+            "Crystal",
+            "Amy",
+            "Samantha",
+            "Ashley",
+            "Chloe",
+            "Isabella"
+        ]
+    },
+    "Katherine": {
+        "positives": [
+            "Elizabeth",
+            "Theresa",
+            "Peggy"
+        ],
+        "negatives": [
+            "Erin",
+            "Tina",
+            "Sara",
+            "Anna",
+            "Kayla",
+            "Amanda"
+        ]
+    },
+    "Charlotte": {
+        "positives": [
+            "Shelby",
+            "Peggy",
+            "Catherine"
+        ],
+        "negatives": [
+            "Gloria",
+            "Lauren",
+            "Linda",
+            "Debbie",
+            "Alexandra",
+            "Chloe"
+        ]
+    },
+    "Janet": {
+        "positives": [
+            "Patricia",
+            "Barbara",
+            "Karen"
+        ],
+        "negatives": [
+            "Gloria",
+            "Joan",
+            "Virginia",
+            "Emma",
+            "Sophia",
+            "Abigail"
+        ]
+    },
+    "Amanda": {
+        "positives": [
+            "Hannah",
+            "Kayla",
+            "Alexandra"
+        ],
+        "negatives": [
+            "Joyce",
+            "Rebecca",
+            "Andrea",
+            "Elizabeth",
+            "Alice",
+            "Martha"
+        ]
+    },
+    "Catherine": {
+        "positives": [
+            "Rebecca",
+            "Mary",
+            "Elizabeth"
+        ],
+        "negatives": [
+            "Maria",
+            "Grace",
+            "Anna",
+            "Emily",
+            "Emma",
+            "Abigail"
+        ]
+    },
+    "Grace": {
+        "positives": [
+            "Anna",
+            "Margaret",
+            "Mary",
+            "Samantha"
+        ],
+        "negatives": [
+            "Julie",
+            "Andrea",
+            "Natalie",
+            "Jessica",
+            "Amanda"
+        ]
+    },
+    "Shirley": {
+        "positives": [
+            "Dolores",
+            "Cindy",
+            "Linda"
+        ],
+        "negatives": [
+            "Dorothy",
+            "Christina",
+            "Megan",
+            "Natalie",
+            "Olivia",
+            "Abigail"
+        ]
+    },
+    "Lillian": {
+        "positives": [
+            "Anna",
+            "Helen",
+            "Margaret"
+        ],
+        "negatives": [
+            "Tracy",
+            "Tina",
+            "Laura",
+            "Sydney",
+            "Isabella",
+            "Chloe"
+        ]
+    },
+    "Lisa": {
+        "positives": [
+            "Teresa",
+            "Amy",
+            "Kim"
+        ],
+        "negatives": [
+            "Brenda",
+            "Christina",
+            "Rebecca",
+            "Grace",
+            "Elizabeth",
+            "Emma"
+        ]
+    },
+    "Marilyn": {
+        "positives": [
+            "Brenda",
+            "Sharon",
+            "Patricia"
+        ],
+        "negatives": [
+            "Debbie",
+            "Melissa",
+            "Jamie",
+            "Jasmine",
+            "Alexandra",
+            "Anna"
+        ]
+    },
+    "Denise": {
+        "positives": [
+            "Tammy",
+            "Susan",
+            "Pamela"
+        ],
+        "negatives": [
+            "Janet",
+            "Jamie",
+            "Linda",
+            "Olivia",
+            "Alice",
+            "Martha"
+        ]
+    },
+    "Laura": {
+        "positives": [
+            "Kelly",
+            "Shannon",
+            "Sharon"
+        ],
+        "negatives": [
+            "Joyce",
+            "Joan",
+            "Linda",
+            "Grace",
+            "Marie",
+            "Frances"
+        ]
+    },
+    "Doris": {
+        "positives": [
+            "Carol",
+            "Nancy",
+            "Patricia"
+        ],
+        "negatives": [
+            "Sharon",
+            "Shirley",
+            "Catherine",
+            "Andrea",
+            "Anna",
+            "Victoria"
+        ]
+    },
+    "Tracy": {
+        "positives": [
+            "Cynthia",
+            "Amy",
+            "Lisa"
+        ],
+        "negatives": [
+            "Brenda",
+            "Janet",
+            "Christine",
+            "Elizabeth",
+            "Lillian",
+            "Anna"
+        ]
+    },
+    "Cynthia": {
+        "positives": [
+            "Lisa",
+            "Lori",
+            "Tina"
+        ],
+        "negatives": [
+            "Christina",
+            "Janet",
+            "Sharon",
+            "Margaret",
+            "Anna",
+            "Grace"
+        ]
+    },
+    "Debbie": {
+        "positives": [
+            "Deborah",
+            "Debra",
+            "Kathleen"
+        ],
+        "negatives": [
+            "Donna",
+            "Karen",
+            "Samantha",
+            "Abigail",
+            "Anna",
+            "Elizabeth"
+        ]
+    },
+    "Judith": {
+        "positives": [
+            "Diane",
+            "Kathleen",
+            "Susan"
+        ],
+        "negatives": [
+            "Peggy",
+            "Beverly",
+            "Marilyn",
+            "Emily",
+            "Natalie",
+            "Anna"
+        ]
+    }
+}

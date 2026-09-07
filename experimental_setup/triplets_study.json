@@ -1,0 +1,1702 @@
+[
+  {
+    "class": "ddtw_dissents",
+    "query": 157,
+    "candidate_a": 147,
+    "candidate_b": 91,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.43064440498862955,
+      "shapedtw": 0.23024219611248167,
+      "ddtw": -0.45625031050595716
+    },
+    "trial": 0
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 60,
+    "candidate_a": 145,
+    "candidate_b": 11,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.9501451419480977,
+      "shapedtw": 0.41003715293683207,
+      "ddtw": -0.327093833393511
+    },
+    "trial": 1
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 142,
+    "candidate_a": 138,
+    "candidate_b": 24,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.8130022429322685,
+      "shapedtw": -0.4535282189415392,
+      "ddtw": 0.8183564444509327
+    },
+    "trial": 2
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 186,
+    "candidate_a": 84,
+    "candidate_b": 68,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.10444844005547582,
+      "shapedtw": -0.4132783236836783,
+      "ddtw": -0.6057325361068898
+    },
+    "trial": 3
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 10,
+    "candidate_a": 187,
+    "candidate_b": 182,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.5884327021984179,
+      "shapedtw": 0.775932806877864,
+      "ddtw": -0.16617875140829494
+    },
+    "trial": 4
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 132,
+    "candidate_a": 1,
+    "candidate_b": 174,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.6275283652183251,
+      "shapedtw": 0.4050385908967333,
+      "ddtw": -0.2740757399889054
+    },
+    "trial": 5
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 151,
+    "candidate_a": 194,
+    "candidate_b": 165,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.9829061150307125,
+      "shapedtw": -0.8222945146535358,
+      "ddtw": 0.10320375321649009
+    },
+    "trial": 6
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 72,
+    "candidate_a": 180,
+    "candidate_b": 93,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.2833736078349871,
+      "shapedtw": 0.23134136216986614,
+      "ddtw": -0.7885740722913519
+    },
+    "trial": 7
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 14,
+    "candidate_a": 170,
+    "candidate_b": 156,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.3831416943481696,
+      "shapedtw": -0.23977732741128693,
+      "ddtw": 0.3315168714924198
+    },
+    "trial": 8
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 136,
+    "candidate_a": 193,
+    "candidate_b": 156,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.9825374348587389,
+      "shapedtw": 0.668096058237612,
+      "ddtw": -0.13794860534805728
+    },
+    "trial": 9
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 170,
+    "candidate_a": 79,
+    "candidate_b": 6,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.426347307470288,
+      "shapedtw": 0.10919117809521212,
+      "ddtw": -0.19073931898598315
+    },
+    "trial": 10
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 177,
+    "candidate_a": 186,
+    "candidate_b": 47,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.8617922996263584,
+      "shapedtw": -0.7238127058820178,
+      "ddtw": 0.30311884903478004
+    },
+    "trial": 11
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 156,
+    "candidate_a": 93,
+    "candidate_b": 135,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.8731358051664465,
+      "shapedtw": -0.7791477978124496,
+      "ddtw": -0.11616547049661795
+    },
+    "trial": 12
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 105,
+    "candidate_a": 175,
+    "candidate_b": 118,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.15527347718948942,
+      "shapedtw": -0.41960163997732897,
+      "ddtw": 0.5061883501307747
+    },
+    "trial": 13
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 26,
+    "candidate_a": 191,
+    "candidate_b": 174,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.32381058954634484,
+      "shapedtw": -0.20331263114104214,
+      "ddtw": -0.24162138310429435
+    },
+    "trial": 14
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 187,
+    "candidate_a": 168,
+    "candidate_b": 75,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.5060886472482048,
+      "shapedtw": -0.8670502487801673,
+      "ddtw": -0.45199298261551096
+    },
+    "trial": 15
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 16,
+    "candidate_a": 101,
+    "candidate_b": 132,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.6045152898958581,
+      "shapedtw": -0.36714556541872223,
+      "ddtw": -0.3644396407530724
+    },
+    "trial": 16
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 10,
+    "candidate_a": 134,
+    "candidate_b": 192,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.565201345535904,
+      "shapedtw": -0.8461099625813611,
+      "ddtw": 0.29476307624150133
+    },
+    "trial": 17
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 72,
+    "candidate_a": 120,
+    "candidate_b": 140,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.12058231327840542,
+      "shapedtw": -0.1710626735216774,
+      "ddtw": 0.8600631379270918
+    },
+    "trial": 18
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 157,
+    "candidate_a": 162,
+    "candidate_b": 131,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.8254178717285904,
+      "shapedtw": -0.5217442196452649,
+      "ddtw": 0.42668081472547914
+    },
+    "trial": 19
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 160,
+    "candidate_a": 9,
+    "candidate_b": 193,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.32528389014931114,
+      "shapedtw": -0.45933252554881143,
+      "ddtw": -0.3532380281750462
+    },
+    "trial": 20
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 27,
+    "candidate_a": 58,
+    "candidate_b": 183,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.5451462021482708,
+      "shapedtw": -0.10482992743112222,
+      "ddtw": -0.4940338037713375
+    },
+    "trial": 21
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 111,
+    "candidate_a": 150,
+    "candidate_b": 56,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.3233596382771092,
+      "shapedtw": 0.28706060113400655,
+      "ddtw": -0.2576276547675874
+    },
+    "trial": 22
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 157,
+    "candidate_a": 85,
+    "candidate_b": 29,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.9334052183143537,
+      "shapedtw": -0.16896041220673605,
+      "ddtw": -0.8328499140636613
+    },
+    "trial": 23
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 152,
+    "candidate_a": 180,
+    "candidate_b": 36,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.3691458748625132,
+      "shapedtw": -0.11201610659196656,
+      "ddtw": -0.6204115871347853
+    },
+    "trial": 24
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 133,
+    "candidate_a": 126,
+    "candidate_b": 19,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.7930446026619306,
+      "shapedtw": -0.4048221226423971,
+      "ddtw": -0.5373096810297244
+    },
+    "trial": 25
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 151,
+    "candidate_a": 180,
+    "candidate_b": 138,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.16221942331370254,
+      "shapedtw": 0.6707956114193635,
+      "ddtw": -0.8421042199171355
+    },
+    "trial": 26
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 135,
+    "candidate_a": 145,
+    "candidate_b": 125,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.5858881883396615,
+      "shapedtw": -0.10451447127281326,
+      "ddtw": 0.16834232096343965
+    },
+    "trial": 27
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 170,
+    "candidate_a": 14,
+    "candidate_b": 50,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.1074197926869949,
+      "shapedtw": -0.3503744643607307,
+      "ddtw": -0.39886010200293853
+    },
+    "trial": 28
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 80,
+    "candidate_a": 99,
+    "candidate_b": 106,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.12197651556408748,
+      "shapedtw": -0.12618929860366523,
+      "ddtw": -0.10498241017536296
+    },
+    "trial": 29
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 16,
+    "candidate_a": 144,
+    "candidate_b": 88,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.5741443087713745,
+      "shapedtw": 0.16245269582561,
+      "ddtw": -0.6754312976012501
+    },
+    "trial": 30
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 190,
+    "candidate_a": 1,
+    "candidate_b": 34,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.5092174021955942,
+      "shapedtw": -0.27085368314915464,
+      "ddtw": -0.875405706358218
+    },
+    "trial": 31
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 103,
+    "candidate_a": 83,
+    "candidate_b": 144,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.41642987697009737,
+      "shapedtw": -0.3808949183531949,
+      "ddtw": 0.7654223873233685
+    },
+    "trial": 32
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 24,
+    "candidate_a": 192,
+    "candidate_b": 2,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.1334825463531826,
+      "shapedtw": 0.8386340211733067,
+      "ddtw": -0.1983902644624584
+    },
+    "trial": 33
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 189,
+    "candidate_a": 123,
+    "candidate_b": 38,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.6025994060804323,
+      "shapedtw": 0.8396331852456925,
+      "ddtw": -0.6001526943717385
+    },
+    "trial": 34
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 163,
+    "candidate_a": 53,
+    "candidate_b": 46,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.7019763483505693,
+      "shapedtw": -0.4637041541289769,
+      "ddtw": -0.14235792516843443
+    },
+    "trial": 35
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 26,
+    "candidate_a": 148,
+    "candidate_b": 80,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.6881160623412409,
+      "shapedtw": -0.45408346575240166,
+      "ddtw": 0.61959610421711
+    },
+    "trial": 36
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 177,
+    "candidate_a": 43,
+    "candidate_b": 175,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.4349127275101105,
+      "shapedtw": -0.6251504471661816,
+      "ddtw": -0.5942432429279233
+    },
+    "trial": 37
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 193,
+    "candidate_a": 11,
+    "candidate_b": 171,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.10217499899445401,
+      "shapedtw": -0.3367684802986165,
+      "ddtw": 0.11864800187588415
+    },
+    "trial": 38
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 65,
+    "candidate_a": 147,
+    "candidate_b": 153,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.12396078008048357,
+      "shapedtw": -0.17303141380620768,
+      "ddtw": -0.754614507917166
+    },
+    "trial": 39
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 152,
+    "candidate_a": 20,
+    "candidate_b": 8,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.1838151787010457,
+      "shapedtw": 0.6714644146330063,
+      "ddtw": -0.2839704953927245
+    },
+    "trial": 40
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 26,
+    "candidate_a": 80,
+    "candidate_b": 47,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.11274795942863804,
+      "shapedtw": 0.40891506910057146,
+      "ddtw": -0.6535733140712455
+    },
+    "trial": 41
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 69,
+    "candidate_a": 149,
+    "candidate_b": 50,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.14304199072721457,
+      "shapedtw": 0.32666951555746354,
+      "ddtw": -0.1013446470539118
+    },
+    "trial": 42
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 39,
+    "candidate_a": 67,
+    "candidate_b": 172,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.563444381729738,
+      "shapedtw": -0.7629633878439117,
+      "ddtw": -0.8001794984218709
+    },
+    "trial": 43
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 165,
+    "candidate_a": 140,
+    "candidate_b": 118,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.28069230558880676,
+      "shapedtw": 0.5146243011746526,
+      "ddtw": -0.3850158224832372
+    },
+    "trial": 44
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 167,
+    "candidate_a": 67,
+    "candidate_b": 25,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.5506457700387701,
+      "shapedtw": 0.6608884813019704,
+      "ddtw": -0.40172625770947484
+    },
+    "trial": 45
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 34,
+    "candidate_a": 27,
+    "candidate_b": 146,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.5661692423483343,
+      "shapedtw": -0.12543794062837663,
+      "ddtw": 0.5904200396390964
+    },
+    "trial": 46
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 45,
+    "candidate_a": 114,
+    "candidate_b": 69,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.7781707783866081,
+      "shapedtw": -0.19067163695556405,
+      "ddtw": 0.7214804897778717
+    },
+    "trial": 47
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 132,
+    "candidate_a": 190,
+    "candidate_b": 99,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.8716010670748223,
+      "shapedtw": -0.4047111071895502,
+      "ddtw": 0.10078757106563044
+    },
+    "trial": 48
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 110,
+    "candidate_a": 183,
+    "candidate_b": 31,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.20978751283499056,
+      "shapedtw": -0.11872804920771,
+      "ddtw": 0.5989720401912196
+    },
+    "trial": 49
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 71,
+    "candidate_a": 77,
+    "candidate_b": 19,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.8563207184636763,
+      "shapedtw": 0.10131931029451198,
+      "ddtw": -0.33636020138043365
+    },
+    "trial": 50
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 110,
+    "candidate_a": 90,
+    "candidate_b": 122,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.1285672459283679,
+      "shapedtw": 0.1113116272439289,
+      "ddtw": -0.5590714800911956
+    },
+    "trial": 51
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 142,
+    "candidate_a": 42,
+    "candidate_b": 192,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.34310878083110713,
+      "shapedtw": -0.36514201979088173,
+      "ddtw": -0.6438120346149604
+    },
+    "trial": 52
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 190,
+    "candidate_a": 48,
+    "candidate_b": 171,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.9314167331324716,
+      "shapedtw": 0.11698229166979357,
+      "ddtw": -0.6648406346245842
+    },
+    "trial": 53
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 33,
+    "candidate_a": 76,
+    "candidate_b": 19,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.15018416188793338,
+      "shapedtw": -0.6251432894098167,
+      "ddtw": 0.13371116643723674
+    },
+    "trial": 54
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 178,
+    "candidate_a": 145,
+    "candidate_b": 90,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.5040064493932018,
+      "shapedtw": -0.14556479917938175,
+      "ddtw": -0.10164488034205518
+    },
+    "trial": 55
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 165,
+    "candidate_a": 136,
+    "candidate_b": 10,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.44889853366019183,
+      "shapedtw": -0.8994989005844927,
+      "ddtw": -0.10180582058481706
+    },
+    "trial": 56
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 140,
+    "candidate_a": 118,
+    "candidate_b": 69,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.22095880339597307,
+      "shapedtw": -0.11464458275889879,
+      "ddtw": -0.4487221539405308
+    },
+    "trial": 57
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 15,
+    "candidate_a": 2,
+    "candidate_b": 7,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.23047892933220654,
+      "shapedtw": -0.45283299780541325,
+      "ddtw": 0.2964454679727434
+    },
+    "trial": 58
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 119,
+    "candidate_a": 76,
+    "candidate_b": 11,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.16608058192067382,
+      "shapedtw": -0.34963600734427885,
+      "ddtw": -0.12128577322652706
+    },
+    "trial": 59
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 126,
+    "candidate_a": 94,
+    "candidate_b": 50,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.6683758052998162,
+      "shapedtw": -0.6204759840059806,
+      "ddtw": 0.1293317153772586
+    },
+    "trial": 60
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 106,
+    "candidate_a": 86,
+    "candidate_b": 60,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.9653819747872955,
+      "shapedtw": -0.23402646018325216,
+      "ddtw": 0.5715449435882517
+    },
+    "trial": 61
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 48,
+    "candidate_a": 122,
+    "candidate_b": 45,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.3831072898512848,
+      "shapedtw": -0.4189254017429132,
+      "ddtw": -0.11120424395516705
+    },
+    "trial": 62
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 129,
+    "candidate_a": 125,
+    "candidate_b": 163,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.20974110655239991,
+      "shapedtw": 0.7214350905456868,
+      "ddtw": -0.5909784770073487
+    },
+    "trial": 63
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 7,
+    "candidate_a": 127,
+    "candidate_b": 31,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.39315990365216985,
+      "shapedtw": 0.4988580437061444,
+      "ddtw": -0.11964837270829957
+    },
+    "trial": 64
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 24,
+    "candidate_a": 46,
+    "candidate_b": 165,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.9131483325529958,
+      "shapedtw": -0.811469313930068,
+      "ddtw": -0.43939821875048457
+    },
+    "trial": 65
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 153,
+    "candidate_a": 111,
+    "candidate_b": 127,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.2994159244128395,
+      "shapedtw": -0.7167707135665771,
+      "ddtw": 0.7402283181016825
+    },
+    "trial": 66
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 142,
+    "candidate_a": 84,
+    "candidate_b": 186,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.635503981239635,
+      "shapedtw": 0.3718278388148506,
+      "ddtw": -0.5124222627830064
+    },
+    "trial": 67
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 185,
+    "candidate_a": 64,
+    "candidate_b": 2,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.7801316420598364,
+      "shapedtw": -0.1816272992180587,
+      "ddtw": -0.11215677336839991
+    },
+    "trial": 68
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 189,
+    "candidate_a": 9,
+    "candidate_b": 100,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.36218567460993506,
+      "shapedtw": -0.726676850353698,
+      "ddtw": 0.17964875171441932
+    },
+    "trial": 69
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 167,
+    "candidate_a": 133,
+    "candidate_b": 137,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.7789518663542677,
+      "shapedtw": -0.1038607825314692,
+      "ddtw": 0.37177572977994505
+    },
+    "trial": 70
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 152,
+    "candidate_a": 179,
+    "candidate_b": 75,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.8627516891760745,
+      "shapedtw": -0.8621774247598375,
+      "ddtw": 0.7419205345827383
+    },
+    "trial": 71
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 20,
+    "candidate_a": 155,
+    "candidate_b": 4,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.13829326125430882,
+      "shapedtw": -0.7486476311088418,
+      "ddtw": 0.3426289506942711
+    },
+    "trial": 72
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 183,
+    "candidate_a": 44,
+    "candidate_b": 184,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.11493778670695165,
+      "shapedtw": 0.5996755237291426,
+      "ddtw": -0.11014326169639492
+    },
+    "trial": 73
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 65,
+    "candidate_a": 130,
+    "candidate_b": 155,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.46632256358262847,
+      "shapedtw": 0.3035071116325291,
+      "ddtw": -0.10235846038053141
+    },
+    "trial": 74
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 182,
+    "candidate_a": 124,
+    "candidate_b": 81,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.12077108402995886,
+      "shapedtw": -0.46191706860570964,
+      "ddtw": 0.7891916672114996
+    },
+    "trial": 75
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 134,
+    "candidate_a": 125,
+    "candidate_b": 73,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.10920465866695178,
+      "shapedtw": -0.8165883959188379,
+      "ddtw": -0.3614766984938262
+    },
+    "trial": 76
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 15,
+    "candidate_a": 194,
+    "candidate_b": 114,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.9941952407444238,
+      "shapedtw": -0.10340181353486412,
+      "ddtw": -0.2699118523331452
+    },
+    "trial": 77
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 68,
+    "candidate_a": 106,
+    "candidate_b": 105,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.7991209303202689,
+      "shapedtw": 0.4888611941137329,
+      "ddtw": -0.1040847399918739
+    },
+    "trial": 78
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 12,
+    "candidate_a": 39,
+    "candidate_b": 181,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.6304019806600429,
+      "shapedtw": -0.34060131645701724,
+      "ddtw": 0.34855951911144933
+    },
+    "trial": 79
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 184,
+    "candidate_a": 128,
+    "candidate_b": 91,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.11260931897017568,
+      "shapedtw": -0.10320669161111594,
+      "ddtw": 0.344166835532617
+    },
+    "trial": 80
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 160,
+    "candidate_a": 101,
+    "candidate_b": 79,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.43507247984504926,
+      "shapedtw": -0.4684000565475745,
+      "ddtw": 0.19757273579877438
+    },
+    "trial": 81
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 133,
+    "candidate_a": 178,
+    "candidate_b": 86,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.874744475088398,
+      "shapedtw": 0.43782825721111635,
+      "ddtw": -0.619887376332847
+    },
+    "trial": 82
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 175,
+    "candidate_a": 75,
+    "candidate_b": 52,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.17616781491528757,
+      "shapedtw": 0.31940174880842687,
+      "ddtw": -0.41497035613432787
+    },
+    "trial": 83
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 131,
+    "candidate_a": 40,
+    "candidate_b": 37,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.6955806484334394,
+      "shapedtw": 0.10163150251101512,
+      "ddtw": -0.4901144956988677
+    },
+    "trial": 84
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 94,
+    "candidate_a": 81,
+    "candidate_b": 32,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.8113498531163993,
+      "shapedtw": -0.10248022635743945,
+      "ddtw": -0.5888953254348621
+    },
+    "trial": 85
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 53,
+    "candidate_a": 73,
+    "candidate_b": 36,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.9588654237385545,
+      "shapedtw": 0.12340426943592167,
+      "ddtw": -0.15104252814533503
+    },
+    "trial": 86
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 14,
+    "candidate_a": 76,
+    "candidate_b": 63,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.1781141079334946,
+      "shapedtw": 0.12480496823127993,
+      "ddtw": -0.2847447906116917
+    },
+    "trial": 87
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 114,
+    "candidate_a": 81,
+    "candidate_b": 0,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.7324291283022587,
+      "shapedtw": 0.1581987972112337,
+      "ddtw": -0.8796817801632673
+    },
+    "trial": 88
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 103,
+    "candidate_a": 112,
+    "candidate_b": 34,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.45174876806225217,
+      "shapedtw": 0.40744341682950336,
+      "ddtw": -0.7005864162346221
+    },
+    "trial": 89
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 68,
+    "candidate_a": 44,
+    "candidate_b": 136,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.9902550826620256,
+      "shapedtw": -0.10975173870016526,
+      "ddtw": 0.23664938716288653
+    },
+    "trial": 90
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 149,
+    "candidate_a": 150,
+    "candidate_b": 54,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.9640250015659879,
+      "shapedtw": -0.41577980712344814,
+      "ddtw": -0.2851839670678491
+    },
+    "trial": 91
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 73,
+    "candidate_a": 43,
+    "candidate_b": 32,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.5225588566649001,
+      "shapedtw": -0.5815469807365683,
+      "ddtw": 0.49753853857760155
+    },
+    "trial": 92
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 4,
+    "candidate_a": 88,
+    "candidate_b": 181,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.13663092352345357,
+      "shapedtw": -0.5630222386827628,
+      "ddtw": -0.12004714465678175
+    },
+    "trial": 93
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 29,
+    "candidate_a": 119,
+    "candidate_b": 58,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.9909557170081729,
+      "shapedtw": -0.10677066580628557,
+      "ddtw": 0.9130953312126836
+    },
+    "trial": 94
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 89,
+    "candidate_a": 151,
+    "candidate_b": 74,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.1977352679115057,
+      "shapedtw": -0.6070391732045176,
+      "ddtw": -0.7322492826627254
+    },
+    "trial": 95
+  },
+  {
+    "class": "shapedtw_dissents",
+    "query": 108,
+    "candidate_a": 63,
+    "candidate_b": 46,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "a"
+    },
+    "margins": {
+      "dtw": 0.3033787135208275,
+      "shapedtw": -0.12595656738283356,
+      "ddtw": 0.10954663165081728
+    },
+    "trial": 96
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 31,
+    "candidate_a": 111,
+    "candidate_b": 72,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.5986191519025993,
+      "shapedtw": -0.6305308999388475,
+      "ddtw": -0.36577016789295236
+    },
+    "trial": 97
+  },
+  {
+    "class": "ddtw_dissents",
+    "query": 43,
+    "candidate_a": 128,
+    "candidate_b": 162,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "a",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.7053722876185734,
+      "shapedtw": 0.1873730633710118,
+      "ddtw": -0.1019603640633475
+    },
+    "trial": 98
+  },
+  {
+    "class": "dtw_dissents",
+    "query": 7,
+    "candidate_a": 105,
+    "candidate_b": 196,
+    "votes": {
+      "dtw": "a",
+      "shapedtw": "b",
+      "ddtw": "b"
+    },
+    "margins": {
+      "dtw": 0.37669183129955003,
+      "shapedtw": -0.6424865623778375,
+      "ddtw": -0.22916463803925824
+    },
+    "trial": 99
+  }
+]

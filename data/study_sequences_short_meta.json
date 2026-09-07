@@ -1,0 +1,2002 @@
+[
+  {
+    "index": 0,
+    "ticker": "EXC",
+    "sector": "utilities",
+    "start": "2018-01-12",
+    "end": "2018-05-12",
+    "smooth_window": 6,
+    "n_raw_days": 83,
+    "turning_points": 7
+  },
+  {
+    "index": 1,
+    "ticker": "WFC",
+    "sector": "finance",
+    "start": "2012-02-16",
+    "end": "2012-04-16",
+    "smooth_window": 7,
+    "n_raw_days": 40,
+    "turning_points": 3
+  },
+  {
+    "index": 2,
+    "ticker": "FDX",
+    "sector": "industrials",
+    "start": "2022-05-24",
+    "end": "2022-07-24",
+    "smooth_window": 10,
+    "n_raw_days": 41,
+    "turning_points": 5
+  },
+  {
+    "index": 3,
+    "ticker": "UPS",
+    "sector": "industrials",
+    "start": "2011-05-31",
+    "end": "2011-08-31",
+    "smooth_window": 6,
+    "n_raw_days": 65,
+    "turning_points": 7
+  },
+  {
+    "index": 4,
+    "ticker": "TSLA",
+    "sector": "consumer",
+    "start": "2021-05-24",
+    "end": "2021-08-24",
+    "smooth_window": 10,
+    "n_raw_days": 64,
+    "turning_points": 4
+  },
+  {
+    "index": 5,
+    "ticker": "COST",
+    "sector": "consumer",
+    "start": "2012-10-19",
+    "end": "2013-01-19",
+    "smooth_window": 8,
+    "n_raw_days": 61,
+    "turning_points": 7
+  },
+  {
+    "index": 6,
+    "ticker": "AMGN",
+    "sector": "healthcare",
+    "start": "2019-12-25",
+    "end": "2020-03-25",
+    "smooth_window": 4,
+    "n_raw_days": 61,
+    "turning_points": 8
+  },
+  {
+    "index": 7,
+    "ticker": "SRE",
+    "sector": "utilities",
+    "start": "2016-07-06",
+    "end": "2016-09-06",
+    "smooth_window": 5,
+    "n_raw_days": 43,
+    "turning_points": 2
+  },
+  {
+    "index": 8,
+    "ticker": "VLO",
+    "sector": "energy",
+    "start": "2024-10-22",
+    "end": "2025-02-22",
+    "smooth_window": 8,
+    "n_raw_days": 83,
+    "turning_points": 7
+  },
+  {
+    "index": 9,
+    "ticker": "TMO",
+    "sector": "healthcare",
+    "start": "2017-06-17",
+    "end": "2017-08-17",
+    "smooth_window": 9,
+    "n_raw_days": 42,
+    "turning_points": 2
+  },
+  {
+    "index": 10,
+    "ticker": "MSFT",
+    "sector": "technology",
+    "start": "2014-11-28",
+    "end": "2015-01-28",
+    "smooth_window": 3,
+    "n_raw_days": 40,
+    "turning_points": 7
+  },
+  {
+    "index": 11,
+    "ticker": "MCD",
+    "sector": "consumer",
+    "start": "2011-05-16",
+    "end": "2011-07-16",
+    "smooth_window": 3,
+    "n_raw_days": 43,
+    "turning_points": 8
+  },
+  {
+    "index": 12,
+    "ticker": "UNH",
+    "sector": "healthcare",
+    "start": "2017-11-09",
+    "end": "2018-02-09",
+    "smooth_window": 9,
+    "n_raw_days": 62,
+    "turning_points": 5
+  },
+  {
+    "index": 13,
+    "ticker": "JPM",
+    "sector": "finance",
+    "start": "2010-11-19",
+    "end": "2011-03-19",
+    "smooth_window": 4,
+    "n_raw_days": 82,
+    "turning_points": 8
+  },
+  {
+    "index": 14,
+    "ticker": "AEP",
+    "sector": "utilities",
+    "start": "2018-01-16",
+    "end": "2018-04-16",
+    "smooth_window": 10,
+    "n_raw_days": 62,
+    "turning_points": 5
+  },
+  {
+    "index": 15,
+    "ticker": "C",
+    "sector": "finance",
+    "start": "2012-08-18",
+    "end": "2012-11-18",
+    "smooth_window": 10,
+    "n_raw_days": 62,
+    "turning_points": 3
+  },
+  {
+    "index": 16,
+    "ticker": "JPM",
+    "sector": "finance",
+    "start": "2019-03-12",
+    "end": "2019-07-12",
+    "smooth_window": 7,
+    "n_raw_days": 85,
+    "turning_points": 5
+  },
+  {
+    "index": 17,
+    "ticker": "PLD",
+    "sector": "realestate",
+    "start": "2011-01-10",
+    "end": "2011-04-10",
+    "smooth_window": 7,
+    "n_raw_days": 63,
+    "turning_points": 7
+  },
+  {
+    "index": 18,
+    "ticker": "MS",
+    "sector": "finance",
+    "start": "2017-11-25",
+    "end": "2018-03-25",
+    "smooth_window": 7,
+    "n_raw_days": 81,
+    "turning_points": 5
+  },
+  {
+    "index": 19,
+    "ticker": "FDX",
+    "sector": "industrials",
+    "start": "2016-12-16",
+    "end": "2017-02-16",
+    "smooth_window": 9,
+    "n_raw_days": 41,
+    "turning_points": 7
+  },
+  {
+    "index": 20,
+    "ticker": "WEC",
+    "sector": "utilities",
+    "start": "2010-09-16",
+    "end": "2011-01-16",
+    "smooth_window": 9,
+    "n_raw_days": 85,
+    "turning_points": 6
+  },
+  {
+    "index": 21,
+    "ticker": "NEE",
+    "sector": "utilities",
+    "start": "2019-12-28",
+    "end": "2020-02-28",
+    "smooth_window": 4,
+    "n_raw_days": 41,
+    "turning_points": 3
+  },
+  {
+    "index": 22,
+    "ticker": "COP",
+    "sector": "energy",
+    "start": "2021-10-31",
+    "end": "2022-02-28",
+    "smooth_window": 10,
+    "n_raw_days": 81,
+    "turning_points": 4
+  },
+  {
+    "index": 23,
+    "ticker": "JPM",
+    "sector": "finance",
+    "start": "2019-05-14",
+    "end": "2019-09-14",
+    "smooth_window": 8,
+    "n_raw_days": 86,
+    "turning_points": 5
+  },
+  {
+    "index": 24,
+    "ticker": "UNH",
+    "sector": "healthcare",
+    "start": "2016-10-13",
+    "end": "2016-12-13",
+    "smooth_window": 7,
+    "n_raw_days": 42,
+    "turning_points": 2
+  },
+  {
+    "index": 25,
+    "ticker": "BAC",
+    "sector": "finance",
+    "start": "2018-11-24",
+    "end": "2019-03-24",
+    "smooth_window": 4,
+    "n_raw_days": 80,
+    "turning_points": 7
+  },
+  {
+    "index": 26,
+    "ticker": "META",
+    "sector": "technology",
+    "start": "2012-08-06",
+    "end": "2012-12-06",
+    "smooth_window": 7,
+    "n_raw_days": 84,
+    "turning_points": 7
+  },
+  {
+    "index": 27,
+    "ticker": "OXY",
+    "sector": "energy",
+    "start": "2018-03-25",
+    "end": "2018-06-25",
+    "smooth_window": 3,
+    "n_raw_days": 63,
+    "turning_points": 6
+  },
+  {
+    "index": 28,
+    "ticker": "ABT",
+    "sector": "healthcare",
+    "start": "2010-03-14",
+    "end": "2010-06-14",
+    "smooth_window": 5,
+    "n_raw_days": 63,
+    "turning_points": 6
+  },
+  {
+    "index": 29,
+    "ticker": "WFC",
+    "sector": "finance",
+    "start": "2017-07-27",
+    "end": "2017-10-27",
+    "smooth_window": 8,
+    "n_raw_days": 65,
+    "turning_points": 3
+  },
+  {
+    "index": 30,
+    "ticker": "GS",
+    "sector": "finance",
+    "start": "2018-02-04",
+    "end": "2018-05-04",
+    "smooth_window": 9,
+    "n_raw_days": 62,
+    "turning_points": 5
+  },
+  {
+    "index": 31,
+    "ticker": "META",
+    "sector": "technology",
+    "start": "2021-09-24",
+    "end": "2021-11-24",
+    "smooth_window": 4,
+    "n_raw_days": 43,
+    "turning_points": 8
+  },
+  {
+    "index": 32,
+    "ticker": "MPC",
+    "sector": "energy",
+    "start": "2016-09-17",
+    "end": "2016-12-17",
+    "smooth_window": 9,
+    "n_raw_days": 64,
+    "turning_points": 3
+  },
+  {
+    "index": 33,
+    "ticker": "TSLA",
+    "sector": "consumer",
+    "start": "2020-08-19",
+    "end": "2020-12-19",
+    "smooth_window": 8,
+    "n_raw_days": 86,
+    "turning_points": 6
+  },
+  {
+    "index": 34,
+    "ticker": "BA",
+    "sector": "industrials",
+    "start": "2012-08-08",
+    "end": "2012-12-08",
+    "smooth_window": 10,
+    "n_raw_days": 84,
+    "turning_points": 5
+  },
+  {
+    "index": 35,
+    "ticker": "NEE",
+    "sector": "utilities",
+    "start": "2017-07-07",
+    "end": "2017-10-07",
+    "smooth_window": 5,
+    "n_raw_days": 65,
+    "turning_points": 4
+  },
+  {
+    "index": 36,
+    "ticker": "TSLA",
+    "sector": "consumer",
+    "start": "2014-12-16",
+    "end": "2015-02-16",
+    "smooth_window": 3,
+    "n_raw_days": 41,
+    "turning_points": 5
+  },
+  {
+    "index": 37,
+    "ticker": "WELL",
+    "sector": "realestate",
+    "start": "2019-06-28",
+    "end": "2019-08-28",
+    "smooth_window": 4,
+    "n_raw_days": 42,
+    "turning_points": 5
+  },
+  {
+    "index": 38,
+    "ticker": "AEP",
+    "sector": "utilities",
+    "start": "2012-07-31",
+    "end": "2012-10-31",
+    "smooth_window": 4,
+    "n_raw_days": 63,
+    "turning_points": 7
+  },
+  {
+    "index": 39,
+    "ticker": "O",
+    "sector": "realestate",
+    "start": "2014-08-25",
+    "end": "2014-11-25",
+    "smooth_window": 3,
+    "n_raw_days": 65,
+    "turning_points": 7
+  },
+  {
+    "index": 40,
+    "ticker": "AMGN",
+    "sector": "healthcare",
+    "start": "2012-05-07",
+    "end": "2012-07-07",
+    "smooth_window": 6,
+    "n_raw_days": 43,
+    "turning_points": 8
+  },
+  {
+    "index": 41,
+    "ticker": "O",
+    "sector": "realestate",
+    "start": "2022-04-04",
+    "end": "2022-07-04",
+    "smooth_window": 5,
+    "n_raw_days": 62,
+    "turning_points": 4
+  },
+  {
+    "index": 42,
+    "ticker": "LOW",
+    "sector": "consumer",
+    "start": "2013-04-30",
+    "end": "2013-08-30",
+    "smooth_window": 9,
+    "n_raw_days": 86,
+    "turning_points": 6
+  },
+  {
+    "index": 43,
+    "ticker": "XEL",
+    "sector": "utilities",
+    "start": "2017-03-26",
+    "end": "2017-07-26",
+    "smooth_window": 10,
+    "n_raw_days": 84,
+    "turning_points": 4
+  },
+  {
+    "index": 44,
+    "ticker": "EQIX",
+    "sector": "realestate",
+    "start": "2010-03-21",
+    "end": "2010-05-21",
+    "smooth_window": 8,
+    "n_raw_days": 43,
+    "turning_points": 6
+  },
+  {
+    "index": 45,
+    "ticker": "PSX",
+    "sector": "energy",
+    "start": "2018-07-02",
+    "end": "2018-09-02",
+    "smooth_window": 7,
+    "n_raw_days": 44,
+    "turning_points": 4
+  },
+  {
+    "index": 46,
+    "ticker": "TGT",
+    "sector": "consumer",
+    "start": "2010-11-29",
+    "end": "2011-01-29",
+    "smooth_window": 7,
+    "n_raw_days": 43,
+    "turning_points": 4
+  },
+  {
+    "index": 47,
+    "ticker": "ORCL",
+    "sector": "technology",
+    "start": "2013-08-09",
+    "end": "2013-11-09",
+    "smooth_window": 5,
+    "n_raw_days": 65,
+    "turning_points": 5
+  },
+  {
+    "index": 48,
+    "ticker": "OXY",
+    "sector": "energy",
+    "start": "2020-10-25",
+    "end": "2021-02-25",
+    "smooth_window": 9,
+    "n_raw_days": 83,
+    "turning_points": 4
+  },
+  {
+    "index": 49,
+    "ticker": "GS",
+    "sector": "finance",
+    "start": "2016-06-09",
+    "end": "2016-08-09",
+    "smooth_window": 8,
+    "n_raw_days": 42,
+    "turning_points": 4
+  },
+  {
+    "index": 50,
+    "ticker": "AAPL",
+    "sector": "technology",
+    "start": "2019-05-17",
+    "end": "2019-09-17",
+    "smooth_window": 5,
+    "n_raw_days": 84,
+    "turning_points": 5
+  },
+  {
+    "index": 51,
+    "ticker": "BA",
+    "sector": "industrials",
+    "start": "2014-05-17",
+    "end": "2014-08-17",
+    "smooth_window": 9,
+    "n_raw_days": 63,
+    "turning_points": 6
+  },
+  {
+    "index": 52,
+    "ticker": "BA",
+    "sector": "industrials",
+    "start": "2012-11-07",
+    "end": "2013-02-07",
+    "smooth_window": 9,
+    "n_raw_days": 62,
+    "turning_points": 4
+  },
+  {
+    "index": 53,
+    "ticker": "SPG",
+    "sector": "realestate",
+    "start": "2020-03-20",
+    "end": "2020-05-20",
+    "smooth_window": 8,
+    "n_raw_days": 42,
+    "turning_points": 4
+  },
+  {
+    "index": 54,
+    "ticker": "CRM",
+    "sector": "technology",
+    "start": "2015-02-25",
+    "end": "2015-04-25",
+    "smooth_window": 4,
+    "n_raw_days": 42,
+    "turning_points": 6
+  },
+  {
+    "index": 55,
+    "ticker": "XEL",
+    "sector": "utilities",
+    "start": "2012-07-18",
+    "end": "2012-10-18",
+    "smooth_window": 5,
+    "n_raw_days": 65,
+    "turning_points": 7
+  },
+  {
+    "index": 56,
+    "ticker": "SPG",
+    "sector": "realestate",
+    "start": "2011-10-06",
+    "end": "2012-01-06",
+    "smooth_window": 8,
+    "n_raw_days": 63,
+    "turning_points": 4
+  },
+  {
+    "index": 57,
+    "ticker": "TSLA",
+    "sector": "consumer",
+    "start": "2010-08-29",
+    "end": "2010-11-29",
+    "smooth_window": 8,
+    "n_raw_days": 63,
+    "turning_points": 4
+  },
+  {
+    "index": 58,
+    "ticker": "LOW",
+    "sector": "consumer",
+    "start": "2014-08-31",
+    "end": "2014-10-31",
+    "smooth_window": 3,
+    "n_raw_days": 43,
+    "turning_points": 6
+  },
+  {
+    "index": 59,
+    "ticker": "ADBE",
+    "sector": "technology",
+    "start": "2013-03-08",
+    "end": "2013-05-08",
+    "smooth_window": 5,
+    "n_raw_days": 42,
+    "turning_points": 3
+  },
+  {
+    "index": 60,
+    "ticker": "PLD",
+    "sector": "realestate",
+    "start": "2017-09-22",
+    "end": "2018-01-22",
+    "smooth_window": 7,
+    "n_raw_days": 82,
+    "turning_points": 7
+  },
+  {
+    "index": 61,
+    "ticker": "JPM",
+    "sector": "finance",
+    "start": "2018-02-15",
+    "end": "2018-04-15",
+    "smooth_window": 8,
+    "n_raw_days": 40,
+    "turning_points": 3
+  },
+  {
+    "index": 62,
+    "ticker": "PSA",
+    "sector": "realestate",
+    "start": "2022-05-29",
+    "end": "2022-08-29",
+    "smooth_window": 8,
+    "n_raw_days": 62,
+    "turning_points": 4
+  },
+  {
+    "index": 63,
+    "ticker": "BLK",
+    "sector": "finance",
+    "start": "2012-10-22",
+    "end": "2012-12-22",
+    "smooth_window": 6,
+    "n_raw_days": 42,
+    "turning_points": 4
+  },
+  {
+    "index": 64,
+    "ticker": "DE",
+    "sector": "industrials",
+    "start": "2015-04-23",
+    "end": "2015-06-23",
+    "smooth_window": 5,
+    "n_raw_days": 42,
+    "turning_points": 8
+  },
+  {
+    "index": 65,
+    "ticker": "WMT",
+    "sector": "consumer",
+    "start": "2016-09-18",
+    "end": "2017-01-18",
+    "smooth_window": 9,
+    "n_raw_days": 83,
+    "turning_points": 8
+  },
+  {
+    "index": 66,
+    "ticker": "SCHW",
+    "sector": "finance",
+    "start": "2016-09-07",
+    "end": "2017-01-07",
+    "smooth_window": 8,
+    "n_raw_days": 85,
+    "turning_points": 2
+  },
+  {
+    "index": 67,
+    "ticker": "TGT",
+    "sector": "consumer",
+    "start": "2024-03-11",
+    "end": "2024-07-11",
+    "smooth_window": 8,
+    "n_raw_days": 84,
+    "turning_points": 7
+  },
+  {
+    "index": 68,
+    "ticker": "AMD",
+    "sector": "technology",
+    "start": "2010-03-11",
+    "end": "2010-07-11",
+    "smooth_window": 9,
+    "n_raw_days": 84,
+    "turning_points": 7
+  },
+  {
+    "index": 69,
+    "ticker": "MMM",
+    "sector": "industrials",
+    "start": "2018-05-03",
+    "end": "2018-07-03",
+    "smooth_window": 7,
+    "n_raw_days": 42,
+    "turning_points": 3
+  },
+  {
+    "index": 70,
+    "ticker": "PLD",
+    "sector": "realestate",
+    "start": "2012-06-08",
+    "end": "2012-08-08",
+    "smooth_window": 7,
+    "n_raw_days": 42,
+    "turning_points": 6
+  },
+  {
+    "index": 71,
+    "ticker": "SBUX",
+    "sector": "consumer",
+    "start": "2020-01-03",
+    "end": "2020-03-03",
+    "smooth_window": 9,
+    "n_raw_days": 40,
+    "turning_points": 3
+  },
+  {
+    "index": 72,
+    "ticker": "MCD",
+    "sector": "consumer",
+    "start": "2016-08-11",
+    "end": "2016-10-11",
+    "smooth_window": 3,
+    "n_raw_days": 42,
+    "turning_points": 5
+  },
+  {
+    "index": 73,
+    "ticker": "CVX",
+    "sector": "energy",
+    "start": "2022-03-25",
+    "end": "2022-06-25",
+    "smooth_window": 5,
+    "n_raw_days": 63,
+    "turning_points": 6
+  },
+  {
+    "index": 74,
+    "ticker": "BA",
+    "sector": "industrials",
+    "start": "2013-09-01",
+    "end": "2013-11-01",
+    "smooth_window": 4,
+    "n_raw_days": 43,
+    "turning_points": 2
+  },
+  {
+    "index": 75,
+    "ticker": "EXC",
+    "sector": "utilities",
+    "start": "2021-08-29",
+    "end": "2021-11-29",
+    "smooth_window": 5,
+    "n_raw_days": 63,
+    "turning_points": 6
+  },
+  {
+    "index": 76,
+    "ticker": "EOG",
+    "sector": "energy",
+    "start": "2018-05-04",
+    "end": "2018-09-04",
+    "smooth_window": 5,
+    "n_raw_days": 84,
+    "turning_points": 8
+  },
+  {
+    "index": 77,
+    "ticker": "CCI",
+    "sector": "realestate",
+    "start": "2017-12-10",
+    "end": "2018-03-10",
+    "smooth_window": 10,
+    "n_raw_days": 61,
+    "turning_points": 5
+  },
+  {
+    "index": 78,
+    "ticker": "AEP",
+    "sector": "utilities",
+    "start": "2020-12-18",
+    "end": "2021-04-18",
+    "smooth_window": 8,
+    "n_raw_days": 81,
+    "turning_points": 3
+  },
+  {
+    "index": 79,
+    "ticker": "AMT",
+    "sector": "realestate",
+    "start": "2016-09-25",
+    "end": "2017-01-25",
+    "smooth_window": 5,
+    "n_raw_days": 83,
+    "turning_points": 7
+  },
+  {
+    "index": 80,
+    "ticker": "AMT",
+    "sector": "realestate",
+    "start": "2010-07-29",
+    "end": "2010-09-29",
+    "smooth_window": 8,
+    "n_raw_days": 43,
+    "turning_points": 4
+  },
+  {
+    "index": 81,
+    "ticker": "PFE",
+    "sector": "healthcare",
+    "start": "2014-04-16",
+    "end": "2014-07-16",
+    "smooth_window": 4,
+    "n_raw_days": 62,
+    "turning_points": 8
+  },
+  {
+    "index": 82,
+    "ticker": "GE",
+    "sector": "industrials",
+    "start": "2013-04-27",
+    "end": "2013-08-27",
+    "smooth_window": 10,
+    "n_raw_days": 84,
+    "turning_points": 5
+  },
+  {
+    "index": 83,
+    "ticker": "USB",
+    "sector": "finance",
+    "start": "2012-11-24",
+    "end": "2013-02-24",
+    "smooth_window": 6,
+    "n_raw_days": 61,
+    "turning_points": 8
+  },
+  {
+    "index": 84,
+    "ticker": "AXP",
+    "sector": "finance",
+    "start": "2018-09-21",
+    "end": "2018-12-21",
+    "smooth_window": 9,
+    "n_raw_days": 63,
+    "turning_points": 6
+  },
+  {
+    "index": 85,
+    "ticker": "O",
+    "sector": "realestate",
+    "start": "2014-05-27",
+    "end": "2014-07-27",
+    "smooth_window": 10,
+    "n_raw_days": 43,
+    "turning_points": 3
+  },
+  {
+    "index": 86,
+    "ticker": "MS",
+    "sector": "finance",
+    "start": "2023-09-27",
+    "end": "2023-12-27",
+    "smooth_window": 4,
+    "n_raw_days": 63,
+    "turning_points": 7
+  },
+  {
+    "index": 87,
+    "ticker": "WEC",
+    "sector": "utilities",
+    "start": "2020-12-29",
+    "end": "2021-04-29",
+    "smooth_window": 7,
+    "n_raw_days": 83,
+    "turning_points": 6
+  },
+  {
+    "index": 88,
+    "ticker": "AAPL",
+    "sector": "technology",
+    "start": "2017-11-05",
+    "end": "2018-01-05",
+    "smooth_window": 3,
+    "n_raw_days": 41,
+    "turning_points": 6
+  },
+  {
+    "index": 89,
+    "ticker": "XOM",
+    "sector": "energy",
+    "start": "2011-06-06",
+    "end": "2011-08-06",
+    "smooth_window": 9,
+    "n_raw_days": 44,
+    "turning_points": 2
+  },
+  {
+    "index": 90,
+    "ticker": "AMGN",
+    "sector": "healthcare",
+    "start": "2022-07-06",
+    "end": "2022-11-06",
+    "smooth_window": 6,
+    "n_raw_days": 87,
+    "turning_points": 6
+  },
+  {
+    "index": 91,
+    "ticker": "EQIX",
+    "sector": "realestate",
+    "start": "2023-08-24",
+    "end": "2023-11-24",
+    "smooth_window": 4,
+    "n_raw_days": 64,
+    "turning_points": 8
+  },
+  {
+    "index": 92,
+    "ticker": "HD",
+    "sector": "consumer",
+    "start": "2022-01-08",
+    "end": "2022-04-08",
+    "smooth_window": 10,
+    "n_raw_days": 62,
+    "turning_points": 4
+  },
+  {
+    "index": 93,
+    "ticker": "ABBV",
+    "sector": "healthcare",
+    "start": "2025-02-01",
+    "end": "2025-05-01",
+    "smooth_window": 7,
+    "n_raw_days": 61,
+    "turning_points": 2
+  },
+  {
+    "index": 94,
+    "ticker": "ED",
+    "sector": "utilities",
+    "start": "2019-11-15",
+    "end": "2020-03-15",
+    "smooth_window": 4,
+    "n_raw_days": 81,
+    "turning_points": 8
+  },
+  {
+    "index": 95,
+    "ticker": "TSLA",
+    "sector": "consumer",
+    "start": "2012-03-19",
+    "end": "2012-05-19",
+    "smooth_window": 5,
+    "n_raw_days": 44,
+    "turning_points": 3
+  },
+  {
+    "index": 96,
+    "ticker": "AEP",
+    "sector": "utilities",
+    "start": "2023-09-29",
+    "end": "2024-01-29",
+    "smooth_window": 4,
+    "n_raw_days": 82,
+    "turning_points": 8
+  },
+  {
+    "index": 97,
+    "ticker": "DHR",
+    "sector": "healthcare",
+    "start": "2012-11-15",
+    "end": "2013-01-15",
+    "smooth_window": 7,
+    "n_raw_days": 40,
+    "turning_points": 2
+  },
+  {
+    "index": 98,
+    "ticker": "LMT",
+    "sector": "industrials",
+    "start": "2012-05-28",
+    "end": "2012-09-28",
+    "smooth_window": 7,
+    "n_raw_days": 86,
+    "turning_points": 5
+  },
+  {
+    "index": 99,
+    "ticker": "MRK",
+    "sector": "healthcare",
+    "start": "2021-07-12",
+    "end": "2021-11-12",
+    "smooth_window": 10,
+    "n_raw_days": 88,
+    "turning_points": 5
+  },
+  {
+    "index": 100,
+    "ticker": "EOG",
+    "sector": "energy",
+    "start": "2010-05-16",
+    "end": "2010-07-16",
+    "smooth_window": 4,
+    "n_raw_days": 42,
+    "turning_points": 5
+  },
+  {
+    "index": 101,
+    "ticker": "WMT",
+    "sector": "consumer",
+    "start": "2015-07-31",
+    "end": "2015-11-30",
+    "smooth_window": 6,
+    "n_raw_days": 84,
+    "turning_points": 7
+  },
+  {
+    "index": 102,
+    "ticker": "BMY",
+    "sector": "healthcare",
+    "start": "2014-12-21",
+    "end": "2015-03-21",
+    "smooth_window": 6,
+    "n_raw_days": 61,
+    "turning_points": 3
+  },
+  {
+    "index": 103,
+    "ticker": "SBUX",
+    "sector": "consumer",
+    "start": "2025-02-17",
+    "end": "2025-05-17",
+    "smooth_window": 8,
+    "n_raw_days": 63,
+    "turning_points": 4
+  },
+  {
+    "index": 104,
+    "ticker": "TMO",
+    "sector": "healthcare",
+    "start": "2016-06-07",
+    "end": "2016-10-07",
+    "smooth_window": 5,
+    "n_raw_days": 86,
+    "turning_points": 7
+  },
+  {
+    "index": 105,
+    "ticker": "BLK",
+    "sector": "finance",
+    "start": "2013-12-19",
+    "end": "2014-02-19",
+    "smooth_window": 4,
+    "n_raw_days": 40,
+    "turning_points": 6
+  },
+  {
+    "index": 106,
+    "ticker": "MS",
+    "sector": "finance",
+    "start": "2022-10-10",
+    "end": "2023-02-10",
+    "smooth_window": 6,
+    "n_raw_days": 85,
+    "turning_points": 4
+  },
+  {
+    "index": 107,
+    "ticker": "PFE",
+    "sector": "healthcare",
+    "start": "2018-08-17",
+    "end": "2018-10-17",
+    "smooth_window": 8,
+    "n_raw_days": 42,
+    "turning_points": 2
+  },
+  {
+    "index": 108,
+    "ticker": "BMY",
+    "sector": "healthcare",
+    "start": "2024-10-27",
+    "end": "2024-12-27",
+    "smooth_window": 10,
+    "n_raw_days": 42,
+    "turning_points": 4
+  },
+  {
+    "index": 109,
+    "ticker": "DLR",
+    "sector": "realestate",
+    "start": "2011-10-08",
+    "end": "2012-01-08",
+    "smooth_window": 7,
+    "n_raw_days": 62,
+    "turning_points": 4
+  },
+  {
+    "index": 110,
+    "ticker": "SCHW",
+    "sector": "finance",
+    "start": "2014-04-15",
+    "end": "2014-08-15",
+    "smooth_window": 8,
+    "n_raw_days": 85,
+    "turning_points": 6
+  },
+  {
+    "index": 111,
+    "ticker": "UPS",
+    "sector": "industrials",
+    "start": "2019-11-24",
+    "end": "2020-02-24",
+    "smooth_window": 6,
+    "n_raw_days": 60,
+    "turning_points": 6
+  },
+  {
+    "index": 112,
+    "ticker": "MS",
+    "sector": "finance",
+    "start": "2019-10-06",
+    "end": "2020-02-06",
+    "smooth_window": 5,
+    "n_raw_days": 84,
+    "turning_points": 3
+  },
+  {
+    "index": 113,
+    "ticker": "RTX",
+    "sector": "industrials",
+    "start": "2024-07-23",
+    "end": "2024-09-23",
+    "smooth_window": 8,
+    "n_raw_days": 43,
+    "turning_points": 3
+  },
+  {
+    "index": 114,
+    "ticker": "JPM",
+    "sector": "finance",
+    "start": "2023-12-13",
+    "end": "2024-02-13",
+    "smooth_window": 5,
+    "n_raw_days": 41,
+    "turning_points": 2
+  },
+  {
+    "index": 115,
+    "ticker": "HD",
+    "sector": "consumer",
+    "start": "2013-12-15",
+    "end": "2014-02-15",
+    "smooth_window": 6,
+    "n_raw_days": 42,
+    "turning_points": 2
+  },
+  {
+    "index": 116,
+    "ticker": "PLD",
+    "sector": "realestate",
+    "start": "2016-07-26",
+    "end": "2016-10-26",
+    "smooth_window": 5,
+    "n_raw_days": 65,
+    "turning_points": 8
+  },
+  {
+    "index": 117,
+    "ticker": "EQIX",
+    "sector": "realestate",
+    "start": "2013-08-22",
+    "end": "2013-11-22",
+    "smooth_window": 9,
+    "n_raw_days": 65,
+    "turning_points": 4
+  },
+  {
+    "index": 118,
+    "ticker": "OXY",
+    "sector": "energy",
+    "start": "2022-05-07",
+    "end": "2022-08-07",
+    "smooth_window": 10,
+    "n_raw_days": 62,
+    "turning_points": 5
+  },
+  {
+    "index": 119,
+    "ticker": "CRM",
+    "sector": "technology",
+    "start": "2010-11-10",
+    "end": "2011-02-10",
+    "smooth_window": 10,
+    "n_raw_days": 63,
+    "turning_points": 4
+  },
+  {
+    "index": 120,
+    "ticker": "AAPL",
+    "sector": "technology",
+    "start": "2010-10-08",
+    "end": "2011-01-08",
+    "smooth_window": 7,
+    "n_raw_days": 64,
+    "turning_points": 4
+  },
+  {
+    "index": 121,
+    "ticker": "SLB",
+    "sector": "energy",
+    "start": "2018-08-29",
+    "end": "2018-11-29",
+    "smooth_window": 7,
+    "n_raw_days": 64,
+    "turning_points": 2
+  },
+  {
+    "index": 122,
+    "ticker": "UNH",
+    "sector": "healthcare",
+    "start": "2015-06-11",
+    "end": "2015-09-11",
+    "smooth_window": 8,
+    "n_raw_days": 64,
+    "turning_points": 7
+  },
+  {
+    "index": 123,
+    "ticker": "C",
+    "sector": "finance",
+    "start": "2016-07-13",
+    "end": "2016-10-13",
+    "smooth_window": 7,
+    "n_raw_days": 65,
+    "turning_points": 4
+  },
+  {
+    "index": 124,
+    "ticker": "MMM",
+    "sector": "industrials",
+    "start": "2023-06-22",
+    "end": "2023-10-22",
+    "smooth_window": 9,
+    "n_raw_days": 85,
+    "turning_points": 5
+  },
+  {
+    "index": 125,
+    "ticker": "JPM",
+    "sector": "finance",
+    "start": "2022-10-02",
+    "end": "2022-12-02",
+    "smooth_window": 3,
+    "n_raw_days": 43,
+    "turning_points": 3
+  },
+  {
+    "index": 126,
+    "ticker": "COP",
+    "sector": "energy",
+    "start": "2011-06-03",
+    "end": "2011-08-03",
+    "smooth_window": 5,
+    "n_raw_days": 42,
+    "turning_points": 8
+  },
+  {
+    "index": 127,
+    "ticker": "SBUX",
+    "sector": "consumer",
+    "start": "2019-10-01",
+    "end": "2020-02-01",
+    "smooth_window": 7,
+    "n_raw_days": 85,
+    "turning_points": 7
+  },
+  {
+    "index": 128,
+    "ticker": "OXY",
+    "sector": "energy",
+    "start": "2017-09-04",
+    "end": "2017-12-04",
+    "smooth_window": 6,
+    "n_raw_days": 63,
+    "turning_points": 6
+  },
+  {
+    "index": 129,
+    "ticker": "SRE",
+    "sector": "utilities",
+    "start": "2010-10-25",
+    "end": "2011-02-25",
+    "smooth_window": 9,
+    "n_raw_days": 85,
+    "turning_points": 6
+  },
+  {
+    "index": 130,
+    "ticker": "JNJ",
+    "sector": "healthcare",
+    "start": "2021-11-13",
+    "end": "2022-02-13",
+    "smooth_window": 5,
+    "n_raw_days": 62,
+    "turning_points": 6
+  },
+  {
+    "index": 131,
+    "ticker": "TMO",
+    "sector": "healthcare",
+    "start": "2010-06-06",
+    "end": "2010-10-06",
+    "smooth_window": 6,
+    "n_raw_days": 85,
+    "turning_points": 6
+  },
+  {
+    "index": 132,
+    "ticker": "MRK",
+    "sector": "healthcare",
+    "start": "2019-06-03",
+    "end": "2019-08-03",
+    "smooth_window": 4,
+    "n_raw_days": 44,
+    "turning_points": 6
+  },
+  {
+    "index": 133,
+    "ticker": "PFE",
+    "sector": "healthcare",
+    "start": "2011-06-19",
+    "end": "2011-10-19",
+    "smooth_window": 9,
+    "n_raw_days": 85,
+    "turning_points": 4
+  },
+  {
+    "index": 134,
+    "ticker": "EXC",
+    "sector": "utilities",
+    "start": "2019-10-22",
+    "end": "2020-01-22",
+    "smooth_window": 8,
+    "n_raw_days": 62,
+    "turning_points": 5
+  },
+  {
+    "index": 135,
+    "ticker": "BA",
+    "sector": "industrials",
+    "start": "2010-09-04",
+    "end": "2010-12-04",
+    "smooth_window": 10,
+    "n_raw_days": 63,
+    "turning_points": 2
+  },
+  {
+    "index": 136,
+    "ticker": "META",
+    "sector": "technology",
+    "start": "2018-12-04",
+    "end": "2019-02-04",
+    "smooth_window": 9,
+    "n_raw_days": 40,
+    "turning_points": 4
+  },
+  {
+    "index": 137,
+    "ticker": "CAT",
+    "sector": "industrials",
+    "start": "2020-08-16",
+    "end": "2020-12-16",
+    "smooth_window": 5,
+    "n_raw_days": 85,
+    "turning_points": 4
+  },
+  {
+    "index": 138,
+    "ticker": "WFC",
+    "sector": "finance",
+    "start": "2025-01-17",
+    "end": "2025-05-17",
+    "smooth_window": 5,
+    "n_raw_days": 83,
+    "turning_points": 8
+  },
+  {
+    "index": 139,
+    "ticker": "GS",
+    "sector": "finance",
+    "start": "2020-10-14",
+    "end": "2020-12-14",
+    "smooth_window": 3,
+    "n_raw_days": 42,
+    "turning_points": 3
+  },
+  {
+    "index": 140,
+    "ticker": "CRM",
+    "sector": "technology",
+    "start": "2014-01-16",
+    "end": "2014-05-16",
+    "smooth_window": 8,
+    "n_raw_days": 83,
+    "turning_points": 6
+  },
+  {
+    "index": 141,
+    "ticker": "AXP",
+    "sector": "finance",
+    "start": "2010-11-13",
+    "end": "2011-01-13",
+    "smooth_window": 5,
+    "n_raw_days": 41,
+    "turning_points": 3
+  },
+  {
+    "index": 142,
+    "ticker": "DHR",
+    "sector": "healthcare",
+    "start": "2017-06-26",
+    "end": "2017-08-26",
+    "smooth_window": 5,
+    "n_raw_days": 44,
+    "turning_points": 3
+  },
+  {
+    "index": 143,
+    "ticker": "FDX",
+    "sector": "industrials",
+    "start": "2017-07-13",
+    "end": "2017-11-13",
+    "smooth_window": 9,
+    "n_raw_days": 86,
+    "turning_points": 4
+  },
+  {
+    "index": 144,
+    "ticker": "BA",
+    "sector": "industrials",
+    "start": "2017-02-08",
+    "end": "2017-04-08",
+    "smooth_window": 3,
+    "n_raw_days": 42,
+    "turning_points": 6
+  },
+  {
+    "index": 145,
+    "ticker": "ADBE",
+    "sector": "technology",
+    "start": "2018-01-10",
+    "end": "2018-03-10",
+    "smooth_window": 4,
+    "n_raw_days": 41,
+    "turning_points": 4
+  },
+  {
+    "index": 146,
+    "ticker": "PSX",
+    "sector": "energy",
+    "start": "2019-03-31",
+    "end": "2019-07-31",
+    "smooth_window": 5,
+    "n_raw_days": 84,
+    "turning_points": 4
+  },
+  {
+    "index": 147,
+    "ticker": "CAT",
+    "sector": "industrials",
+    "start": "2019-01-21",
+    "end": "2019-03-21",
+    "smooth_window": 3,
+    "n_raw_days": 41,
+    "turning_points": 6
+  },
+  {
+    "index": 148,
+    "ticker": "CRM",
+    "sector": "technology",
+    "start": "2015-11-19",
+    "end": "2016-03-19",
+    "smooth_window": 3,
+    "n_raw_days": 82,
+    "turning_points": 7
+  },
+  {
+    "index": 149,
+    "ticker": "AMT",
+    "sector": "realestate",
+    "start": "2021-08-02",
+    "end": "2021-10-02",
+    "smooth_window": 7,
+    "n_raw_days": 44,
+    "turning_points": 2
+  },
+  {
+    "index": 150,
+    "ticker": "AAPL",
+    "sector": "technology",
+    "start": "2017-07-29",
+    "end": "2017-11-29",
+    "smooth_window": 5,
+    "n_raw_days": 85,
+    "turning_points": 8
+  },
+  {
+    "index": 151,
+    "ticker": "GS",
+    "sector": "finance",
+    "start": "2013-07-26",
+    "end": "2013-09-26",
+    "smooth_window": 6,
+    "n_raw_days": 43,
+    "turning_points": 3
+  },
+  {
+    "index": 152,
+    "ticker": "CAT",
+    "sector": "industrials",
+    "start": "2024-01-14",
+    "end": "2024-05-14",
+    "smooth_window": 9,
+    "n_raw_days": 83,
+    "turning_points": 4
+  },
+  {
+    "index": 153,
+    "ticker": "GOOGL",
+    "sector": "technology",
+    "start": "2024-04-04",
+    "end": "2024-06-04",
+    "smooth_window": 7,
+    "n_raw_days": 42,
+    "turning_points": 3
+  },
+  {
+    "index": 154,
+    "ticker": "HON",
+    "sector": "industrials",
+    "start": "2017-11-24",
+    "end": "2018-01-24",
+    "smooth_window": 6,
+    "n_raw_days": 40,
+    "turning_points": 4
+  },
+  {
+    "index": 155,
+    "ticker": "SO",
+    "sector": "utilities",
+    "start": "2010-06-09",
+    "end": "2010-08-09",
+    "smooth_window": 3,
+    "n_raw_days": 42,
+    "turning_points": 6
+  },
+  {
+    "index": 156,
+    "ticker": "AMD",
+    "sector": "technology",
+    "start": "2022-09-28",
+    "end": "2023-01-28",
+    "smooth_window": 8,
+    "n_raw_days": 84,
+    "turning_points": 3
+  },
+  {
+    "index": 157,
+    "ticker": "PFE",
+    "sector": "healthcare",
+    "start": "2021-06-11",
+    "end": "2021-09-11",
+    "smooth_window": 6,
+    "n_raw_days": 64,
+    "turning_points": 2
+  },
+  {
+    "index": 158,
+    "ticker": "DUK",
+    "sector": "utilities",
+    "start": "2019-02-23",
+    "end": "2019-04-23",
+    "smooth_window": 8,
+    "n_raw_days": 40,
+    "turning_points": 7
+  },
+  {
+    "index": 159,
+    "ticker": "NKE",
+    "sector": "consumer",
+    "start": "2015-07-06",
+    "end": "2015-11-06",
+    "smooth_window": 10,
+    "n_raw_days": 88,
+    "turning_points": 3
+  },
+  {
+    "index": 160,
+    "ticker": "AEP",
+    "sector": "utilities",
+    "start": "2015-05-21",
+    "end": "2015-09-21",
+    "smooth_window": 10,
+    "n_raw_days": 84,
+    "turning_points": 7
+  },
+  {
+    "index": 161,
+    "ticker": "AMD",
+    "sector": "technology",
+    "start": "2019-09-17",
+    "end": "2020-01-17",
+    "smooth_window": 4,
+    "n_raw_days": 85,
+    "turning_points": 3
+  },
+  {
+    "index": 162,
+    "ticker": "MMM",
+    "sector": "industrials",
+    "start": "2013-07-26",
+    "end": "2013-11-26",
+    "smooth_window": 7,
+    "n_raw_days": 86,
+    "turning_points": 4
+  },
+  {
+    "index": 163,
+    "ticker": "SCHW",
+    "sector": "finance",
+    "start": "2016-08-22",
+    "end": "2016-11-22",
+    "smooth_window": 9,
+    "n_raw_days": 65,
+    "turning_points": 4
+  },
+  {
+    "index": 164,
+    "ticker": "MPC",
+    "sector": "energy",
+    "start": "2017-10-12",
+    "end": "2017-12-12",
+    "smooth_window": 5,
+    "n_raw_days": 42,
+    "turning_points": 4
+  },
+  {
+    "index": 165,
+    "ticker": "BAC",
+    "sector": "finance",
+    "start": "2013-09-19",
+    "end": "2013-12-19",
+    "smooth_window": 3,
+    "n_raw_days": 64,
+    "turning_points": 7
+  },
+  {
+    "index": 166,
+    "ticker": "WEC",
+    "sector": "utilities",
+    "start": "2020-05-25",
+    "end": "2020-09-25",
+    "smooth_window": 4,
+    "n_raw_days": 86,
+    "turning_points": 7
+  },
+  {
+    "index": 167,
+    "ticker": "NKE",
+    "sector": "consumer",
+    "start": "2013-10-18",
+    "end": "2013-12-18",
+    "smooth_window": 5,
+    "n_raw_days": 42,
+    "turning_points": 6
+  },
+  {
+    "index": 168,
+    "ticker": "PFE",
+    "sector": "healthcare",
+    "start": "2010-09-01",
+    "end": "2010-11-01",
+    "smooth_window": 5,
+    "n_raw_days": 42,
+    "turning_points": 5
+  },
+  {
+    "index": 169,
+    "ticker": "BLK",
+    "sector": "finance",
+    "start": "2015-04-06",
+    "end": "2015-07-06",
+    "smooth_window": 9,
+    "n_raw_days": 63,
+    "turning_points": 6
+  },
+  {
+    "index": 170,
+    "ticker": "COST",
+    "sector": "consumer",
+    "start": "2018-06-07",
+    "end": "2018-08-07",
+    "smooth_window": 4,
+    "n_raw_days": 42,
+    "turning_points": 4
+  },
+  {
+    "index": 171,
+    "ticker": "BA",
+    "sector": "industrials",
+    "start": "2018-04-12",
+    "end": "2018-08-12",
+    "smooth_window": 7,
+    "n_raw_days": 85,
+    "turning_points": 7
+  },
+  {
+    "index": 172,
+    "ticker": "EQIX",
+    "sector": "realestate",
+    "start": "2022-08-06",
+    "end": "2022-10-06",
+    "smooth_window": 4,
+    "n_raw_days": 42,
+    "turning_points": 4
+  },
+  {
+    "index": 173,
+    "ticker": "JPM",
+    "sector": "finance",
+    "start": "2021-08-07",
+    "end": "2021-10-07",
+    "smooth_window": 9,
+    "n_raw_days": 42,
+    "turning_points": 3
+  },
+  {
+    "index": 174,
+    "ticker": "BLK",
+    "sector": "finance",
+    "start": "2019-11-22",
+    "end": "2020-01-22",
+    "smooth_window": 3,
+    "n_raw_days": 39,
+    "turning_points": 4
+  },
+  {
+    "index": 175,
+    "ticker": "DUK",
+    "sector": "utilities",
+    "start": "2017-07-03",
+    "end": "2017-11-03",
+    "smooth_window": 6,
+    "n_raw_days": 87,
+    "turning_points": 4
+  },
+  {
+    "index": 176,
+    "ticker": "AMT",
+    "sector": "realestate",
+    "start": "2023-11-28",
+    "end": "2024-03-28",
+    "smooth_window": 4,
+    "n_raw_days": 83,
+    "turning_points": 8
+  },
+  {
+    "index": 177,
+    "ticker": "OXY",
+    "sector": "energy",
+    "start": "2022-05-10",
+    "end": "2022-09-10",
+    "smooth_window": 9,
+    "n_raw_days": 85,
+    "turning_points": 7
+  },
+  {
+    "index": 178,
+    "ticker": "PSA",
+    "sector": "realestate",
+    "start": "2015-02-26",
+    "end": "2015-04-26",
+    "smooth_window": 8,
+    "n_raw_days": 41,
+    "turning_points": 3
+  },
+  {
+    "index": 179,
+    "ticker": "WFC",
+    "sector": "finance",
+    "start": "2020-04-01",
+    "end": "2020-06-01",
+    "smooth_window": 4,
+    "n_raw_days": 41,
+    "turning_points": 6
+  },
+  {
+    "index": 180,
+    "ticker": "MCD",
+    "sector": "consumer",
+    "start": "2022-09-12",
+    "end": "2023-01-12",
+    "smooth_window": 9,
+    "n_raw_days": 85,
+    "turning_points": 7
+  },
+  {
+    "index": 181,
+    "ticker": "COP",
+    "sector": "energy",
+    "start": "2012-02-11",
+    "end": "2012-05-11",
+    "smooth_window": 5,
+    "n_raw_days": 62,
+    "turning_points": 5
+  },
+  {
+    "index": 182,
+    "ticker": "XEL",
+    "sector": "utilities",
+    "start": "2012-05-26",
+    "end": "2012-09-26",
+    "smooth_window": 10,
+    "n_raw_days": 84,
+    "turning_points": 5
+  },
+  {
+    "index": 183,
+    "ticker": "DHR",
+    "sector": "healthcare",
+    "start": "2016-02-27",
+    "end": "2016-05-27",
+    "smooth_window": 6,
+    "n_raw_days": 63,
+    "turning_points": 5
+  },
+  {
+    "index": 184,
+    "ticker": "ORCL",
+    "sector": "technology",
+    "start": "2021-06-01",
+    "end": "2021-09-01",
+    "smooth_window": 8,
+    "n_raw_days": 65,
+    "turning_points": 5
+  },
+  {
+    "index": 185,
+    "ticker": "TSLA",
+    "sector": "consumer",
+    "start": "2022-11-13",
+    "end": "2023-02-13",
+    "smooth_window": 9,
+    "n_raw_days": 61,
+    "turning_points": 3
+  },
+  {
+    "index": 186,
+    "ticker": "TMO",
+    "sector": "healthcare",
+    "start": "2013-04-06",
+    "end": "2013-08-06",
+    "smooth_window": 6,
+    "n_raw_days": 84,
+    "turning_points": 4
+  },
+  {
+    "index": 187,
+    "ticker": "SLB",
+    "sector": "energy",
+    "start": "2024-10-20",
+    "end": "2025-02-20",
+    "smooth_window": 8,
+    "n_raw_days": 82,
+    "turning_points": 5
+  },
+  {
+    "index": 188,
+    "ticker": "MPC",
+    "sector": "energy",
+    "start": "2012-09-05",
+    "end": "2012-11-05",
+    "smooth_window": 9,
+    "n_raw_days": 41,
+    "turning_points": 7
+  },
+  {
+    "index": 189,
+    "ticker": "DE",
+    "sector": "industrials",
+    "start": "2015-02-17",
+    "end": "2015-06-17",
+    "smooth_window": 8,
+    "n_raw_days": 84,
+    "turning_points": 6
+  },
+  {
+    "index": 190,
+    "ticker": "GE",
+    "sector": "industrials",
+    "start": "2018-01-21",
+    "end": "2018-04-21",
+    "smooth_window": 9,
+    "n_raw_days": 63,
+    "turning_points": 3
+  },
+  {
+    "index": 191,
+    "ticker": "CCI",
+    "sector": "realestate",
+    "start": "2015-06-19",
+    "end": "2015-09-19",
+    "smooth_window": 5,
+    "n_raw_days": 64,
+    "turning_points": 8
+  },
+  {
+    "index": 192,
+    "ticker": "MMM",
+    "sector": "industrials",
+    "start": "2012-06-19",
+    "end": "2012-08-19",
+    "smooth_window": 9,
+    "n_raw_days": 43,
+    "turning_points": 2
+  },
+  {
+    "index": 193,
+    "ticker": "ED",
+    "sector": "utilities",
+    "start": "2022-09-10",
+    "end": "2023-01-10",
+    "smooth_window": 6,
+    "n_raw_days": 83,
+    "turning_points": 3
+  },
+  {
+    "index": 194,
+    "ticker": "XEL",
+    "sector": "utilities",
+    "start": "2020-11-30",
+    "end": "2021-02-28",
+    "smooth_window": 6,
+    "n_raw_days": 61,
+    "turning_points": 6
+  },
+  {
+    "index": 195,
+    "ticker": "GE",
+    "sector": "industrials",
+    "start": "2019-09-04",
+    "end": "2019-11-04",
+    "smooth_window": 3,
+    "n_raw_days": 43,
+    "turning_points": 4
+  },
+  {
+    "index": 196,
+    "ticker": "MCD",
+    "sector": "consumer",
+    "start": "2010-01-13",
+    "end": "2010-03-13",
+    "smooth_window": 9,
+    "n_raw_days": 41,
+    "turning_points": 6
+  },
+  {
+    "index": 197,
+    "ticker": "SBUX",
+    "sector": "consumer",
+    "start": "2015-04-04",
+    "end": "2015-06-04",
+    "smooth_window": 6,
+    "n_raw_days": 42,
+    "turning_points": 4
+  },
+  {
+    "index": 198,
+    "ticker": "PEG",
+    "sector": "utilities",
+    "start": "2010-01-04",
+    "end": "2010-05-04",
+    "smooth_window": 9,
+    "n_raw_days": 83,
+    "turning_points": 7
+  },
+  {
+    "index": 199,
+    "ticker": "ADBE",
+    "sector": "technology",
+    "start": "2018-03-30",
+    "end": "2018-06-30",
+    "smooth_window": 8,
+    "n_raw_days": 64,
+    "turning_points": 3
+  }
+]

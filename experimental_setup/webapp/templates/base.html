@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Sequence Similarity Study{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>📈</text></svg>">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> Sequence Similarity Study</div>
+    <div class="who">
+      {% block topbar %}{% endblock %}
+    </div>
+  </div>
+  {% block body %}{% endblock %}
+
+  <script>
+    // Draw a sequence as an SVG path, scaled to fill its box.
+    function drawCurve(el, values, gradientId) {
+      const w = 1000, h = 300, pad = 14;
+      const lo = Math.min(...values), hi = Math.max(...values);
+      const span = (hi - lo) || 1;
+      const pts = values.map((v, i) => {
+        const x = pad + (i / (values.length - 1)) * (w - 2 * pad);
+        const y = h - pad - ((v - lo) / span) * (h - 2 * pad);
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      });
+      el.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      // Stretch to fill the card rather than letterboxing inside it, and keep the
+      // stroke an even width despite the non-uniform scale. Every curve is drawn
+      // into an identically sized box, so aspect ratio -- which is known to shift
+      // similarity judgements -- is held constant across all trials.
+      el.setAttribute('preserveAspectRatio', 'none');
+      el.innerHTML = `
+        <defs>
+          <linearGradient id="${gradientId}" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#12c2b6"/>
+            <stop offset="55%" stop-color="#6d5efc"/>
+            <stop offset="100%" stop-color="#ff5c93"/>
+          </linearGradient>
+        </defs>
+        <polyline fill="none" stroke="url(#${gradientId})" stroke-width="3"
+                  vector-effect="non-scaling-stroke"
+                  stroke-linejoin="round" stroke-linecap="round"
+                  points="${pts.join(' ')}"/>`;
+    }
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

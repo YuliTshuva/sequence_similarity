@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Labeling — Sequence Similarity Study{% endblock %}
+
+{% block topbar %}
+  <span class="pill">{{ session['username'] }}</span>
+  <a href="{{ url_for('logout') }}">Sign out</a>
+{% endblock %}
+
+{% block body %}
+<div class="wrap">
+
+  <div class="progress-head">
+    <span>Trial {{ completed + 1 }} of {{ total }}</span>
+    <span>{{ ((completed / total) * 100) | round | int }}% complete</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" style="width: {{ (completed / total) * 100 }}%"></div>
+  </div>
+
+  <div class="card query-card">
+    <div class="label-kicker">Reference curve</div>
+    <svg class="curve tall" id="curve-query"></svg>
+  </div>
+
+  <div class="label-kicker" style="margin-bottom:10px">
+    Which one looks more similar to the reference?
+  </div>
+
+  <div class="candidates">
+    <div class="candidate card" id="cand-left" onclick="pick('left')">
+      <h3><span class="key">A</span> Left</h3>
+      <svg class="curve" id="curve-left"></svg>
+    </div>
+    <div class="candidate card" id="cand-right" onclick="pick('right')">
+      <h3><span class="key">B</span> Right</h3>
+      <svg class="curve" id="curve-right"></svg>
+    </div>
+  </div>
+
+  <div class="actions">
+    <div class="hint">
+      Press <b>A</b> or <b>B</b> to choose, <b>T</b> if they look equally similar,
+      then <b>Enter</b> to submit.
+    </div>
+    <div style="display:flex; gap:11px; flex-wrap:wrap">
+      <button class="btn-ghost" id="btn-tie" onclick="pick('tie')">Equally similar</button>
+      <button class="btn-primary" id="btn-submit" onclick="submit()" disabled>Submit</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const QUERY = {{ query | tojson }};
+  const LEFT = {{ left_curve | tojson }};
+  const RIGHT = {{ right_curve | tojson }};
+  const TRIAL_ID = {{ trial_id | tojson }};
+  // Which candidate each side actually is, so the stored answer is side-independent.
+  const ROLE = { left: {{ left_role | tojson }}, right: {{ right_role | tojson }} };
+
+  drawCurve(document.getElementById('curve-query'), QUERY, 'g-query');
+  drawCurve(document.getElementById('curve-left'), LEFT, 'g-left');
+  drawCurve(document.getElementById('curve-right'), RIGHT, 'g-right');
+
+  const shownAt = performance.now();
+  let choice = null;
+
+  function pick(which) {
+    choice = which;
+    document.getElementById('cand-left').classList.toggle('selected', which === 'left');
+    document.getElementById('cand-right').classList.toggle('selected', which === 'right');
+    document.getElementById('btn-tie').classList.toggle('selected', which === 'tie');
+    document.getElementById('btn-submit').disabled = false;
+  }
+
+  async function submit() {
+    if (!choice) return;
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    await fetch('{{ url_for("save_label") }}', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        trial_id: TRIAL_ID,
+        choice: choice === 'tie' ? 'tie' : ROLE[choice],
+        response_ms: Math.round(performance.now() - shownAt),
+      }),
+    });
+    location.reload();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    if (k === 'a') pick('left');
+    else if (k === 'b') pick('right');
+    else if (k === 't') pick('tie');
+    else if (e.key === 'Enter' && choice) submit();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,339 @@
+\documentclass[11pt]{article}
+
+% ---------------------------------------------------------------
+% Research direction review: Human-aligned time-series similarity
+% Prepared as a learning / discussion document for the supervisor.
+% ---------------------------------------------------------------
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=teal,urlcolor=blue]{hyperref}
+\usepackage{tabularx}
+
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+\newcommand{\verify}[1]{\textcolor{orange}{\textbf{[verify: #1]}}}
+
+\title{\textbf{A Human-Aligned, Interpretable Similarity Metric for Time Series}}
+\author{Yuli Tshuva}
+\date{June 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent
+This document records the proposed framing of the project and a critical assessment
+of its novelty and validation strategy. The central thesis is that the proposed
+distance --- built from change-point segmentation, hand-crafted shape features, and a
+\emph{merge-aware} segment-level dynamic time warping --- is designed not to optimise a
+benchmark loss, but to \emph{reproduce the human notion of similarity} between sequences.
+The empirical case rests on a human study over \emph{adversarial} examples on which the
+proposed metric and standard baselines disagree. We summarise why this framing is strong,
+the main threats to the human study's validity, the most closely related prior work
+(verified against the literature), and concrete recommendations before final results are
+produced.
+\end{abstract}
+
+% ===============================================================
+\section{The thesis}
+% ===============================================================
+The goal is a \textbf{human-aligned similarity metric}: a distance that represents the
+human notion of similarity between two sequences, rather than one that optimises an
+arbitrary objective. The argument has two pillars:
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Construction.} The algorithm encodes the structural cues a human reasons
+  about --- it segments a sequence at change points, describes each segment with
+  interpretable shape features (trend direction/strength, curvature, amplitude, length),
+  and aligns segments with a merge-aware DTW that can collapse several segments on either
+  side into one matched unit.
+  \item \textbf{Validation.} An empirical human study over \emph{adversarial} pairs ---
+  examples where the proposed metric and the baselines (DTW, LCSS, Euclidean) rank
+  similarity in opposite directions --- in which human raters adjudicate. If humans
+  consistently side with the proposed metric, the claim of human-alignment is supported
+  by evidence external to the model.
+\end{enumerate}
+
+\noindent
+Interpretability matters because humans make decisions for reasons they can articulate;
+a metric whose alignment is human-readable (a labelled segment-to-segment mapping) is the
+mechanism through which the ``reasoning'' can be inspected.
+
+\paragraph{Motivating application.} Comparing signals such as COVID-19 epidemic curves:
+locate where a similar trajectory occurred before, and use that precedent to inform the
+next decision. This is a query-by-example retrieval setting where \emph{segment-level
+shape}, not point-level alignment, is what makes two curves ``the same kind of thing''.
+
+% ===============================================================
+\section{Why this framing is strong}
+% ===============================================================
+\begin{itemize}[leftmargin=*]
+  \item It converts the project's main apparent weakness into a strength. The many
+  hand-crafted, intuition-driven choices (shape features, trend labels, segment merging)
+  would normally be attacked as arbitrary in an ``accuracy'' paper. Under the
+  human-alignment thesis they are \emph{defensible by design}: they encode the cues humans
+  use.
+  \item It moves the work out of the saturated ``yet another DTW variant'' competition
+  (where the bar is beating dozens of methods on the UCR archive) into the
+  less-occupied niche of \emph{perceptually / human-aligned} similarity.
+  \item Interpretability stops being a feature and becomes evidence for the thesis.
+\end{itemize}
+
+% ===============================================================
+\section{The human study is the paper}
+% ===============================================================
+With this framing the empirical case rests almost entirely on the human experiment, so
+its methodology \emph{is} the contribution. The predictable threats, and how to defuse
+them:
+
+\begin{description}[leftmargin=*]
+  \item[\textbf{1. Cherry-picking / selection bias (the \#1 threat).}]
+  If adversarial examples are hand-selected where the method wins, the rebuttal writes
+  itself: ``you chose examples engineered to flatter your method.'' \emph{Mitigation:}
+  make selection \emph{mechanical and outcome-blind}. Define ``the baselines disagree with
+  us'' by an automatic criterion, sample from that pool, and \textbf{freeze the set before
+  observing which side the human took.} Present both directions (ours-high/theirs-low and
+  ours-low/theirs-high); this symmetry is what buys credibility.
+
+  \item[\textbf{2. Ask humans the right question.}]
+  Do \emph{not} ask people for similarity scores or full rankings --- these are noisy and
+  unreliable. Use \textbf{triplets / odd-one-out}: ``Is query $Q$ more similar to $A$ or to
+  $B$?'' Each method predicts an answer; agreement with the human majority is the outcome.
+  This is the standard robust design for perceptual-similarity studies and sidesteps most
+  reliability complaints.
+
+  \item[\textbf{3. Measure inter-rater agreement --- and worry if it is low.}]
+  The premise is that ``the human notion of similarity'' is a real, shared target. If
+  raters do not agree with \emph{each other} (report Krippendorff's $\alpha$ or similar),
+  the target is ill-defined and the thesis weakens. \textbf{Check this early --- it is an
+  existential risk, not a detail.}
+
+  \item[\textbf{4. Avoid circularity.}]
+  The metric is built from human intuition, then validated against humans. This is sound
+  \emph{only} if the validation set is genuinely held out and the metric is never tuned on
+  the human judgments. Keep all weight tuning on a separate development set, sealed from the
+  study data.
+
+  \item[\textbf{5. Keep a competence floor.}]
+  If the only result is ``we win on adversarial cases,'' reviewers suspect a trade.
+  Include a sanity check showing the metric is \emph{competitive} (not necessarily SOTA) on
+  ordinary cases / a standard benchmark, so the adversarial wins are not bought with
+  ordinary-case losses.
+\end{description}
+
+\paragraph{Two claims, kept separate.} Conflating these will hurt the paper:
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Alignment:} the scores match human judgment --- proven \emph{only} by the
+  human study.
+  \item \textbf{Interpretability:} the method yields a human-readable segment alignment ---
+  proven by construction and examples.
+\end{itemize}
+Interpretability does not imply alignment. Treat them as two distinct contributions, each
+with its own evidence.
+
+\paragraph{The application as motivation, not proof.} The COVID retrieval use case is a
+strong story for the introduction, but proving it requires showing downstream
+\emph{decision} quality, which is a different and harder paper. Safer: a qualitative
+query-by-example retrieval demo (``look how sensible the nearest neighbours are'') to
+illustrate the application, without resting validity on it.
+
+% ===============================================================
+\section{Related work (verified)}
+% ===============================================================
+The following items were checked against the literature in June 2026. The single most
+important one for positioning is DTW+S.
+
+\paragraph{Human perception of time-series similarity.}
+Gogolou et al.~\cite{gogolou2019} ran controlled human studies on how well automatic
+measures (Euclidean, DTW) match human \emph{perception} of similarity, and showed the
+visual representation (line chart vs.\ horizon graph vs.\ colorfield) changes that
+perception. This is the must-cite anchor. \textbf{Key differentiation:} they
+\emph{measure} how existing metrics align with perception (descriptive); the present work
+\emph{constructs} a new metric designed to be human-aligned and interpretable
+(constructive). It also primes reviewers to believe ``DTW is already roughly perceptual'',
+so the study must beat DTW with statistical significance, not just on hand-picked cases.
+
+\paragraph{Shape-based DTW variants (the methodological neighbours).}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{shapeDTW} \cite{zhao2018}: encodes a local \emph{shape descriptor} around
+  every point and aligns descriptor sequences with DTW, yielding perceptually
+  interpretable alignments; beats DTW on 64/84 UCR datasets. Differs from the present work
+  in being \emph{point-wise} (one descriptor per timestamp) rather than
+  \emph{segment-level}, and has \emph{no human study}.
+  \item \textbf{ESDTW} (extrema-based shape DTW)~\cite{esdtw2023}: a more recent shape-DTW
+  variant keyed on extrema --- a useful comparison point for the segmentation idea.
+\end{itemize}
+
+\paragraph{The closest competitor --- and the open gap.}
+\textbf{DTW+S} (Srivastava, 2023)~\cite{dtwpluss} is the nearest neighbour to this project:
+it builds an interpretable, ``closeness-preserving'' matrix in which each column is a
+\emph{local trend}, then applies DTW --- explicitly to match similar local trends at
+similar times, and explicitly motivated by \textbf{clustering epidemic / COVID curves}
+(surge $\to$ increase $\to$ peak $\to$ decrease). This overlaps the present project on
+three axes at once: shape/local-trend representation, interpretability, and the epidemic
+application. \textbf{Crucially, DTW+S contains no human study} --- it is evaluated
+computationally (clustering / classification). This is the wedge: the present work's
+human-alignment validation is exactly what the closest competitor does not do, and the
+segment-level \emph{merge-aware} alignment (many-to-many segment collapsing with a
+correlation-gated merge cost) is a mechanism DTW+S does not have. \textbf{This paper must
+be cited, contrasted carefully, and ideally used as a baseline.}
+
+\paragraph{Who is already building on DTW+S.}
+Checking the papers that cite DTW+S confirms the line of work is active and
+epidemic-focused --- and, tellingly, that citers \emph{consume} it as a similarity
+primitive rather than scrutinising whether its alignments match human perception (which
+is precisely the present project's wedge). The verified citers of DTW+S (the AAAI~2025
+published version, ``Aligning time-series by local trends'') are:
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{p{0.32\textwidth} c c X}
+\toprule
+\textbf{Citing paper} & \textbf{Year} & \textbf{$\approx$cit.} & \textbf{How it uses DTW+S}\\
+\midrule
+TrendGNN: Towards Understanding of Epidemics, Beliefs, and Behaviors~\cite{trendgnn}
+& 2025 & $<5$ &
+Uses DTW+S to build the signal-similarity graph (retaining the top-5 trend-similar edges
+per signal) that feeds a GraphSAGE epidemic-forecasting GNN; reports DTW+S-constructed
+graphs beat lagged-correlation and random / fully-connected baselines at 2--4 week
+horizons. A pure \emph{downstream use} of DTW+S, with no perceptual / human evaluation of
+the similarity itself.\\
+\bottomrule
+\end{tabularx}
+\caption{Verified citers of DTW+S.}
+\end{table}
+
+\paragraph{Recent baselines and the broader ``human-aligned similarity'' trend.}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Multiscale Dubuc}~\cite{dubuc2024}: a 2024 new time-series similarity
+  measure --- a fresh baseline to include.
+  \item \textbf{Seeing Eye to AI?} (CHI 2025)~\cite{seeingeye2025}: deep-feature metrics
+  match human perception of \emph{visualizations} (scatterplots), not time series. Shows
+  the ``does this metric see like a human?'' question is active at top HCI venues ---
+  useful to cite as evidence the broader direction is timely, while noting it does not
+  address time-series shape.
+  \item Classic baseline surveys for similarity-measure comparison on
+  classification~\cite{empirical2014} remain the reference for the competence-floor
+  experiment.
+\end{itemize}
+
+\paragraph{Study-design methodology.}
+Ordinal / triplet similarity indices~\cite{ordinal2026} formalise interpretable alignment
+from \emph{relative} (triplet / quadruplet) comparisons rather than scalar scores --- a
+useful reference for justifying the triplet study design and for analysing the collected
+judgments.
+
+% ===============================================================
+\section{Positioning at a glance}
+% ===============================================================
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabularx}{\textwidth}{l c c c c X}
+\toprule
+\textbf{Method} & \textbf{Shape} & \textbf{Segment} & \textbf{Interpret.} & \textbf{Human} & \textbf{Application focus}\\
+& \textbf{-based} & \textbf{-level} & & \textbf{study} & \\
+\midrule
+DTW / LCSS              & no  & no  & low  & no  & general\\
+shapeDTW \cite{zhao2018}        & yes & no (point) & med & no  & UCR classification\\
+DTW+S \cite{dtwpluss}           & yes & trend cols & yes & \textbf{no} & \textbf{epidemic curves}\\
+\textbf{This work}     & yes & \textbf{yes (merge-aware)} & yes & \textbf{yes} & epidemic / decision support\\
+\bottomrule
+\end{tabularx}
+\caption{The combination of segment-level merge-aware alignment \emph{and} a human-alignment
+study is the unoccupied cell.}
+\end{table}
+
+% ===============================================================
+\section{Residual risks reviewers will probe}
+% ===============================================================
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Hyperparameter sensitivity.} Many hand-set constants (feature set,
+  hard-coded normalisation means/stds, \texttt{CHANGE\_THRESHOLD}, \texttt{SEGMENT\_PERCENTAGE},
+  domain-tuned weights). Ablations / sensitivity analysis are needed to show robustness.
+  \item \textbf{Computational cost.} The merge-aware DTW searches over merge spans
+  ($d_i, d_j$) and recomputes merged features inside the loop, giving roughly
+  $O(n^2 m^2)$ behaviour --- a scalability question on long series. \verify{profile and
+  report; consider caching merged features / bounding the max merge span.}
+  \item \textbf{``DTW is already perceptual.''} Primed by \cite{gogolou2019}; answered only
+  by a statistically significant win in the human study.
+\end{itemize}
+
+% ===============================================================
+\section{Recommended next steps}
+% ===============================================================
+\begin{enumerate}[leftmargin=*]
+  \item Lock the human-study design \emph{before} producing final results: triplet /
+  odd-one-out, outcome-blind mechanical selection of adversarial triplets, pre-registered
+  set, inter-rater agreement reported.
+  \item Obtain and run \textbf{DTW+S} as a baseline; write the explicit contrast (segment
+  merge mechanism + human validation).
+  \item Add a competence-floor benchmark (standard datasets) so adversarial wins are not
+  read as trades.
+  \item Run hyperparameter ablations and a complexity/runtime analysis.
+  \item Keep the COVID retrieval as a qualitative motivating demo, not a validity claim.
+\end{enumerate}
+
+% ===============================================================
+\begin{thebibliography}{9}
+
+\bibitem{gogolou2019}
+A.~Gogolou, T.~Tsandilas, T.~Palpanas, and A.~Bezerianos.
+\newblock Comparing Similarity Perception in Time Series Visualizations.
+\newblock \emph{IEEE Transactions on Visualization and Computer Graphics},
+25(1):523--533, 2019.
+\newblock \url{https://doi.org/10.1109/TVCG.2018.2865077}
+
+\bibitem{zhao2018}
+J.~Zhao and L.~Itti.
+\newblock shapeDTW: shape Dynamic Time Warping.
+\newblock \emph{Pattern Recognition}, 74:171--184, 2018.
+\newblock \url{https://arxiv.org/abs/1606.01601}
+
+\bibitem{dtwpluss}
+A.~Srivastava.
+\newblock DTW+S: Shape-based Comparison of Time-series with Ordered Local Trend.
+\newblock \emph{arXiv:2309.03579}, 2023 (rev.\ 2024).
+\newblock \url{https://arxiv.org/abs/2309.03579}
+
+\bibitem{trendgnn}
+M.~Tian and A.~Srivastava.
+\newblock TrendGNN: Towards Understanding of Epidemics, Beliefs, and Behaviors.
+\newblock \emph{arXiv:2512.00421}, 2025.
+\newblock \url{https://arxiv.org/abs/2512.00421}
+
+\bibitem{esdtw2023}
+ESDTW: Extrema-based shape dynamic time warping.
+\newblock \emph{Expert Systems with Applications}, 2023.
+\newblock \url{https://www.sciencedirect.com/science/article/abs/pii/S0957417423029342}
+
+\bibitem{dubuc2024}
+Multiscale Dubuc: A New Similarity Measure for Time Series.
+\newblock \emph{arXiv:2411.10418}, 2024.
+\newblock \url{https://arxiv.org/abs/2411.10418}
+
+\bibitem{seeingeye2025}
+S.~Long, A.~Chatzimparmpas, E.~Alexander, M.~Kay, and J.~Hullman.
+\newblock Seeing Eye to AI? Applying Deep-Feature-Based Similarity Metrics to
+Information Visualization.
+\newblock \emph{ACM CHI}, 2025.
+\newblock \url{https://mucollective.northwestern.edu/project/2025-perceptual-similarity-metric}
+
+\bibitem{empirical2014}
+J.~Serr\`a and J.~L.~Arcos.
+\newblock An Empirical Evaluation of Similarity Measures for Time Series Classification.
+\newblock \emph{arXiv:1401.3973}, 2014.
+\newblock \url{https://arxiv.org/abs/1401.3973}
+
+\bibitem{ordinal2026}
+Scalable and Interpretable Representation Alignment with Ordinal Similarity
+(Triplet / Quadruplet Similarity Indices).
+\newblock \emph{arXiv:2606.16379}. \verify{exact authors, title, year}
+\newblock \url{https://arxiv.org/abs/2606.16379}
+
+\end{thebibliography}
+
+\end{document}
